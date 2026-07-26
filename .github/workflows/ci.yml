@@ -1,0 +1,110 @@
+# Layer 3 of the gate. Repeats every pre-commit hook, because hooks can be
+# bypassed with --no-verify, and adds what cannot run locally: the test
+# matrix across supported Python versions, and coverage measurement.
+#
+# Third-party actions are pinned to a commit SHA with the version in a
+# trailing comment — a tag can be repointed at different code, a SHA
+# cannot. Dependabot still bumps them by reading the comment.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint and format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.13"
+      - name: Install
+        run: python -m pip install --upgrade pip ruff
+      - name: Lint
+        run: ruff check --output-format=github .
+      - name: Format
+        run: ruff format --check .
+
+  types:
+    name: Type check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.10"
+      - name: Install
+        run: python -m pip install --upgrade pip mypy
+      - name: Type check
+        run: mypy
+
+  test:
+    name: Test (${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Both ends of the supported range. requires-python is >=3.10, so
+        # 3.10 catches accidental use of newer syntax and 3.13 catches
+        # deprecations before they become errors.
+        python-version: ["3.10", "3.13"]
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        # Installing the package itself proves pyproject.toml is valid and
+        # that tier 1 genuinely needs no third-party dependency.
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m pip install pytest pytest-cov
+      - name: Test with coverage
+        # The coverage floor lives in pyproject.toml; it fails the job.
+        run: pytest --cov=pagefetch
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Single required status check for branch protection. Without this, each
+  # job has to be named individually in the ruleset, and a job added later
+  # is not required until someone remembers to add it.
+  gate:
+    name: Gate
+    runs-on: ubuntu-latest
+    needs: [lint, types, test, secrets]
+    if: always()
+    steps:
+      - name: Check results
+        # A skipped or cancelled dependency is not a pass. Every job here
+        # is unconditional, so anything other than success is a failure.
+        run: |
+          set -euo pipefail
+          results="${{ join(needs.*.result, ' ') }}"
+          echo "Dependency results: ${results}"
+          for r in ${results}; do
+            if [ "${r}" != "success" ]; then
+              echo "::error::A required job did not succeed: ${results}"
+              exit 1
+            fi
+          done
+          echo "All required jobs succeeded."

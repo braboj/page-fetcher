@@ -29,6 +29,7 @@ from .detection import (
     looks_like_real_content,
 )
 from .source import (
+    DEFAULT_WAIT_MS,
     ContentMode,
     FetchOptions,
     FetchResult,
@@ -217,9 +218,7 @@ class NetworkFetcher(PageSource):
 
     # --- tier 3: Nodriver --------------------------------------------
 
-    def _fetch_nodriver(
-        self, url: str, mode: ContentMode, wait_ms: int
-    ) -> str | None:
+    def _fetch_nodriver(self, url: str, mode: ContentMode, wait_ms: int) -> str | None:
         """Fetch via Nodriver (headed Chrome via CDP, no driver binary)."""
         try:
             import nodriver as uc_nd
@@ -250,7 +249,9 @@ class NetworkFetcher(PageSource):
             print(f"[nodriver] {e}", file=sys.stderr)
             return None
 
-    async def _nodriver_read_page(self, page, mode: ContentMode, wait_ms: int) -> str | None:
+    async def _nodriver_read_page(
+        self, page, mode: ContentMode, wait_ms: int
+    ) -> str | None:
         """Wait for a Nodriver page to clear bot protection and read it.
 
         Shared by single-fetch and batch (persistent browser) paths.
@@ -277,7 +278,7 @@ class NetworkFetcher(PageSource):
             print("[nodriver] Bot detection page still present", file=sys.stderr)
             return None
 
-        if wait_ms > 500:
+        if wait_ms > DEFAULT_WAIT_MS:
             await page.sleep(wait_ms / 1000)
 
         try:
@@ -334,9 +335,12 @@ class NetworkFetcher(PageSource):
         try:
             sb.open(url)
             if not self._uc_wait_for_page(sb):
-                print("[uc] Bot detection page still present after timeout", file=sys.stderr)
+                print(
+                    "[uc] Bot detection page still present after timeout",
+                    file=sys.stderr,
+                )
                 return None
-            if wait_ms > 500:
+            if wait_ms > DEFAULT_WAIT_MS:
                 sb.sleep(wait_ms / 1000)
             self._uc_wait_for_scroll(sb)
             html = sb.get_page_source()
@@ -409,7 +413,7 @@ class NetworkFetcher(PageSource):
         persistent Nodriver browser itself; sb_session lets a persistent
         UC session flow through to escalation.
         """
-        mode, wait_ms = opts.mode, opts.wait_ms
+        mode = opts.mode
 
         if opts.use_cache:
             cached = self._cache.read(url, mode)
@@ -432,9 +436,7 @@ class NetworkFetcher(PageSource):
             self._cache.write(url, mode, content)
         return content, tier
 
-    def _escalate(
-        self, url: str, opts: FetchOptions, sb_session
-    ) -> tuple[str, str]:
+    def _escalate(self, url: str, opts: FetchOptions, sb_session) -> tuple[str, str]:
         """Run the tier strategy for opts.transport. Returns (content, tier)."""
         mode, wait_ms = opts.mode, opts.wait_ms
 
@@ -462,7 +464,10 @@ class NetworkFetcher(PageSource):
 
         if result == _BOT_BLOCKED:
             # Bot protection: skip Playwright (it would fail too).
-            print("[auto] Skipping Playwright (bot protection), trying Nodriver...", file=sys.stderr)
+            print(
+                "[auto] Skipping Playwright (bot protection), trying Nodriver...",
+                file=sys.stderr,
+            )
             content = self._nodriver_either(url, mode, wait_ms)
             if content:
                 return content, "nodriver"
@@ -514,9 +519,14 @@ class NetworkFetcher(PageSource):
 
         # Auto mode: probe the first URL to decide if a persistent bot-tier
         # session is warranted.
-        if not needs_nodriver and not needs_uc and not force_js and urls:
-            if self._fetch_urllib(urls[0], opts.mode) == _BOT_BLOCKED:
-                needs_nodriver = True
+        if (
+            not needs_nodriver
+            and not needs_uc
+            and not force_js
+            and urls
+            and self._fetch_urllib(urls[0], opts.mode) == _BOT_BLOCKED
+        ):
+            needs_nodriver = True
 
         nd_browser = None
         sb_session = None
@@ -532,12 +542,21 @@ class NetworkFetcher(PageSource):
                 pids_before = self._reaper.running_chrome_pids()
                 nd_browser = loop.run_until_complete(uc_nd.start(headless=False))
                 self._reaper.track_new_since(pids_before)
-                print(f"[batch] Persistent Nodriver session started for {len(urls)} URLs", file=sys.stderr)
+                print(
+                    f"[batch] Persistent Nodriver session started for {len(urls)} URLs",
+                    file=sys.stderr,
+                )
             except ImportError:
-                print("[batch] Nodriver not installed, falling back to UC", file=sys.stderr)
+                print(
+                    "[batch] Nodriver not installed, falling back to UC",
+                    file=sys.stderr,
+                )
                 needs_nodriver, needs_uc = False, True
             except Exception as e:
-                print(f"[batch] Nodriver failed to start: {e}, falling back to UC", file=sys.stderr)
+                print(
+                    f"[batch] Nodriver failed to start: {e}, falling back to UC",
+                    file=sys.stderr,
+                )
                 needs_nodriver, needs_uc = False, True
 
         if needs_uc and not nd_browser:
@@ -548,9 +567,15 @@ class NetworkFetcher(PageSource):
                 sb_context = SB(uc=True, headless=True)
                 sb_session = sb_context.__enter__()
                 self._reaper.track_new_since(pids_before)
-                print(f"[batch] Persistent UC session started for {len(urls)} URLs", file=sys.stderr)
+                print(
+                    f"[batch] Persistent UC session started for {len(urls)} URLs",
+                    file=sys.stderr,
+                )
             except ImportError:
-                print("[batch] SeleniumBase not installed, falling back to per-URL mode", file=sys.stderr)
+                print(
+                    "[batch] SeleniumBase not installed, falling back to per-URL mode",
+                    file=sys.stderr,
+                )
 
         try:
             ok = fail = 0
@@ -558,7 +583,11 @@ class NetworkFetcher(PageSource):
                 t0 = time.monotonic()
                 print(f"[batch] [{i + 1}/{len(urls)}] {url}", file=sys.stderr)
 
-                if nd_browser and needs_nodriver:
+                # `loop` is assigned alongside nd_browser in the startup
+                # block above, so a live browser implies a live loop —
+                # naming it here makes that invariant explicit rather than
+                # assumed.
+                if nd_browser and loop and needs_nodriver:
                     content = (
                         loop.run_until_complete(
                             self._nodriver_fetch_with_browser(
@@ -575,13 +604,18 @@ class NetworkFetcher(PageSource):
                 if content:
                     self._cache.write(url, opts.mode, content)
                     ok += 1
-                    print(f"[batch]   -> {len(content)} bytes ({elapsed:.1f}s)", file=sys.stderr)
+                    print(
+                        f"[batch]   -> {len(content)} bytes ({elapsed:.1f}s)",
+                        file=sys.stderr,
+                    )
                 else:
                     fail += 1
                     print(f"[batch]   FAILED ({elapsed:.1f}s)", file=sys.stderr)
 
                 results.append(
-                    FetchResult(url=url, content=content, tier_used=tier, ok=bool(content))
+                    FetchResult(
+                        url=url, content=content, tier_used=tier, ok=bool(content)
+                    )
                 )
 
             print(f"[batch] Done: {ok} ok, {fail} failed", file=sys.stderr)

@@ -27,9 +27,7 @@ class FakeFetcher(PageSource):
     def fetch(self, url: str, options: FetchOptions | None = None) -> FetchResult:
         self.calls.append(url)
         content = self._responses.get(url, "")
-        return FetchResult(
-            url=url, content=content, tier_used="fake", ok=bool(content)
-        )
+        return FetchResult(url=url, content=content, tier_used="fake", ok=bool(content))
 
     def fetch_batch(
         self, urls: list[str], options: FetchOptions | None = None

@@ -125,8 +125,10 @@ Inject a `PageSource` into your own code so it can be faked in tests:
 def scrape(source: PageSource, url: str) -> str:
     return source.fetch(url, FetchOptions(mode=ContentMode.HTML)).content
 
+
 # in tests — no network, no browser:
 from pagefetch import FakeFetcher
+
 assert scrape(FakeFetcher({url: "<html>...</html>"}), url) == "<html>...</html>"
 ```
 
@@ -165,28 +167,48 @@ fetcher = NetworkFetcher(cache=FileCache(cache_dir=Path("/my/cache")))
 | `pagefetch/__main__.py`  | CLI entry point — a thin wrapper over the library  |
 | `pagefetch/tests/`       | pytest suite, including captured HTML fixtures     |
 | `docs/decisions/`        | Architecture Decision Records                      |
-| `requirements.txt`       | Optional browser-tier dependencies                 |
+| `pyproject.toml`         | Package metadata and every tool's configuration    |
 
 ## Development setup
 
 ```bash
 git clone https://github.com/braboj/page-fetcher.git
 cd page-fetcher
-py -m pip install pytest
-py -m pytest pagefetch/tests/ -v
+py -m pip install -e ".[dev]"
+pre-commit install
+py -m pytest
 ```
 
 Expect 98 passing tests in well under a second. The escalation logic is
 tested by stubbing the four tier methods, so the suite needs no network and
 no browser. The browser-tier method bodies require headed Chrome and are
-validated manually.
+validated by hand.
 
-To exercise the browser tiers locally, install the optional dependencies:
+To exercise the browser tiers locally, add the optional engines:
 
 ```bash
-py -m pip install -r requirements.txt
+py -m pip install -e ".[browsers]"
 playwright install chromium
 ```
+
+### The gate
+
+`pre-commit install` wires the first four of these to run on every commit.
+CI repeats all of them on every pull request, because hooks can be skipped
+with `--no-verify`. Run any one directly:
+
+```bash
+py -m ruff check .          # lint
+py -m ruff format --check . # formatting, including Python in this README
+py -m mypy                  # type check
+py -m pytest --cov=pagefetch
+```
+
+Coverage sits at roughly 47% with a floor of 45% that fails the build if it
+drops. That number is low because the browser tiers cannot run in CI at all;
+the logic that can be tested — detection, cache, options, the fake — is at
+94-100%. See [ADR-002](docs/decisions/002-python-toolchain-and-ci.md) for
+why the floor is measured rather than aspirational.
 
 ## Configuration reference
 
@@ -304,6 +326,7 @@ deliberate `--no-cache` passes.
 | `nodriver`        | 3    | optional | AGPL-3.0   |
 | `seleniumbase`    | 4    | optional | MIT        |
 
+All three live in the `browsers` extra (`pip install ".[browsers]"`).
 Missing optional dependencies are handled gracefully — the tier is skipped
 with a message on stderr.
 
@@ -363,9 +386,11 @@ three tiers and skips Nodriver with a stderr message.
 
 ## Links
 
-- [Architecture Decision Records](docs/decisions/) — starting with
-  [ADR-001](docs/decisions/001-extract-pagefetch-into-standalone-repo.md),
-  which records this package's extraction from its original home
+- [Architecture Decision Records](docs/decisions/) —
+  [ADR-001](docs/decisions/001-extract-pagefetch-into-standalone-repo.md)
+  records this package's extraction from its original home, and
+  [ADR-002](docs/decisions/002-python-toolchain-and-ci.md) the toolchain
+  and CI gate
 - Upstream history: the package grew inside
   [Imbra-Ltd/wuseria](https://github.com/Imbra-Ltd/wuseria) as
   `tools/pagefetch/`, where two earlier decision records still cover it —

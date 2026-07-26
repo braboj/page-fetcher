@@ -10,9 +10,16 @@ tasklist call simply yields no PIDs and cleanup is a no-op.
 """
 
 import atexit
+import contextlib
 import os
 import signal
+import subprocess
 import sys
+
+# tasklist's CSV rows are "image name","pid",... — a row is only usable
+# once the PID column is present.
+_PID_COLUMN = 1
+_MIN_CSV_COLUMNS = 2
 
 
 class ChromeReaper:
@@ -28,21 +35,18 @@ class ChromeReaper:
         elsewhere or on error)."""
         pids: set[int] = set()
         try:
-            import subprocess
-
             result = subprocess.run(
                 ["tasklist", "/FI", "IMAGENAME eq chrome.exe", "/FO", "CSV", "/NH"],
                 capture_output=True,
                 text=True,
                 timeout=5,
+                check=False,
             )
             for line in result.stdout.strip().splitlines():
                 parts = line.strip('"').split('","')
-                if len(parts) >= 2:
-                    try:
-                        pids.add(int(parts[1]))
-                    except ValueError:
-                        pass
+                if len(parts) >= _MIN_CSV_COLUMNS:
+                    with contextlib.suppress(ValueError):
+                        pids.add(int(parts[_PID_COLUMN]))
         except Exception:
             pass
         return pids
@@ -57,10 +61,8 @@ class ChromeReaper:
             return
         still_running = self.running_chrome_pids() & self._spawned_pids
         for pid in still_running:
-            try:
+            with contextlib.suppress(OSError, ProcessLookupError):
                 os.kill(pid, signal.SIGTERM)
-            except (OSError, ProcessLookupError):
-                pass
         if still_running:
             print(
                 f"[cleanup] Killed {len(still_running)} orphaned Chrome process(es)",

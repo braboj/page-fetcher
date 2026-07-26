@@ -35,7 +35,7 @@ def test_short_meta_refresh_is_blocked():
 
 def test_long_page_with_meta_refresh_is_not_short_circuited():
     # The meta-refresh short-circuit only fires under 500 bytes.
-    html = '<meta refresh>' + ("x" * 600)
+    html = "<meta refresh>" + ("x" * 600)
     assert is_bot_blocked(html) is False
 
 
@@ -97,9 +97,11 @@ def test_cloudflare_checking_your_browser_still_detected():
 def test_checking_your_browser_substring_alone_is_not_bot_blocked():
     # The bare substring without the " before " anchor (e.g. ad-blocker help
     # text on real content pages) must not trigger a bot match.
-    benign = "<html><body>" + (
-        "We recommend checking your browser extensions and settings. " * 200
-    ) + "</body></html>"
+    benign = (
+        "<html><body>"
+        + ("We recommend checking your browser extensions and settings. " * 200)
+        + "</body></html>"
+    )
     assert is_bot_blocked(benign) is False
 
 

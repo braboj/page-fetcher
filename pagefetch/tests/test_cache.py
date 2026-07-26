@@ -5,7 +5,6 @@ projects depend on sha256(url)[:16] + suffix. These tests pin it.
 """
 
 import hashlib
-from pathlib import Path
 
 import pytest
 

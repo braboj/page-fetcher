@@ -5,8 +5,6 @@ uses the default CWD-relative FileCache, so the test chdirs into tmp_path
 and seeds `.cache/pagefetch` there.
 """
 
-import os
-
 import pytest
 
 from pagefetch import ContentMode, FileCache

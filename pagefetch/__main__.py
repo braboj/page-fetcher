@@ -33,6 +33,9 @@ from .detection import is_bot_blocked, is_error_page
 from .network import NetworkFetcher
 from .source import ContentMode, FetchOptions, Transport
 
+# argv[0] is the program name, so anything useful needs at least one more.
+_MIN_ARGV_WITH_TARGET = 2
+
 _VALUE_FLAGS = {"--wait", "--batch", "--output-dir", "--cache-dir"}
 _BARE_FLAGS = {
     "--html",
@@ -86,8 +89,8 @@ def _collect_urls(argv: list[str], batch_file: str | None) -> list[str]:
                 print(f"Batch file not found: {batch_file}", file=sys.stderr)
                 sys.exit(1)
             lines = batch_path.read_text(encoding="utf-8").splitlines()
-        for line in lines:
-            line = line.strip()
+        for raw_line in lines:
+            line = raw_line.strip()
             if line and not line.startswith("#"):
                 urls.append(line)
     return urls
@@ -127,7 +130,7 @@ def _clean_cache(cache: FileCache, dry_run: bool) -> None:
 
 def main() -> None:
     argv = sys.argv
-    if len(argv) < 2:
+    if len(argv) < _MIN_ARGV_WITH_TARGET:
         print(__doc__)
         sys.exit(1)
 
@@ -182,7 +185,9 @@ def _write_batch_output(results, output_dir: str | None, mode: ContentMode) -> N
         if out_path:
             fname = FileCache.url_hash(result.url) + suffix
             (out_path / fname).write_text(result.content, encoding="utf-8")
-            print(f"[batch]   -> {fname} ({len(result.content)} bytes)", file=sys.stderr)
+            print(
+                f"[batch]   -> {fname} ({len(result.content)} bytes)", file=sys.stderr
+            )
         else:
             sys.stdout.buffer.write(f"--- {result.url} ---\n".encode())
             sys.stdout.buffer.write(result.content.encode("utf-8", errors="replace"))

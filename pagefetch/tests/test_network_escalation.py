@@ -76,7 +76,9 @@ def test_bot_blocked_nodriver_fails_falls_to_uc(fetcher, monkeypatch):
     assert result.tier_used == "uc"
 
 
-def test_non_bot_failure_escalates_playwright_then_nodriver_then_uc(fetcher, monkeypatch):
+def test_non_bot_failure_escalates_playwright_then_nodriver_then_uc(
+    fetcher, monkeypatch
+):
     calls = _stub_tiers(
         fetcher, monkeypatch, urllib_result=None, pw="", nd="", uc="from uc"
     )
@@ -93,9 +95,7 @@ def test_non_bot_failure_playwright_succeeds_stops_there(fetcher, monkeypatch):
 
 
 def test_all_tiers_fail_returns_not_ok(fetcher, monkeypatch):
-    calls = _stub_tiers(
-        fetcher, monkeypatch, urllib_result=None, pw="", nd="", uc=""
-    )
+    calls = _stub_tiers(fetcher, monkeypatch, urllib_result=None, pw="", nd="", uc="")
     result = fetcher.fetch("https://x.test", FetchOptions(use_cache=False))
     assert calls == ["urllib", "playwright", "nodriver", "uc"]
     assert result.ok is False
@@ -118,6 +118,8 @@ def test_force_nodriver_uses_only_nodriver(fetcher, monkeypatch):
         "https://x.test", FetchOptions(transport=Transport.NODRIVER, use_cache=False)
     )
     assert calls == ["nodriver"]
+    assert result.tier_used == "nodriver"
+    assert result.content == "nd only"
 
 
 def test_force_playwright_uses_only_playwright(fetcher, monkeypatch):
@@ -126,6 +128,8 @@ def test_force_playwright_uses_only_playwright(fetcher, monkeypatch):
         "https://x.test", FetchOptions(transport=Transport.PLAYWRIGHT, use_cache=False)
     )
     assert calls == ["playwright"]
+    assert result.tier_used == "playwright"
+    assert result.content == "pw only"
 
 
 def test_cache_hit_skips_all_tiers(fetcher, monkeypatch, cache):

@@ -29,13 +29,19 @@ class Transport(Enum):
     UC = "uc"  # force SeleniumBase UC mode
 
 
+# Post-load settle time the browser tiers apply without being asked. The
+# tiers poll for readiness rather than sleeping, so this is a floor, not a
+# budget: a caller asking for more than this gets an extra explicit sleep.
+DEFAULT_WAIT_MS = 500
+
+
 @dataclass(frozen=True)
 class FetchOptions:
     """Options for a single fetch. Immutable so it can be shared safely."""
 
     mode: ContentMode = ContentMode.TEXT
     transport: Transport = Transport.AUTO
-    wait_ms: int = 500
+    wait_ms: int = DEFAULT_WAIT_MS
     use_cache: bool = True
 
 
@@ -45,7 +51,9 @@ class FetchResult:
 
     url: str
     content: str
-    tier_used: str  # "urllib" | "playwright" | "nodriver" | "uc" | "cache" | "fake" | "none"
+    tier_used: (
+        str  # "urllib" | "playwright" | "nodriver" | "uc" | "cache" | "fake" | "none"
+    )
     ok: bool
 
 
