@@ -16,11 +16,15 @@ package works with only the standard library installed — unavailable tiers
 are skipped gracefully.
 """
 
+import asyncio
 import gzip
 import sys
+import time
 import urllib.parse
 import zlib
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 from .cache import FileCache
 from .chrome import ChromeReaper
@@ -116,6 +120,50 @@ def _decompress(raw: bytes, content_encoding: str) -> bytes:
             # Some servers send a raw deflate stream with no zlib header.
             return zlib.decompress(raw, -zlib.MAX_WBITS)
     return raw
+
+
+@dataclass
+class _BatchSession:
+    """The browser a batch holds open, and how to give it back.
+
+    A batch pays the browser launch cost once instead of per URL, which
+    means something stays alive across the whole run and has to be
+    released whatever happens. Keeping the handles and the teardown in one
+    place is the point: every field here is something that leaks if the
+    batch exits without calling close().
+
+    An empty instance is the per-URL mode — no persistent browser, every
+    field None, and close() does nothing.
+
+    Fields are typed Any because they are third-party handles (a nodriver
+    Browser, a SeleniumBase context) that the package imports lazily and
+    cannot reference in an annotation.
+    """
+
+    nd_browser: Any = None
+    loop: Any = None
+    sb_session: Any = None
+    sb_context: Any = None
+
+    @property
+    def drives_nodriver(self) -> bool:
+        """True when the batch loop should fetch through Nodriver."""
+        return self.nd_browser is not None and self.loop is not None
+
+    def close(self) -> None:
+        """Release everything this session holds, in dependency order.
+
+        The browser goes first because stopping it may need the loop, and
+        the loop is closed rather than merely abandoned — a batch that
+        left one open leaked a selector and its file descriptors on every
+        run, invisibly, since nothing in the process complained.
+        """
+        if self.nd_browser is not None:
+            self.nd_browser.stop()
+        if self.loop is not None:
+            self.loop.close()
+        if self.sb_context is not None:
+            self.sb_context.__exit__(None, None, None)
 
 
 def _scroll_page_js() -> str:
@@ -607,106 +655,128 @@ class NetworkFetcher(PageSource):
 
     # --- batch -------------------------------------------------------
 
-    def _run_batch(self, urls: list[str], opts: FetchOptions) -> list[FetchResult]:
-        """Fetch many URLs with one persistent browser session.
+    def _wants_persistent_bot_tier(
+        self, urls: list[str], opts: FetchOptions
+    ) -> tuple[bool, bool]:
+        """Decide which persistent browser, if any, the batch should hold.
 
-        Mirrors the original batch behavior: the browser launches once and
-        stays open for all pages. Nodriver is preferred for bot-protected
-        batches; UC is the fallback. Returns results in input order.
+        Returns (wants_nodriver, wants_uc). An explicit transport is taken
+        at its word; only auto mode probes, and it probes the first URL
+        alone — launching a headed browser for a batch that plain HTTP can
+        serve costs far more than one wasted request.
         """
-        import asyncio
-        import time
+        if opts.transport is Transport.NODRIVER:
+            return True, False
+        if opts.transport is Transport.UC:
+            return False, True
+        if opts.transport is Transport.AUTO and urls:
+            probe = self._fetch_urllib(urls[0], opts.mode)
+            return probe == _BOT_BLOCKED, False
+        return False, False
 
-        results: list[FetchResult] = []
-
-        needs_nodriver = opts.transport is Transport.NODRIVER
-        needs_uc = opts.transport is Transport.UC
-        force_js = opts.transport is Transport.PLAYWRIGHT
-
-        # Auto mode: probe the first URL to decide if a persistent bot-tier
-        # session is warranted.
-        if (
-            not needs_nodriver
-            and not needs_uc
-            and not force_js
-            and urls
-            and self._fetch_urllib(urls[0], opts.mode) == _BOT_BLOCKED
-        ):
-            needs_nodriver = True
-
-        nd_browser = None
-        sb_session = None
-        sb_context = None
+    def _start_nodriver_session(self, url_count: int) -> _BatchSession | None:
+        """Launch a persistent Nodriver browser, or None if it cannot be."""
         loop = None
-
-        if needs_nodriver:
-            try:
-                import nodriver as uc_nd
-
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                pids_before = self._reaper.running_chrome_pids()
-                nd_browser = loop.run_until_complete(uc_nd.start(headless=False))
-                self._reaper.track_new_since(pids_before)
-                print(
-                    f"[batch] Persistent Nodriver session started for {len(urls)} URLs",
-                    file=sys.stderr,
-                )
-            except ImportError:
-                print(
-                    "[batch] Nodriver not installed, falling back to UC",
-                    file=sys.stderr,
-                )
-                needs_nodriver, needs_uc = False, True
-            except Exception as e:
-                print(
-                    f"[batch] Nodriver failed to start: {e}, falling back to UC",
-                    file=sys.stderr,
-                )
-                needs_nodriver, needs_uc = False, True
-
-        if needs_uc and not nd_browser:
-            try:
-                from seleniumbase import SB
-
-                pids_before = self._reaper.running_chrome_pids()
-                sb_context = SB(uc=True, headless=True)
-                sb_session = sb_context.__enter__()
-                self._reaper.track_new_since(pids_before)
-                print(
-                    f"[batch] Persistent UC session started for {len(urls)} URLs",
-                    file=sys.stderr,
-                )
-            except ImportError:
-                print(
-                    "[batch] SeleniumBase not installed, falling back to per-URL mode",
-                    file=sys.stderr,
-                )
-
         try:
-            ok = fail = 0
+            import nodriver as uc_nd
+
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            pids_before = self._reaper.running_chrome_pids()
+            browser = loop.run_until_complete(uc_nd.start(headless=False))
+            self._reaper.track_new_since(pids_before)
+            print(
+                f"[batch] Persistent Nodriver session started for {url_count} URLs",
+                file=sys.stderr,
+            )
+            return _BatchSession(nd_browser=browser, loop=loop)
+        except ImportError:
+            print("[batch] Nodriver not installed, falling back to UC", file=sys.stderr)
+        except Exception as e:
+            print(
+                f"[batch] Nodriver failed to start: {e}, falling back to UC",
+                file=sys.stderr,
+            )
+        # The loop is created before the browser, so a failed launch would
+        # otherwise strand it — there is no session object to close yet.
+        if loop is not None:
+            loop.close()
+        return None
+
+    def _start_uc_session(self, url_count: int) -> _BatchSession | None:
+        """Open a persistent SeleniumBase UC session, or None if absent."""
+        try:
+            from seleniumbase import SB
+
+            pids_before = self._reaper.running_chrome_pids()
+            context = SB(uc=True, headless=True)
+            session = context.__enter__()
+            self._reaper.track_new_since(pids_before)
+            print(
+                f"[batch] Persistent UC session started for {url_count} URLs",
+                file=sys.stderr,
+            )
+            return _BatchSession(sb_session=session, sb_context=context)
+        except ImportError:
+            print(
+                "[batch] SeleniumBase not installed, falling back to per-URL mode",
+                file=sys.stderr,
+            )
+        return None
+
+    def _open_batch_session(self, urls: list[str], opts: FetchOptions) -> _BatchSession:
+        """Open whichever persistent browser the batch warrants.
+
+        Nodriver is preferred for bot-protected batches and UC is the
+        fallback, including when Nodriver is installed but will not
+        launch. An empty session means per-URL mode, which is a working
+        outcome rather than a failure.
+        """
+        wants_nodriver, wants_uc = self._wants_persistent_bot_tier(urls, opts)
+        if wants_nodriver:
+            session = self._start_nodriver_session(len(urls))
+            if session is not None:
+                return session
+            wants_uc = True
+        if wants_uc:
+            session = self._start_uc_session(len(urls))
+            if session is not None:
+                return session
+        return _BatchSession()
+
+    def _fetch_one_in_batch(
+        self, url: str, opts: FetchOptions, session: _BatchSession
+    ) -> tuple[str, str]:
+        """Fetch one URL using the batch's session, if it has one."""
+        if session.drives_nodriver:
+            content = (
+                session.loop.run_until_complete(
+                    self._nodriver_fetch_with_browser(
+                        session.nd_browser, url, opts.mode, opts.wait_ms
+                    )
+                )
+                or ""
+            )
+            return content, "nodriver" if content else "none"
+        return self._fetch_single(url, opts, sb_session=session.sb_session)
+
+    def _run_batch(self, urls: list[str], opts: FetchOptions) -> list[FetchResult]:
+        """Fetch many URLs through one persistent browser session.
+
+        The browser launches once and stays open for every page. Results
+        come back in input order.
+        """
+        session = self._open_batch_session(urls, opts)
+        results: list[FetchResult] = []
+        ok = fail = 0
+        try:
             for i, url in enumerate(urls):
-                t0 = time.monotonic()
+                started_at = time.monotonic()
                 print(f"[batch] [{i + 1}/{len(urls)}] {url}", file=sys.stderr)
 
-                # `loop` is assigned alongside nd_browser in the startup
-                # block above, so a live browser implies a live loop —
-                # naming it here makes that invariant explicit rather than
-                # assumed.
-                if nd_browser and loop and needs_nodriver:
-                    content = (
-                        loop.run_until_complete(
-                            self._nodriver_fetch_with_browser(
-                                nd_browser, url, opts.mode, opts.wait_ms
-                            )
-                        )
-                        or ""
-                    )
-                    tier = "nodriver" if content else "none"
-                else:
-                    content, tier = self._fetch_single(url, opts, sb_session=sb_session)
+                content, tier = self._fetch_one_in_batch(url, opts, session)
 
-                elapsed = time.monotonic() - t0
+                elapsed = time.monotonic() - started_at
                 if content:
                     self._cache.write(url, opts.mode, content)
                     ok += 1
@@ -726,9 +796,6 @@ class NetworkFetcher(PageSource):
 
             print(f"[batch] Done: {ok} ok, {fail} failed", file=sys.stderr)
         finally:
-            if nd_browser:
-                nd_browser.stop()
-            if sb_context:
-                sb_context.__exit__(None, None, None)
+            session.close()
 
         return results
