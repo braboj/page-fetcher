@@ -132,15 +132,19 @@ def is_cacheable_junk(html: str) -> bool:
 
 def html_to_text(html: str) -> str:
     """Strip script/style/tags and collapse whitespace to plain text."""
-    # The closing tags allow whitespace before the ">" (`</script >` is
-    # valid HTML). Without \s* the block is not matched, the outer tag
-    # strip then removes only the tags, and the script body survives as
-    # "text" — polluting extracted content with JavaScript.
+    # HTML5 end tags may carry whitespace and even attributes before the
+    # ">" — browsers parse `</script >` and `</script foo="bar">` as end
+    # tags and ignore the extra. Anchoring on a bare "</script>" left such
+    # blocks unmatched; the outer tag strip then removed only the tags and
+    # the script body survived as "text", polluting extracted content with
+    # JavaScript. Matching everything up to ">" also matches a malformed
+    # `</scriptfoo>`, which is a deliberate trade: over-stripping junk from
+    # scraped text is harmless, under-stripping is not.
     text = re.sub(
-        r"<script[^>]*>.*?</script\s*>", "", html, flags=re.DOTALL | re.IGNORECASE
+        r"<script[^>]*>.*?</script[^>]*>", "", html, flags=re.DOTALL | re.IGNORECASE
     )
     text = re.sub(
-        r"<style[^>]*>.*?</style\s*>", "", text, flags=re.DOTALL | re.IGNORECASE
+        r"<style[^>]*>.*?</style[^>]*>", "", text, flags=re.DOTALL | re.IGNORECASE
     )
     text = re.sub(r"<[^>]+>", " ", text)
     return re.sub(r"\s+", " ", text).strip()
