@@ -13,8 +13,8 @@ Public API:
 The fetcher escalates urllib -> Playwright -> Nodriver -> SeleniumBase UC
 as needed. See README.md for the full strategy and CLI usage.
 
-This package has no dependency on any consuming project — it is built to
-be extracted into a standalone repository / git submodule.
+This package has no dependency on any consuming project — drop it in as a
+directory, a git submodule, or clone it on its own.
 """
 
 from .cache import CleanReport, FileCache

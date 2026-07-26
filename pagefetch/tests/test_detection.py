@@ -74,9 +74,10 @@ def test_patterns_list_is_covered_by_parametrization():
 
 
 def test_dpreview_real_body_is_not_bot_blocked():
-    # #870 regression: a real 137 KB DPReview spec page embeds the substring
-    # "checking your browser extensions and settings" inside ad-blocker help
-    # text. The Cloudflare pattern must not false-match on that text.
+    # Imbra-Ltd/wuseria#870 regression: a real 137 KB DPReview spec page
+    # embeds the substring "checking your browser extensions and settings"
+    # inside ad-blocker help text. The Cloudflare pattern must not
+    # false-match on that text.
     html = (FIXTURES / "dpreview_specifications.html").read_text(
         encoding="utf-8", errors="replace"
     )

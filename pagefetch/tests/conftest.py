@@ -1,7 +1,8 @@
 """Shared pytest fixtures for the pagefetch test suite.
 
-Adds the tools/ directory to sys.path so `import pagefetch` resolves when
-tests run from anywhere, and provides a temp-dir-backed FileCache.
+Adds the package's parent directory to sys.path so `import pagefetch`
+resolves when tests run from anywhere, and provides a temp-dir-backed
+FileCache.
 """
 
 import sys
@@ -9,10 +10,12 @@ from pathlib import Path
 
 import pytest
 
-# tools/ is two levels up from this file (tools/pagefetch/tests/conftest.py).
-TOOLS_DIR = Path(__file__).resolve().parent.parent.parent
-if str(TOOLS_DIR) not in sys.path:
-    sys.path.insert(0, str(TOOLS_DIR))
+# The directory holding the package is three levels up from this file
+# (<parent>/pagefetch/tests/conftest.py) — the repo root here, and the
+# host project's package directory when pagefetch is vendored.
+PACKAGE_PARENT = Path(__file__).resolve().parent.parent.parent
+if str(PACKAGE_PARENT) not in sys.path:
+    sys.path.insert(0, str(PACKAGE_PARENT))
 
 from pagefetch import FileCache  # noqa: E402
 

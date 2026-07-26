@@ -1,0 +1,35 @@
+# Build output
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+
+# Test and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Fetch cache — pagefetch's own on-disk response cache
+.cache/
+
+# Secrets
+.env
+.env.local
+*.pem
+*.key
+
+# IDE and editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
