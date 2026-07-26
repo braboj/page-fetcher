@@ -112,8 +112,10 @@ select = [
 "pagefetch/chrome.py" = ["BLE001", "S110", "S607"]
 # pytest's assert-based style (S101 flags every assertion) and its habit
 # of comparing against literals (PLR2004). The tier-stub helper takes one
-# argument per tier, which trips the argument-count rules.
-"pagefetch/tests/*" = ["S101", "PLR2004", "PLR0913", "PLR0917"]
+# argument per tier, which trips the argument-count rules. S311 flags
+# `random` as non-cryptographic, which is the point — a seeded generator
+# builds a deterministic incompressible fixture.
+"pagefetch/tests/*" = ["S101", "PLR2004", "PLR0913", "PLR0917", "S311"]
 
 [tool.mypy]
 python_version = "3.10"

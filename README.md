@@ -21,6 +21,8 @@ on disk, and junk is kept out of the cache rather than re-served from it.
 - Detect bot walls, throttle pages, and soft-404s in a response body
 - Skip a tier that cannot help — a bot wall sends the fetcher past headless
   straight to a headed browser
+- Ask for gzip and deflate and decode them, including from servers that
+  compress without declaring it
 - Cache responses on disk, keyed by URL and content mode, with no TTL
 - Self-heal a poisoned cache: junk entries are deleted on read and re-fetched
 - Sweep accumulated junk on demand with `--clean-cache`

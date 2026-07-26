@@ -16,7 +16,9 @@ package works with only the standard library installed — unavailable tiers
 are skipped gracefully.
 """
 
+import gzip
 import sys
+import zlib
 from pathlib import Path
 
 from .cache import FileCache
@@ -48,6 +50,38 @@ _BOT_BLOCKED = "@@BOT_BLOCKED@@"
 # Sentinel: response is a 404 / gone error page. Terminal — do not escalate
 # (every tier returns the same error) and do not cache.
 _ERROR_PAGE = "@@ERROR_PAGE@@"
+
+# Compressions the urllib tier can undo, so it is honest to ask for them.
+# Brotli and zstd are deliberately absent: neither ships in the standard
+# library, and advertising an encoding we cannot decode is how a response
+# becomes unreadable.
+ACCEPT_ENCODING = "gzip, deflate"
+
+# gzip streams start with these two bytes. Used to catch a server that
+# compresses without saying so — see _decompress.
+_GZIP_MAGIC = b"\x1f\x8b"
+
+
+def _decompress(raw: bytes, content_encoding: str) -> bytes:
+    """Undo a response's Content-Encoding, returning the raw bytes.
+
+    Also sniffs the gzip magic bytes when the header does not claim gzip.
+    A server that compresses without declaring it is not hypothetical, and
+    an undeclared gzip body is the worst case for this fetcher: decoded as
+    text it becomes mojibake, which is comfortably larger than
+    MIN_REAL_CONTENT_BYTES, so it passes the real-content gate and is
+    written to the cache as if it were a page.
+    """
+    encoding = content_encoding.lower().strip()
+    if encoding == "gzip" or raw[:2] == _GZIP_MAGIC:
+        return gzip.decompress(raw)
+    if encoding == "deflate":
+        try:
+            return zlib.decompress(raw)
+        except zlib.error:
+            # Some servers send a raw deflate stream with no zlib header.
+            return zlib.decompress(raw, -zlib.MAX_WBITS)
+    return raw
 
 
 def _scroll_page_js() -> str:
@@ -138,9 +172,16 @@ class NetworkFetcher(PageSource):
         import urllib.request
 
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": self._ua})
+            req = urllib.request.Request(
+                url,
+                headers={
+                    "User-Agent": self._ua,
+                    "Accept-Encoding": ACCEPT_ENCODING,
+                },
+            )
             with urllib.request.urlopen(req, timeout=30) as resp:
-                html = resp.read().decode("utf-8", errors="replace")
+                raw = resp.read()
+                content_encoding = resp.headers.get("Content-Encoding") or ""
         except urllib.error.HTTPError as e:
             # Non-200: never cached. A hard 404/410 is terminal (escalation
             # would hit the same error); other codes fall through to escalate.
@@ -148,6 +189,19 @@ class NetworkFetcher(PageSource):
             return _ERROR_PAGE if e.code in (404, 410) else None
         except Exception as e:
             print(f"[urllib] {e}", file=sys.stderr)
+            return None
+
+        try:
+            html = _decompress(raw, content_encoding).decode("utf-8", errors="replace")
+        except (OSError, EOFError, zlib.error) as e:
+            # A body we cannot decompress is not content. Escalating beats
+            # handing back mojibake that would pass the size gate and be
+            # cached as if it were a page.
+            print(
+                f"[urllib] Could not decompress "
+                f"{content_encoding or 'response'} body: {e}",
+                file=sys.stderr,
+            )
             return None
 
         # A 404/gone body (incl. soft-404 served as HTTP 200) is terminal:
