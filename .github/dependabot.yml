@@ -1,0 +1,19 @@
+version: 2
+updates:
+  # Keeps the SHA pins in the workflows current — Dependabot reads the
+  # version from the trailing comment on each pinned `uses:`.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      dev-dependencies:
+        dependency-type: development

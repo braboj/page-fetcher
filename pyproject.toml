@@ -1,0 +1,145 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pagefetch"
+version = "0.1.0"
+description = "Auto-escalating web page fetcher: plain HTTP first, browsers only when the response is a bot wall, an error, or implausibly short."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Branimir Georgiev" }]
+keywords = ["scraping", "fetch", "cache", "cloudflare", "bot-detection"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Topic :: Internet :: WWW/HTTP",
+]
+
+# Tier 1 (urllib) is standard library only, so the package installs with no
+# dependencies at all. The browser tiers are lazily imported and skipped
+# when absent — see the extras below.
+dependencies = []
+
+[project.optional-dependencies]
+# Tier 2 needs `playwright install chromium` after pip install.
+# Tier 3 (nodriver) is AGPL-3.0 — see the README's Dependencies section
+# before shipping a network service built on it.
+browsers = ["playwright>=1.40", "nodriver>=0.35", "seleniumbase>=4.20"]
+dev = [
+    "ruff>=0.16",
+    "mypy>=1.11",
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "pre-commit>=3.7",
+]
+
+[project.urls]
+Homepage = "https://github.com/braboj/page-fetcher"
+Issues = "https://github.com/braboj/page-fetcher/issues"
+
+[project.scripts]
+pagefetch = "pagefetch.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["pagefetch*"]
+# Tests ship with the repository, not the wheel — the captured HTML
+# fixtures alone are larger than the package.
+exclude = ["pagefetch.tests*"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "SIM",  # flake8-simplify
+    "S",    # flake8-bandit
+    "BLE",  # flake8-blind-except
+    "PL",   # pylint
+    "RUF",  # ruff-specific
+]
+
+[tool.ruff.lint.per-file-ignores]
+# The escalation ladder catches broad exceptions on purpose: any failure
+# inside a tier — a missing browser binary, a CDP disconnect, a driver
+# crash — must fall through to the next tier rather than abort the fetch.
+# Narrowing these would couple the fetcher to each engine's exception
+# hierarchy, which is exactly the coupling the PageSource ABC avoids.
+# S110 (try-except-pass) covers the best-effort browser teardown paths for
+# the same reason: a failure while closing a browser must not mask the
+# result already fetched.
+#
+# PLC0415 (import not at top level): the browser libraries are imported
+# inside the tier methods deliberately, so the package installs and runs
+# with none of them present. Hoisting them to module scope would make
+# every optional dependency mandatory.
+#
+# S310 (audit URL open for permitted schemes): flagged because a caller
+# could pass file:// or a custom scheme. Restricting the fetcher to
+# http/https is a behaviour change, tracked separately in issue #3.
+#
+# PLR0911 (too many returns): the escalation orchestrator returns from
+# each tier as it succeeds. Collapsing that into one exit point would
+# need a result variable threaded through every branch, which reads worse
+# than the early returns.
+#
+# PLR0912 / PLR0915 (too many branches / statements): _run_batch is
+# genuinely too long at 64 statements, but the batch path has no test
+# coverage, so splitting it now would be an unverifiable refactor. Tests
+# first, then the split — tracked in issue #4.
+"pagefetch/network.py" = [
+    "BLE001",
+    "S110",
+    "PLC0415",
+    "S310",
+    "PLR0911",
+    "PLR0912",
+    "PLR0915",
+]
+# S607 (partial executable path): `tasklist` is resolved via PATH on
+# purpose — hardcoding a System32 path breaks on non-default Windows
+# installs, and the call is already best-effort.
+"pagefetch/chrome.py" = ["BLE001", "S110", "S607"]
+# pytest's assert-based style (S101 flags every assertion) and its habit
+# of comparing against literals (PLR2004). The tier-stub helper takes one
+# argument per tier, which trips the argument-count rules.
+"pagefetch/tests/*" = ["S101", "PLR2004", "PLR0913", "PLR0917"]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["pagefetch"]
+# The browser tiers are lazily imported and optional, so their stubs are
+# absent in a plain `pip install -e .` checkout and in CI.
+ignore_missing_imports = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+[tool.pytest.ini_options]
+testpaths = ["pagefetch/tests"]
+addopts = "-q"
+
+[tool.coverage.run]
+source = ["pagefetch"]
+# Measure the package, not the suite that exercises it — including tests
+# reports them at 100% and inflates the headline number.
+omit = ["pagefetch/tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+# Sized from the measured baseline, not from a target picked by feel: the
+# package sits at ~46% because the browser-tier method bodies (most of
+# network.py and chrome.py) need a headed Chrome and are validated by
+# hand. This is a ratchet floor that must not regress, NOT a quality
+# claim — raise it as the testable surface grows. See ADR-002.
+fail_under = 45

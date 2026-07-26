@@ -46,6 +46,11 @@ BOT_DETECTION_PATTERNS = [
 # (e.g. the B&H ~7-8 KB page that carries no spec table) fall under it.
 MIN_REAL_CONTENT_BYTES = 10_000
 
+# A meta-refresh in a page this small is a captcha redirect rather than a
+# real page that happens to redirect — big pages with a meta-refresh are
+# not short-circuited.
+META_REFRESH_MAX_BYTES = 500
+
 # Patterns that indicate a "not found" / gone error page. These catch both
 # hard 404s (HTTP 404 body) and soft-404s — a discontinued product served
 # with HTTP 200 but a "no longer available" / "page not found" body. A
@@ -67,7 +72,11 @@ ERROR_PAGE_PATTERNS = [
 def is_bot_blocked(html: str) -> bool:
     """Return True if the response HTML looks like a bot-detection page."""
     # Very short HTML with a meta-refresh is a captcha redirect.
-    if len(html) < 500 and "meta" in html and "refresh" in html.lower():
+    if (
+        len(html) < META_REFRESH_MAX_BYTES
+        and "meta" in html
+        and "refresh" in html.lower()
+    ):
         return True
     # Strip tags for pattern matching — bot pages embed text in JS/CSS-heavy
     # wrappers, so check both the raw head and the de-tagged text.
@@ -123,7 +132,19 @@ def is_cacheable_junk(html: str) -> bool:
 
 def html_to_text(html: str) -> str:
     """Strip script/style/tags and collapse whitespace to plain text."""
-    text = re.sub(r"<script[^>]*>.*?</script>", "", html, flags=re.DOTALL | re.IGNORECASE)
-    text = re.sub(r"<style[^>]*>.*?</style>", "", text, flags=re.DOTALL | re.IGNORECASE)
+    # HTML5 end tags may carry whitespace and even attributes before the
+    # ">" — browsers parse `</script >` and `</script foo="bar">` as end
+    # tags and ignore the extra. Anchoring on a bare "</script>" left such
+    # blocks unmatched; the outer tag strip then removed only the tags and
+    # the script body survived as "text", polluting extracted content with
+    # JavaScript. Matching everything up to ">" also matches a malformed
+    # `</scriptfoo>`, which is a deliberate trade: over-stripping junk from
+    # scraped text is harmless, under-stripping is not.
+    text = re.sub(
+        r"<script[^>]*>.*?</script[^>]*>", "", html, flags=re.DOTALL | re.IGNORECASE
+    )
+    text = re.sub(
+        r"<style[^>]*>.*?</style[^>]*>", "", text, flags=re.DOTALL | re.IGNORECASE
+    )
     text = re.sub(r"<[^>]+>", " ", text)
     return re.sub(r"\s+", " ", text).strip()

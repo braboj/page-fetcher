@@ -35,7 +35,7 @@ def test_short_meta_refresh_is_blocked():
 
 def test_long_page_with_meta_refresh_is_not_short_circuited():
     # The meta-refresh short-circuit only fires under 500 bytes.
-    html = '<meta refresh>' + ("x" * 600)
+    html = "<meta refresh>" + ("x" * 600)
     assert is_bot_blocked(html) is False
 
 
@@ -97,10 +97,36 @@ def test_cloudflare_checking_your_browser_still_detected():
 def test_checking_your_browser_substring_alone_is_not_bot_blocked():
     # The bare substring without the " before " anchor (e.g. ad-blocker help
     # text on real content pages) must not trigger a bot match.
-    benign = "<html><body>" + (
-        "We recommend checking your browser extensions and settings. " * 200
-    ) + "</body></html>"
+    benign = (
+        "<html><body>"
+        + ("We recommend checking your browser extensions and settings. " * 200)
+        + "</body></html>"
+    )
     assert is_bot_blocked(benign) is False
+
+
+@pytest.mark.parametrize(
+    "closing",
+    [
+        "</script>",
+        "</script >",
+        "</script\t\n>",
+        '</script foo="bar">',
+    ],
+)
+def test_html_to_text_strips_script_whatever_the_closing_tag(closing):
+    # Browsers accept whitespace and even attributes inside an end tag.
+    # Anchoring on a bare "</script>" left those blocks unmatched, the
+    # outer tag strip then removed only the tags, and the JavaScript body
+    # survived as text. Flagged by CodeQL as py/bad-tag-filter.
+    html = f"<html><body><script>var secret=1;{closing}Real text</body></html>"
+    assert html_to_text(html) == "Real text"
+
+
+@pytest.mark.parametrize("closing", ["</style>", "</style >", '</style x="1">'])
+def test_html_to_text_strips_style_whatever_the_closing_tag(closing):
+    html = f"<html><body><style>.a{{color:red}}{closing}Real text</body></html>"
+    assert html_to_text(html) == "Real text"
 
 
 def test_html_to_text_strips_scripts_styles_and_tags():

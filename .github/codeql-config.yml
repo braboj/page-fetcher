@@ -1,0 +1,8 @@
+name: "pagefetch CodeQL config"
+
+# The fixtures are captured HTML from real sites, kept byte-for-byte so
+# the detection tests run offline. They carry third-party inline and
+# minified JavaScript, which CodeQL reports against as if it were project
+# code. It is not — nothing in it executes here.
+paths-ignore:
+  - "pagefetch/tests/fixtures/**"
