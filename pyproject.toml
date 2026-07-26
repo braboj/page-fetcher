@@ -88,19 +88,7 @@ select = [
 # each tier as it succeeds. Collapsing that into one exit point would
 # need a result variable threaded through every branch, which reads worse
 # than the early returns.
-#
-# PLR0912 / PLR0915 (too many branches / statements): _run_batch is
-# genuinely too long at 64 statements, but the batch path has no test
-# coverage, so splitting it now would be an unverifiable refactor. Tests
-# first, then the split — tracked in issue #4.
-"pagefetch/network.py" = [
-    "BLE001",
-    "S110",
-    "PLC0415",
-    "PLR0911",
-    "PLR0912",
-    "PLR0915",
-]
+"pagefetch/network.py" = ["BLE001", "S110", "PLC0415", "PLR0911"]
 # S607 (partial executable path): `tasklist` is resolved via PATH on
 # purpose — hardcoding a System32 path breaks on non-default Windows
 # installs, and the call is already best-effort.
@@ -134,9 +122,10 @@ omit = ["pagefetch/tests/*"]
 
 [tool.coverage.report]
 show_missing = true
-# Sized from the measured baseline, not from a target picked by feel: the
-# package sits at ~46% because the browser-tier method bodies (most of
-# network.py and chrome.py) need a headed Chrome and are validated by
-# hand. This is a ratchet floor that must not regress, NOT a quality
-# claim — raise it as the testable surface grows. See ADR-002.
-fail_under = 45
+# Sized from the measured baseline, not from a target picked by feel.
+# Raised 45 -> 63 when the batch path was brought under test (#4); the
+# measured figure is ~65%. What is left uncovered is the browser-tier
+# method bodies, which need a headed Chrome and are validated by hand.
+# This is a ratchet floor that must not regress, NOT a quality claim —
+# raise it again as the testable surface grows. See ADR-002.
+fail_under = 63

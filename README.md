@@ -208,11 +208,12 @@ py -m mypy                  # type check
 py -m pytest --cov=pagefetch
 ```
 
-Coverage sits at roughly 47% with a floor of 45% that fails the build if it
-drops. That number is low because the browser tiers cannot run in CI at all;
-the logic that can be tested — detection, cache, options, the fake — is at
-94-100%. See [ADR-002](docs/decisions/002-python-toolchain-and-ci.md) for
-why the floor is measured rather than aspirational.
+Coverage sits at roughly 65% with a floor of 63% that fails the build if it
+drops. What remains uncovered is the browser-tier method bodies, which need
+a headed Chrome and cannot run in CI; everything reachable without one is
+tested, including the batch session lifecycle. See
+[ADR-002](docs/decisions/002-python-toolchain-and-ci.md) for why the floor
+is measured against reality rather than set to an aspiration.
 
 ## Configuration reference
 
