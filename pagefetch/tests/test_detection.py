@@ -105,6 +105,20 @@ def test_checking_your_browser_substring_alone_is_not_bot_blocked():
     assert is_bot_blocked(benign) is False
 
 
+def test_html_to_text_strips_script_with_spaced_closing_tag():
+    # `</script >` is valid HTML. Anchoring the pattern on a bare
+    # "</script>" left the block unmatched, the outer tag strip then
+    # removed only the tags, and the JavaScript body survived as text.
+    # Flagged by CodeQL as py/bad-tag-filter.
+    html = "<html><body><script >var secret=1;</script >Real text</body></html>"
+    assert html_to_text(html) == "Real text"
+
+
+def test_html_to_text_strips_style_with_spaced_closing_tag():
+    html = "<html><body><style>.a{color:red}</style >Real text</body></html>"
+    assert html_to_text(html) == "Real text"
+
+
 def test_html_to_text_strips_scripts_styles_and_tags():
     html = (
         "<html><head><style>.a{color:red}</style>"
