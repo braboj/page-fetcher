@@ -161,13 +161,21 @@ def main() -> None:
     )
     fetcher = NetworkFetcher(cache=cache)
 
-    if len(urls) == 1 and not output_dir:
-        result = fetcher.fetch(urls[0], opts)
-        sys.stdout.buffer.write(result.content.encode("utf-8", errors="replace"))
-        sys.stdout.buffer.write(b"\n")
-        return
+    # An unsupported scheme is a typo in the arguments, not a runtime
+    # fault — report it the way the cache-dir errors above are reported
+    # rather than with a traceback.
+    try:
+        if len(urls) == 1 and not output_dir:
+            result = fetcher.fetch(urls[0], opts)
+            sys.stdout.buffer.write(result.content.encode("utf-8", errors="replace"))
+            sys.stdout.buffer.write(b"\n")
+            return
 
-    results = fetcher.fetch_batch(urls, opts)
+        results = fetcher.fetch_batch(urls, opts)
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
     _write_batch_output(results, output_dir, mode)
 
 

@@ -4,6 +4,14 @@ Returns canned content from a URL-to-content map, with no network, no
 browser, and no disk. It records the URLs it was asked to fetch so tests
 can assert on call behavior. It is part of the public package surface so
 consumers (e.g. brand tools) can test their pipelines against it.
+
+One deliberate divergence from NetworkFetcher: this double accepts any
+key as a "URL", while NetworkFetcher rejects anything that is not http or
+https (see require_supported_scheme). The keys here are map lookups that
+never reach a socket, so the scheme carries no meaning and tests are free
+to use short labels. The cost is that a consumer passing an unsupported
+scheme sees it pass against the fake and raise against the real fetcher —
+validate at your own boundary if you accept URLs from elsewhere.
 """
 
 from pathlib import Path

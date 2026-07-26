@@ -23,6 +23,8 @@ on disk, and junk is kept out of the cache rather than re-served from it.
   straight to a headed browser
 - Ask for gzip and deflate and decode them, including from servers that
   compress without declaring it
+- Reject anything that is not an http or https URL, before a request is
+  made or a browser is launched
 - Cache responses on disk, keyed by URL and content mode, with no TTL
 - Self-heal a poisoned cache: junk entries are deleted on read and re-fetched
 - Sweep accumulated junk on demand with `--clean-cache`
@@ -376,6 +378,32 @@ three tiers and skips Nodriver with a stderr message.
 | viltrox.com        | urllib     | static HTML + Shopify JSON              |
 | mobile01.com       | UC         | Akamai blocks headless browsers         |
 | adorama.com        | BLOCKED    | PerimeterX "Press & Hold" — manual only |
+
+## URL schemes, and what this is not
+
+Every entry point rejects a URL whose scheme is not `http` or `https`,
+raising `ValueError` before any request or browser launch:
+
+```text
+>>> NetworkFetcher().fetch("file:///etc/passwd")
+ValueError: 'file:///etc/passwd' uses the 'file' scheme; pagefetch only
+fetches http, https
+```
+
+`urllib` would otherwise read that file and hand it back as page content.
+
+**This is a scheme allowlist, not SSRF protection.** It does nothing to
+stop an `http://` request to `localhost`, `169.254.169.254`, or anything
+else on a private network. If the URLs you pass originate from user input,
+a config you do not control, or a redirect chain, you still need your own
+filter — resolving the host and checking the address, re-checked after
+every redirect. `require_supported_scheme` and `ALLOWED_SCHEMES` are
+exported so you can apply the same check at your own boundary.
+
+That is a deliberate boundary rather than an omission; [ADR-003](docs/decisions/003-url-scheme-allowlist.md)
+records why blocking private ranges here would break ordinary intranet and
+localhost fetching while offering a guarantee this layer cannot honestly
+make.
 
 ## Known limitations
 
