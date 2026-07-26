@@ -18,6 +18,7 @@ are skipped gracefully.
 
 import gzip
 import sys
+import urllib.parse
 import zlib
 from pathlib import Path
 
@@ -60,6 +61,39 @@ ACCEPT_ENCODING = "gzip, deflate"
 # gzip streams start with these two bytes. Used to catch a server that
 # compresses without saying so — see _decompress.
 _GZIP_MAGIC = b"\x1f\x8b"
+
+# This package fetches web pages. urllib will happily open file://, ftp://
+# and a handful of other schemes, which for a page fetcher is never the
+# intent — and when a caller passes a URL that came from somewhere else,
+# file:// turns the fetcher into a file-read primitive.
+ALLOWED_SCHEMES = frozenset({"http", "https"})
+
+
+def require_supported_scheme(url: str) -> None:
+    """Raise ValueError unless `url` is http or https.
+
+    Called at every public entry point rather than deep in a tier, so a
+    bad URL fails before any browser is launched or any request is made.
+
+    This is a scheme allowlist and nothing more. It does NOT stop a
+    request to a loopback or private address over http — a caller passing
+    URLs that originate from untrusted input still has to filter those
+    itself. See ADR-003 for why that is deliberately out of scope here.
+    """
+    scheme = urllib.parse.urlsplit(url).scheme.lower()
+    if scheme in ALLOWED_SCHEMES:
+        return
+    allowed = ", ".join(sorted(ALLOWED_SCHEMES))
+    if not scheme:
+        # Plain ASCII on purpose: this reaches a terminal, and a Windows
+        # console in a legacy code page renders anything else as garbage.
+        raise ValueError(
+            f"{url!r} has no scheme; pagefetch needs an absolute URL "
+            f"({allowed}). Did you mean https://{url}?"
+        )
+    raise ValueError(
+        f"{url!r} uses the {scheme!r} scheme; pagefetch only fetches {allowed}"
+    )
 
 
 def _decompress(raw: bytes, content_encoding: str) -> bytes:
@@ -115,6 +149,7 @@ class NetworkFetcher(PageSource):
     # --- public PageSource interface ---------------------------------
 
     def fetch(self, url: str, options: FetchOptions | None = None) -> FetchResult:
+        require_supported_scheme(url)
         opts = options or FetchOptions()
         content, tier = self._fetch_single(url, opts)
         return FetchResult(url=url, content=content, tier_used=tier, ok=bool(content))
@@ -122,15 +157,25 @@ class NetworkFetcher(PageSource):
     def fetch_batch(
         self, urls: list[str], options: FetchOptions | None = None
     ) -> list[FetchResult]:
+        # Validate the whole list before starting: a batch launches a
+        # browser and can run for minutes, so failing on URL 87 of 100
+        # after all that work is worse than refusing up front.
+        for url in urls:
+            require_supported_scheme(url)
         opts = options or FetchOptions()
         return self._run_batch(urls, opts)
 
     def download_bytes(self, url: str, min_size: int = 0) -> bytes | None:
         import urllib.request
 
+        require_supported_scheme(url)
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": self._ua})
-            with urllib.request.urlopen(req, timeout=30) as resp:
+            # S310 wants proof the scheme is safe; require_supported_scheme
+            # above is that proof, but ruff cannot see across the call.
+            req = urllib.request.Request(  # noqa: S310
+                url, headers={"User-Agent": self._ua}
+            )
+            with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310
                 data = resp.read()
         except Exception as e:
             print(f"[download] {e}", file=sys.stderr)
@@ -142,6 +187,7 @@ class NetworkFetcher(PageSource):
     def screenshot(
         self, url: str, dest: Path, options: FetchOptions | None = None
     ) -> bool:
+        require_supported_scheme(url)
         opts = options or FetchOptions()
         try:
             from playwright.sync_api import sync_playwright
@@ -172,14 +218,20 @@ class NetworkFetcher(PageSource):
         import urllib.request
 
         try:
-            req = urllib.request.Request(
+            # S310 wants proof the scheme is safe. Every public entry point
+            # calls require_supported_scheme before reaching this tier, but
+            # ruff cannot see across those calls.
+            req = urllib.request.Request(  # noqa: S310
                 url,
                 headers={
                     "User-Agent": self._ua,
                     "Accept-Encoding": ACCEPT_ENCODING,
                 },
             )
-            with urllib.request.urlopen(req, timeout=30) as resp:
+            # S310 wants proof the scheme is safe. Every public entry point
+            # calls require_supported_scheme before reaching this tier, but
+            # ruff cannot see across those calls.
+            with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310
                 raw = resp.read()
                 content_encoding = resp.headers.get("Content-Encoding") or ""
         except urllib.error.HTTPError as e:

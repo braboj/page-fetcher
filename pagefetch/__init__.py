@@ -29,7 +29,12 @@ from .detection import (
     looks_like_real_content,
 )
 from .fake import FakeFetcher
-from .network import DEFAULT_USER_AGENT, NetworkFetcher
+from .network import (
+    ALLOWED_SCHEMES,
+    DEFAULT_USER_AGENT,
+    NetworkFetcher,
+    require_supported_scheme,
+)
 from .source import (
     ContentMode,
     FetchOptions,
@@ -39,6 +44,7 @@ from .source import (
 )
 
 __all__ = [
+    "ALLOWED_SCHEMES",
     "BOT_DETECTION_PATTERNS",
     "DEFAULT_USER_AGENT",
     "ERROR_PAGE_PATTERNS",
@@ -57,4 +63,5 @@ __all__ = [
     "is_cacheable_junk",
     "is_error_page",
     "looks_like_real_content",
+    "require_supported_scheme",
 ]

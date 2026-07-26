@@ -84,10 +84,6 @@ select = [
 # with none of them present. Hoisting them to module scope would make
 # every optional dependency mandatory.
 #
-# S310 (audit URL open for permitted schemes): flagged because a caller
-# could pass file:// or a custom scheme. Restricting the fetcher to
-# http/https is a behaviour change, tracked separately in issue #3.
-#
 # PLR0911 (too many returns): the escalation orchestrator returns from
 # each tier as it succeeds. Collapsing that into one exit point would
 # need a result variable threaded through every branch, which reads worse
@@ -101,7 +97,6 @@ select = [
     "BLE001",
     "S110",
     "PLC0415",
-    "S310",
     "PLR0911",
     "PLR0912",
     "PLR0915",
