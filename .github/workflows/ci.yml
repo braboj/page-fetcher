@@ -49,14 +49,23 @@ jobs:
         run: mypy
 
   test:
-    name: Test (${{ matrix.python-version }})
-    runs-on: ubuntu-latest
+    name: Test (${{ matrix.os }}, ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         # Both ends of the supported range. requires-python is >=3.10, so
         # 3.10 catches accidental use of newer syntax and 3.13 catches
         # deprecations before they become errors.
+        #
+        # Windows is here because chrome.py is Windows-only — it shells out
+        # to tasklist, and on Linux that call raises FileNotFoundError into
+        # a broad except, so every test touching the reaper exercises the
+        # no-op path. Without a Windows runner the one platform-specific
+        # module in the package was never run by CI on the platform it
+        # targets. Windows is also the documented development platform:
+        # every command in the README uses the `py` launcher.
+        os: [ubuntu-latest, windows-latest]
         python-version: ["3.10", "3.13"]
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
@@ -64,14 +73,17 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install
-        # Installing the package itself proves pyproject.toml is valid and
-        # that tier 1 genuinely needs no third-party dependency.
+        # Installing the package from pyproject.toml proves it is valid and
+        # that tier 1 genuinely needs no third-party dependency. The dev
+        # extra supplies the test tooling, so CI and a local checkout run
+        # the same declared versions rather than whatever pip resolves.
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e .
-          python -m pip install pytest pytest-cov
+          python -m pip install -e ".[dev]"
       - name: Test with coverage
         # The coverage floor lives in pyproject.toml; it fails the job.
+        # Linux and Windows cover different branches of chrome.py, so the
+        # floor has to hold on both.
         run: pytest --cov=pagefetch
 
   secrets:
