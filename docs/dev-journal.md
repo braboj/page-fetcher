@@ -6,30 +6,33 @@ git already holds.
 
 ---
 
-## 2026-07-30 — 360 audit and the P0 fixes
+## 2026-07-30 — 360 audit and full remediation
 
 **Tool**: Claude Code (Opus 5)
+
+Vendored the shared template system, audited the package against it, and
+closed every finding. 33 findings, 14 tickets, 14 PRs.
 
 **Changes**
 
 - Vendored `solid-ai-templates` as a submodule at
-  `docs/solid-ai-templates`, matching the path and URL used by
+  `docs/solid-ai-templates` (ADR-004), matching the path and URL used by
   `corrosim_repo` and `randomgen`.
 - Ran a 360-degree audit and stored it at `docs/audits/2026-07-30-360.md`.
-  The perspective set was re-projected per the template's headless rule —
-  pagefetch has no user-facing surface, so Discovery does not apply, Value
-  reduced to the README contract, and Quality split into five engineering
-  dimensions. Overall grade C-, weakest dimension Correctness.
-- Fixed the three P0s the audit found, each reproduced against the code
-  before being written up.
-- Raised the coverage floor 63 → 70; `__main__.py` went 39% → 87%.
-- Added the standard documents this file is part of.
+  Perspectives re-projected per the template's headless rule. Overall
+  grade C-, weakest dimension Correctness.
+- Fixed every finding. The three that mattered: detection predicates that
+  discarded real pages, a CLI that could not signal failure, and a reaper
+  that killed browsers it had not launched.
+- Added the standard documents — `CLAUDE.md` (hybrid model),
+  `ONBOARDING.md`, `PLAYBOOK.md`, and this file.
+- CI grew a Windows leg; the coverage floor ratcheted 63 → 70 → 76 against
+  ~79% measured. `__main__.py` 39% → 99%, `chrome.py` 72% → 100%,
+  `fake.py` → 100%. Suite 178 → 299 tests, and faster than it started.
 
-**PRs merged**: #26, #27, #28
+**PRs merged**: #26 through #39 (fourteen)
 
-**Issues closed**: #12, #13, #14, #17
-
-**Issues created**: #12 through #25
+**Issues created and closed**: #12 through #25
 
 **Decisions**
 
@@ -41,19 +44,46 @@ git already holds.
 - *Batch failure exits 2, not 1.* "Some pages are missing" and "nothing
   came back" call for different handling in a pipeline, and collapsing them
   would force the caller to count output files to tell them apart.
-- *The coverage floor sits below the measured figure.* It is measured on
-  Windows and enforced on Linux, where the `chrome.py` branches fall
-  differently. The margin is headroom, not slack.
+- *Chrome ownership is decided by process ancestry, not PID sampling.*
+  Two `tasklist` samples cannot establish that a PID belongs to this
+  process. Where ancestry cannot be established, nothing is tracked —
+  leaving a browser behind is a nuisance, killing someone's tabs is not.
+- *`use_cache=False` stays a refresh, not a bypass.* The audit called the
+  write a defect; it is deliberate and was already pinned by a test. The
+  README's "bypass cache" wording was what was wrong.
+- *Dependency floors were raised anyway.* `increase-if-necessary` is now
+  the Dependabot strategy, but the pending bumps were taken first at the
+  maintainer's direction, against the recommendation to close them. The
+  `browsers` extra and `setuptools` floors now exceed what the code needs.
 
 **Learned**
 
-- `gh pr merge --delete-branch` closes stacked PRs pointing at the deleted
-  branch rather than retargeting them. Recovery is to recreate the ref,
-  reopen, then retarget. Recorded in CLAUDE.md 2.1.
-- ruff walks the filesystem, not the git index, so a submodule is linted
-  even when it is not part of this repository's tracked files. CI never saw
-  it, because `actions/checkout` does not fetch submodules by default —
-  only the documented local gate broke.
+- *A test suite must not touch the host.* `pytest` killed a real Chrome
+  process on the development machine: no test launches a browser, but
+  `_start_nodriver_session` sampled the live process list for real even
+  behind a fake engine. A conftest fixture now stubs both queries. This is
+  what raised #21 from P2 to P0 mid-session.
+- *Read the tests before calling something a bug.* Audit finding C5 was
+  wrong — the behaviour it flagged was documented in a test written
+  precisely to stop a future tidy-up from changing it. The change was made
+  anyway and that test caught it.
+- *`gh pr merge --delete-branch` closes stacked PRs* pointing at the
+  deleted branch rather than retargeting them. Recovery: recreate the ref,
+  reopen, retarget. Recorded in CLAUDE.md 2.1. The same class of mistake
+  cost Dependabot PR #7, which closed itself when `dependabot.yml` changed
+  in an earlier-merged PR.
+- *ruff walks the filesystem, not the git index*, so a submodule is linted
+  even when untracked here. CI never saw it — `actions/checkout` does not
+  fetch submodules by default — so only the documented local gate broke.
+- *Linux and Windows cover different branches of `chrome.py`*, so the
+  coverage floor has to track the lowest matrix leg rather than any single
+  measurement.
+
+**Not done**
+
+- #9 (PerimeterX spike) remains open; it predates the audit.
+- ADR-002's coverage rationale is still accurate, but the floor has moved
+  three times since it was written.
 
 ---
 
