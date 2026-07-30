@@ -184,6 +184,11 @@ fetcher = NetworkFetcher(cache=FileCache(cache_dir=Path("/my/cache")))
 | `pagefetch/__main__.py`  | CLI entry point — a thin wrapper over the library  |
 | `pagefetch/tests/`       | pytest suite, including captured HTML fixtures     |
 | `docs/decisions/`        | Architecture Decision Records                      |
+| `docs/audits/`           | 360-degree audit reports, one per run              |
+| `docs/ONBOARDING.md`     | Fresh clone to a passing gate                      |
+| `docs/PLAYBOOK.md`       | Operational reference for recurring tasks          |
+| `docs/dev-journal.md`    | Session log — what changed and why                 |
+| `CLAUDE.md`              | Project rules for AI agents                        |
 | `pyproject.toml`         | Package metadata and every tool's configuration    |
 
 ## Development setup
@@ -441,6 +446,11 @@ make.
 
 ## Links
 
+- [Onboarding](docs/ONBOARDING.md) — fresh clone to a passing gate
+- [Playbook](docs/PLAYBOOK.md) — git workflow, adding a tier or a detection
+  pattern, the quality checks, maintenance
+- [Dev journal](docs/dev-journal.md) — what changed each session and why
+- [Audits](docs/audits/) — 360-degree assessments, one report per run
 - [Architecture Decision Records](docs/decisions/) —
   [ADR-001](docs/decisions/001-extract-pagefetch-into-standalone-repo.md)
   records this package's extraction from its original home, and
