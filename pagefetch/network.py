@@ -579,6 +579,43 @@ class NetworkFetcher(PageSource):
 
     # --- escalation orchestrator -------------------------------------
 
+    def _read_cache(self, url: str, opts: FetchOptions) -> str | None:
+        """Cached body for this URL, or None for a miss.
+
+        The single place the cache is read. use_cache=False is a miss by
+        definition: the flag gates serving, not storing — see _write_cache.
+
+        Defends against a poisoned cache: a cached body that is a
+        bot/throttle page OR a 404/gone error page is ignored, deleted, and
+        reported as a miss — so a cache written before these guards (or
+        before a product was discontinued) self-heals and the dead file
+        does not linger. Only the pattern checks apply here, not the size
+        threshold — cached TEXT-mode content of a real page can
+        legitimately be short.
+        """
+        if not opts.use_cache:
+            return None
+        cached = self._cache.read(url, opts.mode)
+        if cached is None:
+            return None
+        if is_cacheable_junk(cached):
+            self._cache.delete(url, opts.mode)
+            return None
+        return cached
+
+    def _write_cache(self, url: str, opts: FetchOptions, content: str) -> None:
+        """Cache a fetched body, if there is one.
+
+        The single place the cache is written. Deliberately NOT gated on
+        use_cache: the flag decides whether a cached body is *served*, not
+        whether a fresh one is stored, so use_cache=False is a refresh
+        rather than a bypass — it replaces the stale entry instead of
+        leaving it to be served next time. Pinned by
+        test_use_cache_false_still_populates_the_cache.
+        """
+        if content:
+            self._cache.write(url, opts.mode, content)
+
     def _fetch_single(
         self, url: str, opts: FetchOptions, sb_session=None
     ) -> tuple[str, str]:
@@ -589,27 +626,12 @@ class NetworkFetcher(PageSource):
         persistent Nodriver browser itself; sb_session lets a persistent
         UC session flow through to escalation.
         """
-        mode = opts.mode
-
-        if opts.use_cache:
-            cached = self._cache.read(url, mode)
-            if cached is not None:
-                # Defend against a poisoned cache: a cached body that is a
-                # bot/throttle page OR a 404/gone error page is ignored,
-                # deleted, and re-fetched — so a cache written before these
-                # guards (or before a product was discontinued) self-heals
-                # and the dead file does not linger. Only the pattern checks
-                # apply here, not the size threshold — cached TEXT-mode
-                # content of a real page can legitimately be short.
-                if is_cacheable_junk(cached):
-                    self._cache.delete(url, mode)
-                else:
-                    return cached, "cache"
+        cached = self._read_cache(url, opts)
+        if cached is not None:
+            return cached, "cache"
 
         content, tier = self._escalate(url, opts, sb_session)
-
-        if content:
-            self._cache.write(url, mode, content)
+        self._write_cache(url, opts, content)
         return content, tier
 
     def _escalate(self, url: str, opts: FetchOptions, sb_session) -> tuple[str, str]:
@@ -769,18 +791,30 @@ class NetworkFetcher(PageSource):
     def _fetch_one_in_batch(
         self, url: str, opts: FetchOptions, session: _BatchSession
     ) -> tuple[str, str]:
-        """Fetch one URL using the batch's session, if it has one."""
-        if session.drives_nodriver:
-            content = (
-                session.loop.run_until_complete(
-                    self._nodriver_fetch_with_browser(
-                        session.nd_browser, url, opts.mode, opts.wait_ms
-                    )
+        """Fetch one URL using the batch's session, if it has one.
+
+        The persistent-Nodriver path drives the browser directly instead of
+        going through _escalate, so it has to read and write the cache
+        itself. It used to do neither, which made a batch holding a headed
+        browser re-fetch every URL it already had.
+        """
+        if not session.drives_nodriver:
+            return self._fetch_single(url, opts, sb_session=session.sb_session)
+
+        cached = self._read_cache(url, opts)
+        if cached is not None:
+            return cached, "cache"
+
+        content = (
+            session.loop.run_until_complete(
+                self._nodriver_fetch_with_browser(
+                    session.nd_browser, url, opts.mode, opts.wait_ms
                 )
-                or ""
             )
-            return content, "nodriver" if content else "none"
-        return self._fetch_single(url, opts, sb_session=session.sb_session)
+            or ""
+        )
+        self._write_cache(url, opts, content)
+        return content, "nodriver" if content else "none"
 
     def _run_batch(self, urls: list[str], opts: FetchOptions) -> list[FetchResult]:
         """Fetch many URLs through one persistent browser session.
@@ -798,9 +832,11 @@ class NetworkFetcher(PageSource):
 
                 content, tier = self._fetch_one_in_batch(url, opts, session)
 
+                # No cache write here: _fetch_one_in_batch has already done
+                # it on whichever path it took. Writing again duplicated
+                # every entry, and rewrote a cache hit with its own bytes.
                 elapsed = time.monotonic() - started_at
                 if content:
-                    self._cache.write(url, opts.mode, content)
                     ok += 1
                     print(
                         f"[batch]   -> {len(content)} bytes ({elapsed:.1f}s)",

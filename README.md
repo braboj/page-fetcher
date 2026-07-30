@@ -96,7 +96,7 @@ py -m pagefetch <url> --js         # force Playwright
 py -m pagefetch <url> --nodriver   # force Nodriver (headed)
 py -m pagefetch <url> --uc         # force SeleniumBase UC
 py -m pagefetch <url> --wait 5000  # extra post-load wait (ms)
-py -m pagefetch <url> --no-cache   # bypass cache
+py -m pagefetch <url> --no-cache   # refetch, ignoring any cached copy
 py -m pagefetch <url> --cache-dir DIR
 ```
 
@@ -351,6 +351,12 @@ sweep, so the two never drift.
 The cache has no TTL — validity is decided by content, not age. Specs rarely
 change, discontinuation surfaces as a 404, and price refreshes are
 deliberate `--no-cache` passes.
+
+`--no-cache` is a refresh, not a bypass: it decides whether a cached body is
+_served_, not whether a fresh one is _stored_. The fetch ignores whatever is
+on disk and then replaces it, so the next ordinary fetch gets the new copy
+rather than the stale one it just skipped. Every path honors this the same
+way — single, batch, and a batch holding a persistent browser.
 
 ## Dependencies
 
