@@ -53,6 +53,11 @@ exclude = ["pagefetch.tests*"]
 [tool.ruff]
 line-length = 88
 target-version = "py310"
+# The vendored template system is a submodule with its own toolchain and
+# its own CI. Linting it here reports 85 errors that no commit in this
+# repository can fix, and breaks the `ruff check .` the README tells
+# contributors to run.
+extend-exclude = ["docs/solid-ai-templates"]
 
 [tool.ruff.lint]
 select = [
