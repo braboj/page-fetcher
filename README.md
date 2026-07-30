@@ -296,6 +296,17 @@ discontinued product is served as HTTP 200 with a "page not found" body. A
 genuine 404 is terminal: it is not cached and does not escalate, since every
 tier returns the same error.
 
+Because that verdict is terminal, two phrases are held to a higher bar. "No
+longer available" and "has been discontinued" mean the page is gone on a
+stub and mean one variant is out of stock in the body copy of a perfectly
+good product page, so they count only below the size floor, where there is
+too little else on the page for the phrase to be incidental. Everything
+else — a 404 or 410 title, "page not found", "the page you requested could
+not be found" — is decisive at any size. The same reasoning applies to
+throttle detection: "rate limit" on its own is ordinary technical prose and
+only registers alongside a word that a page actually being throttled would
+use.
+
 ### Event-driven waits
 
 Browser tiers poll rather than sleeping a fixed time. They wait for

@@ -11,6 +11,7 @@ from pagefetch import (
     looks_like_real_content,
 )
 from pagefetch.detection import (
+    AMBIGUOUS_ERROR_PAGE_PATTERNS,
     BOT_DETECTION_PATTERNS,
     ERROR_PAGE_PATTERNS,
     MIN_REAL_CONTENT_BYTES,
@@ -71,6 +72,38 @@ def test_each_bot_pattern_is_detected(snippet):
 def test_patterns_list_is_covered_by_parametrization():
     # Guard: if a new pattern is added, the parametrized test above must grow.
     assert len(BOT_DETECTION_PATTERNS) == 19
+
+
+@pytest.mark.parametrize(
+    "prose",
+    [
+        "Discussing rate limits in REST APIs and how to design them. ",
+        "The rate limit is 100 requests per minute for this endpoint. ",
+        "Rate limiting protects a service from a thundering herd. ",
+    ],
+)
+def test_rate_limit_in_ordinary_prose_is_not_bot_blocked(prose):
+    # #12: "Rate.?limit" matched the bare phrase, so an article about API
+    # rate limiting was unfetchable — every tier applies this same gate, so
+    # there was no escalation path that could return the page.
+    article = "<html><title>API design</title><body>" + (prose * 200) + "</body></html>"
+    assert is_bot_blocked(article) is False
+    assert looks_like_real_content(article) is True
+
+
+@pytest.mark.parametrize(
+    "snippet",
+    [
+        "Rate limit exceeded",
+        "Rate limits exceeded, please slow down",
+        "You have reached your rate limit",
+        "rate-limited — try again in 60 seconds",
+    ],
+)
+def test_real_throttle_wording_is_still_detected(snippet):
+    # Guard against tightening the pattern until genuine throttle pages slip
+    # through, the same way the Cloudflare pattern is guarded above.
+    assert is_bot_blocked(f"<html><body>{snippet}</body></html>") is True
 
 
 def test_dpreview_real_body_is_not_bot_blocked():
@@ -179,8 +212,6 @@ def test_big_real_page_is_not_an_error_page():
         "<p>Page Not Found</p>",
         "The page you requested could not be found",
         "This product is no longer available",
-        "This item is no longer available for purchase",
-        "This model has been discontinued",
     ],
 )
 def test_each_error_pattern_is_detected(snippet):
@@ -190,7 +221,55 @@ def test_each_error_pattern_is_detected(snippet):
 
 def test_error_patterns_list_is_covered_by_parametrization():
     # Guard: if a new error pattern is added, the parametrized test must grow.
-    assert len(ERROR_PAGE_PATTERNS) == 9
+    assert len(ERROR_PAGE_PATTERNS) == 7
+    assert len(AMBIGUOUS_ERROR_PAGE_PATTERNS) == 2
+
+
+@pytest.mark.parametrize(
+    "aside",
+    [
+        "Note: the silver finish is no longer available.",
+        "The original 2019 model has been discontinued.",
+    ],
+)
+def test_ambiguous_phrase_in_body_copy_of_a_real_page_is_not_an_error(aside):
+    # #12: these phrases were unanchored, so a real product page mentioning
+    # a dead variant read as a soft-404. That verdict is terminal in AUTO
+    # mode — no escalation, no cache, no content — so the page was lost.
+    page = (
+        "<html><head><title>Canon RF 50mm f/1.2L USM Lens</title></head><body>"
+        + ("<p>Full specifications and sample images. " * 400)
+        + f"<p>{aside}</p></body></html>"
+    )
+    assert len(page) >= MIN_REAL_CONTENT_BYTES
+    assert is_error_page(page) is False
+    assert looks_like_real_content(page) is True
+    assert is_cacheable_junk(page) is False
+
+
+@pytest.mark.parametrize(
+    "snippet",
+    [
+        "This item is no longer available for purchase",
+        "This model has been discontinued",
+    ],
+)
+def test_ambiguous_phrase_on_a_small_page_is_still_an_error(snippet):
+    # The soft-404 case the phrases exist for: a discontinued product served
+    # as HTTP 200 with a stub body. Below the size floor there is too little
+    # else on the page for the phrase to be incidental.
+    stub = f"<html><body><p>{snippet}</p></body></html>"
+    assert len(stub) < MIN_REAL_CONTENT_BYTES
+    assert is_error_page(stub) is True
+    assert is_cacheable_junk(stub) is True
+
+
+def test_unambiguous_error_wording_is_detected_at_any_size():
+    # The strong patterns keep working on a big soft-404, so a site that
+    # pads its 404 page past the size floor is still caught.
+    big_404 = "<title>Page Not Found</title>" + ("filler " * 5000)
+    assert len(big_404) >= MIN_REAL_CONTENT_BYTES
+    assert is_error_page(big_404) is True
 
 
 def test_error_page_even_when_large_is_not_real_content():
