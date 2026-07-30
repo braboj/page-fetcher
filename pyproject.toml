@@ -128,9 +128,12 @@ omit = ["pagefetch/tests/*"]
 [tool.coverage.report]
 show_missing = true
 # Sized from the measured baseline, not from a target picked by feel.
-# Raised 45 -> 63 when the batch path was brought under test (#4); the
-# measured figure is ~65%. What is left uncovered is the browser-tier
-# method bodies, which need a headed Chrome and are validated by hand.
-# This is a ratchet floor that must not regress, NOT a quality claim —
-# raise it again as the testable surface grows. See ADR-002.
-fail_under = 63
+# Raised 45 -> 63 when the batch path was brought under test (#4), then
+# 63 -> 70 when the CLI was covered (#13, #14) and __main__ went from 39%
+# to 87%. The measured figure is ~73%; the gap is headroom for the small
+# platform differences between this floor's Windows measurement and the
+# Linux runners. What is left uncovered is the browser-tier method bodies,
+# which need a headed Chrome and are validated by hand. This is a ratchet
+# floor that must not regress, NOT a quality claim — raise it again as the
+# testable surface grows. See ADR-002.
+fail_under = 70
