@@ -31,7 +31,14 @@ BOT_DETECTION_PATTERNS = [
     # throttle pages, Cloudflare challenge runtime, generic 429 pages).
     r"<title>429\b",
     r"Too Many Requests",
-    r"Rate.?limit",
+    # "rate limit" is ordinary technical prose — an article about API design
+    # says it in passing. Require a word that only a page *being* throttled
+    # uses, so "discussing rate limits in REST APIs" no longer reads as a
+    # throttle interstitial. Real throttle bodies are still caught by the
+    # 429 title, "Too Many Requests", the PerimeterX markers, and the
+    # MIN_REAL_CONTENT_BYTES floor.
+    r"rate.?limit\w*\b[^.<]{0,40}\b(?:exceeded|reached|try again)"
+    r"|\b(?:exceeded|reached)\b[^.<]{0,40}\brate.?limit",
     r"unusual traffic",
     r"detected (?:a|an) (?:translation|automated)",
     r"challenge-platform",  # Cloudflare challenge runtime script
@@ -64,9 +71,36 @@ ERROR_PAGE_PATTERNS = [
     r"Page Not Found",
     r"page (?:you (?:requested|are looking for)|could not be found)",
     r"This product is no longer available",
+]
+
+# Phrases that mean "this page is gone" on an error stub and "one variant is
+# out of stock" in the body copy of a perfectly good product page. A real
+# 17 KB lens page reading "the silver finish is no longer available" was
+# classified as a soft-404 and failed terminally — no escalation, no cache,
+# no content — which is the worst way to lose a page that was there all
+# along. They carry weight only below MIN_REAL_CONTENT_BYTES, where there is
+# too little else on the page for the phrase to be incidental.
+AMBIGUOUS_ERROR_PAGE_PATTERNS = [
     r"no longer available",
     r"has been discontinued",
 ]
+
+
+def _matches_any(patterns: list[str], html: str) -> bool:
+    """True if any pattern hits the raw head or the de-tagged text.
+
+    Both forms are scanned because bot and error pages embed their text in
+    JS/CSS-heavy wrappers: the raw head catches markup-bound markers (a
+    <title>, a script src), the de-tagged text catches prose broken across
+    tags.
+    """
+    head = html[:5000]
+    text = re.sub(r"<[^>]+>", " ", html[:20000])
+    return any(
+        re.search(pattern, head, re.IGNORECASE)
+        or re.search(pattern, text, re.IGNORECASE)
+        for pattern in patterns
+    )
 
 
 def is_bot_blocked(html: str) -> bool:
@@ -78,15 +112,7 @@ def is_bot_blocked(html: str) -> bool:
         and "refresh" in html.lower()
     ):
         return True
-    # Strip tags for pattern matching — bot pages embed text in JS/CSS-heavy
-    # wrappers, so check both the raw head and the de-tagged text.
-    text = re.sub(r"<[^>]+>", " ", html[:20000])
-    for pattern in BOT_DETECTION_PATTERNS:
-        if re.search(pattern, html[:5000], re.IGNORECASE):
-            return True
-        if re.search(pattern, text, re.IGNORECASE):
-            return True
-    return False
+    return _matches_any(BOT_DETECTION_PATTERNS, html)
 
 
 def looks_like_real_content(html: str, min_bytes: int = MIN_REAL_CONTENT_BYTES) -> bool:
@@ -109,14 +135,18 @@ def is_error_page(html: str) -> bool:
     Covers hard 404s and soft-404s (HTTP 200 with a "not found" / "no longer
     available" body). Used to keep error pages out of the cache and to scrub
     a previously-cached error body so it self-heals on the next fetch.
+
+    A verdict here is terminal in AUTO mode — the fetcher does not escalate,
+    because every tier would return the same error — so the ambiguous
+    phrases are held to the extra size condition described at
+    AMBIGUOUS_ERROR_PAGE_PATTERNS rather than being allowed to fail a real
+    page on one sentence of body copy.
     """
-    text = re.sub(r"<[^>]+>", " ", html[:20000])
-    for pattern in ERROR_PAGE_PATTERNS:
-        if re.search(pattern, html[:5000], re.IGNORECASE):
-            return True
-        if re.search(pattern, text, re.IGNORECASE):
-            return True
-    return False
+    if _matches_any(ERROR_PAGE_PATTERNS, html):
+        return True
+    return len(html) < MIN_REAL_CONTENT_BYTES and _matches_any(
+        AMBIGUOUS_ERROR_PAGE_PATTERNS, html
+    )
 
 
 def is_cacheable_junk(html: str) -> bool:

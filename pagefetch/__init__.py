@@ -19,6 +19,7 @@ directory, a git submodule, or clone it on its own.
 
 from .cache import CleanReport, FileCache
 from .detection import (
+    AMBIGUOUS_ERROR_PAGE_PATTERNS,
     BOT_DETECTION_PATTERNS,
     ERROR_PAGE_PATTERNS,
     MIN_REAL_CONTENT_BYTES,
@@ -45,6 +46,7 @@ from .source import (
 
 __all__ = [
     "ALLOWED_SCHEMES",
+    "AMBIGUOUS_ERROR_PAGE_PATTERNS",
     "BOT_DETECTION_PATTERNS",
     "DEFAULT_USER_AGENT",
     "ERROR_PAGE_PATTERNS",
