@@ -59,7 +59,9 @@ _BARE_FLAGS = {
     "--uc",
     "--clean-cache",
     "--dry-run",
+    "--help",
 }
+_HELP_FLAGS = {"--help", "-h"}
 
 
 def _parse_transport(argv: list[str]) -> Transport:
@@ -78,6 +80,27 @@ def _flag_value(argv: list[str], flag: str) -> str | None:
         if idx + 1 < len(argv):
             return argv[idx + 1]
     return None
+
+
+def _unknown_flags(argv: list[str]) -> list[str]:
+    """Arguments that look like flags but are not recognized.
+
+    Skips the value that follows a value flag, exactly as _collect_urls
+    does, so `--batch -` does not report "-" and a value that happens to
+    start with a dash is never read as a flag.
+    """
+    unknown: list[str] = []
+    skip_next = False
+    for arg in argv[1:]:
+        if skip_next:
+            skip_next = False
+            continue
+        if arg in _VALUE_FLAGS:
+            skip_next = True
+            continue
+        if arg.startswith("--") and arg not in _BARE_FLAGS:
+            unknown.append(arg)
+    return unknown
 
 
 def _collect_urls(argv: list[str], batch_file: str | None) -> list[str]:
@@ -146,7 +169,20 @@ def main() -> None:
     argv = sys.argv
     if len(argv) < _MIN_ARGV_WITH_TARGET:
         print(__doc__)
-        sys.exit(1)
+        sys.exit(EXIT_ALL_FAILED)
+
+    if _HELP_FLAGS.intersection(argv[1:]):
+        print(__doc__)
+        return
+
+    # Checked before anything else acts on argv. A discarded flag used to
+    # mean the command ran with the default instead — and for --clean-cache
+    # that inverts the operation, since a mistyped --dry-run deletes.
+    unknown = _unknown_flags(argv)
+    if unknown:
+        print(f"Error: unknown flag: {', '.join(unknown)}", file=sys.stderr)
+        print("Run `py -m pagefetch --help` for usage.", file=sys.stderr)
+        sys.exit(EXIT_ALL_FAILED)
 
     try:
         cache = _make_cache(argv)
@@ -168,7 +204,7 @@ def main() -> None:
     urls = _collect_urls(argv, batch_file)
     if not urls:
         print(__doc__)
-        sys.exit(1)
+        sys.exit(EXIT_ALL_FAILED)
 
     opts = FetchOptions(
         mode=mode, transport=transport, wait_ms=wait_ms, use_cache=use_cache
