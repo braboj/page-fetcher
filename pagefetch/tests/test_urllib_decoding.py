@@ -157,6 +157,73 @@ def test_tier_advertises_only_encodings_it_can_undo(fetcher, monkeypatch):
     assert "zstd" not in ACCEPT_ENCODING
 
 
+@pytest.mark.parametrize("header", ["br", "zstd", "BR", " compress "])
+def test_decompress_rejects_an_encoding_it_cannot_undo(header):
+    # #16: these used to fall through and be returned unchanged, so the
+    # compressed bytes became mojibake that cleared the size floor and was
+    # cached as if it were a page.
+    with pytest.raises(ValueError, match="unsupported Content-Encoding"):
+        _decompress(b"\x1b\x2a\x00\x84not-html-at-all", header)
+
+
+@pytest.mark.parametrize("header", ["gzip, br", "br, gzip", "deflate, zstd"])
+def test_decompress_rejects_a_chained_encoding(header):
+    # A chain has to be undone in reverse, and any link this tier cannot
+    # undo makes the whole body unreadable. Rejected even when one link is
+    # gzip and the body still carries the gzip magic bytes.
+    with pytest.raises(ValueError, match="chained Content-Encoding"):
+        _decompress(gzip.compress(b"<html>hi</html>"), header)
+
+
+@pytest.mark.parametrize("header", ["identity", "", "  ", "identity, gzip"])
+def test_decompress_treats_identity_as_no_encoding(header):
+    # identity is the no-op encoding; it must not be read as unsupported,
+    # and it must not make a single real encoding look like a chain.
+    body = gzip.compress(b"<html>hi</html>") if "gzip" in header else b"<html>hi</html>"
+    expected = b"<html>hi</html>"
+    assert _decompress(body, header) == expected
+
+
+def test_unsupported_encoding_escalates_instead_of_returning_garbage(
+    fetcher, monkeypatch
+):
+    # The tier fails and the ladder carries on — a browser tier negotiates
+    # its own encoding and may well succeed where urllib could not.
+    calls: list[str] = []
+
+    def fail_tier(name):
+        def _tier(*args, **kwargs):
+            calls.append(name)
+            return ""
+
+        return _tier
+
+    monkeypatch.setattr(fetcher, "_fetch_playwright", fail_tier("playwright"))
+    monkeypatch.setattr(fetcher, "_fetch_nodriver", fail_tier("nodriver"))
+    monkeypatch.setattr(fetcher, "_fetch_uc", fail_tier("uc"))
+
+    with _served(monkeypatch, PAGE_HTML.encode(), {"Content-Encoding": "br"}):
+        result = fetcher.fetch("https://x.test", FetchOptions(use_cache=False))
+
+    assert calls == ["playwright", "nodriver", "uc"]
+    assert result.ok is False
+    assert result.content == ""
+
+
+def test_unsupported_encoding_body_is_not_cached(fetcher, monkeypatch, cache):
+    # The body is big enough to clear the size floor, which is exactly why
+    # it used to be cached.
+    monkeypatch.setattr(fetcher, "_fetch_playwright", lambda *a, **k: "")
+    monkeypatch.setattr(fetcher, "_fetch_nodriver", lambda *a, **k: "")
+    monkeypatch.setattr(fetcher, "_fetch_uc", lambda *a, **k: "")
+    assert len(PAGE_HTML) > MIN_REAL_CONTENT_BYTES
+
+    with _served(monkeypatch, PAGE_HTML.encode(), {"Content-Encoding": "zstd"}):
+        fetcher.fetch("https://x.test", FetchOptions(use_cache=True))
+
+    assert cache.read("https://x.test", ContentMode.TEXT) is None
+
+
 def test_undecompressable_body_escalates_instead_of_returning_garbage(
     fetcher, monkeypatch
 ):

@@ -22,7 +22,8 @@ on disk, and junk is kept out of the cache rather than re-served from it.
 - Skip a tier that cannot help — a bot wall sends the fetcher past headless
   straight to a headed browser
 - Ask for gzip and deflate and decode them, including from servers that
-  compress without declaring it
+  compress without declaring it — and escalate rather than hand back a
+  body in an encoding it cannot undo
 - Reject anything that is not an http or https URL, before a request is
   made or a browser is launched
 - Cache responses on disk, keyed by URL and content mode, with no TTL

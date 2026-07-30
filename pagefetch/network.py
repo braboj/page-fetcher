@@ -62,6 +62,11 @@ _ERROR_PAGE = "@@ERROR_PAGE@@"
 # becomes unreadable.
 ACCEPT_ENCODING = "gzip, deflate"
 
+# What ACCEPT_ENCODING asks for, as tokens. A response carrying anything
+# else means the server ignored the request header, which happens — and a
+# body we cannot undo must fail the tier rather than flow on as content.
+DECODABLE_ENCODINGS = frozenset({"gzip", "deflate"})
+
 # gzip streams start with these two bytes. Used to catch a server that
 # compresses without saying so — see _decompress.
 _GZIP_MAGIC = b"\x1f\x8b"
@@ -109,8 +114,21 @@ def _decompress(raw: bytes, content_encoding: str) -> bytes:
     text it becomes mojibake, which is comfortably larger than
     MIN_REAL_CONTENT_BYTES, so it passes the real-content gate and is
     written to the cache as if it were a page.
+
+    Raises ValueError when the body declares an encoding this tier cannot
+    undo. Handing those bytes back unchanged produces exactly the mojibake
+    described above — the failure this function exists to prevent, arrived
+    at from the other direction.
     """
-    encoding = content_encoding.lower().strip()
+    # A chain ("gzip, br") would have to be undone in reverse order, and
+    # any link this tier cannot undo makes the whole body unreadable.
+    # identity is the no-op encoding and carries no information.
+    tokens = [t.strip() for t in content_encoding.lower().split(",")]
+    tokens = [t for t in tokens if t and t != "identity"]
+    if len(tokens) > 1:
+        raise ValueError(f"chained Content-Encoding {content_encoding!r}")
+    encoding = tokens[0] if tokens else ""
+
     if encoding == "gzip" or raw[:2] == _GZIP_MAGIC:
         return gzip.decompress(raw)
     if encoding == "deflate":
@@ -119,6 +137,8 @@ def _decompress(raw: bytes, content_encoding: str) -> bytes:
         except zlib.error:
             # Some servers send a raw deflate stream with no zlib header.
             return zlib.decompress(raw, -zlib.MAX_WBITS)
+    if encoding and encoding not in DECODABLE_ENCODINGS:
+        raise ValueError(f"unsupported Content-Encoding {encoding!r}")
     return raw
 
 
@@ -293,7 +313,9 @@ class NetworkFetcher(PageSource):
 
         try:
             html = _decompress(raw, content_encoding).decode("utf-8", errors="replace")
-        except (OSError, EOFError, zlib.error) as e:
+        # ValueError is _decompress rejecting an encoding it cannot undo;
+        # the rest are a declared encoding whose body does not match it.
+        except (OSError, EOFError, ValueError, zlib.error) as e:
             # A body we cannot decompress is not content. Escalating beats
             # handing back mojibake that would pass the size gate and be
             # cached as if it were a page.
