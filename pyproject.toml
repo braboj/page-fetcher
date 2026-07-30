@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=77"]
+requires = ["setuptools>=83.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -28,13 +28,13 @@ dependencies = []
 # Tier 2 needs `playwright install chromium` after pip install.
 # Tier 3 (nodriver) is AGPL-3.0 — see the README's Dependencies section
 # before shipping a network service built on it.
-browsers = ["playwright>=1.40", "nodriver>=0.35", "seleniumbase>=4.20"]
+browsers = ["playwright>=1.61.0", "nodriver>=0.50.3", "seleniumbase>=4.51.8"]
 dev = [
     "ruff>=0.16",
-    "mypy>=1.11",
-    "pytest>=8.0",
-    "pytest-cov>=5.0",
-    "pre-commit>=3.7",
+    "mypy>=2.3.0",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "pre-commit>=4.6.1",
 ]
 
 [project.urls]
