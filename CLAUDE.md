@@ -25,7 +25,7 @@ Project-specific overrides and additions follow below.
 
 ### 1.1 Overview
 
-- Model: hybrid
+- **Model**: hybrid
 - **Owner**: Branimir Georgiev
 - **Repo**: github.com/braboj/page-fetcher
 - **Stack**: Python 3.10+, standard library only for tier 1
@@ -142,8 +142,9 @@ Follow `templates/base/core/testing.md` and
   hand; they are the bulk of what is uncovered
 - The coverage floor in `pyproject.toml` is a ratchet — raise it against
   the measured figure, never lower it to make a change pass (ADR-002)
-- Leave the floor a few points under the measured figure: it is measured
-  on Windows and enforced on Linux runners
+- Leave the floor a few points under the measured figure: it is enforced
+  on every matrix leg, and Linux and Windows cover different branches of
+  `chrome.py`
 - `Gate` is the single required status check — a job added to `ci.yml` is
   covered by it automatically
 

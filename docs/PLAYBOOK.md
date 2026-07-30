@@ -142,8 +142,9 @@ py -m pytest -k detection             # one area
 
 The suite needs no network and no browser. The coverage floor is a ratchet:
 raise it against the measured figure when the testable surface grows, never
-lower it to make a change pass (ADR-002). Leave a few points of headroom —
-the figure is measured on Windows and enforced on Linux runners.
+lower it to make a change pass (ADR-002). Leave a few points of headroom:
+the floor is enforced on every matrix leg, and Linux and Windows cover
+different branches of `chrome.py`, so they do not report the same figure.
 
 ### 3.4 Secret scanning (gitleaks)
 
