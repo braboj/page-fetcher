@@ -150,6 +150,14 @@ from pagefetch import FakeFetcher
 assert scrape(FakeFetcher({url: "<html>...</html>"}), url) == "<html>...</html>"
 ```
 
+Map values are page bodies — the HTML a real fetch would have returned.
+`FakeFetcher` derives TEXT mode from them the same way `NetworkFetcher`
+does, by stripping tags, so code that reads both modes sees them differ
+under test as it will in production. Canned content with no markup comes
+back unchanged apart from collapsed whitespace. `screenshot` writes a
+placeholder PNG to the destination rather than only reporting success, so
+a test may assert the file exists.
+
 | Symbol           | Purpose                                         |
 | ---------------- | ----------------------------------------------- |
 | `PageSource`     | Abstract base — the transport interface         |
