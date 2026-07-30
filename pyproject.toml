@@ -128,14 +128,15 @@ omit = ["pagefetch/tests/*"]
 [tool.coverage.report]
 show_missing = true
 # Sized from the measured baseline, not from a target picked by feel.
-# Raised 45 -> 63 when the batch path was brought under test (#4), then
-# 63 -> 70 when the CLI was covered (#13, #14) and __main__ went from 39%
-# to 87%. The measured figure is ~73%; the gap is headroom for the platform
-# differences between the Linux and Windows runners, which cover different
-# branches of chrome.py and so cannot both sit at the same figure. The
-# floor has to hold on every matrix leg, so it tracks the lowest of them.
-# What is left uncovered is the browser-tier method bodies,
-# which need a headed Chrome and are validated by hand. This is a ratchet
-# floor that must not regress, NOT a quality claim — raise it again as the
-# testable surface grows. See ADR-002.
-fail_under = 70
+# Raised 45 -> 63 when the batch path was brought under test (#4), 63 -> 70
+# when the CLI first came under test (#13, #14), and 70 -> 76 when the
+# remaining argument parsing did (#22, #24) — __main__ reached 99%, all but
+# the __main__ guard. The measured figure is ~79%. The floor has to hold on
+# every matrix leg, so it tracks the lowest; the legs sit within a fraction
+# of a point of each other now that chrome.py no longer queries the host,
+# but the gap stays as headroom rather than being spent. What is left
+# uncovered is the browser-tier method bodies, which need a headed Chrome
+# and are validated by hand. This is a ratchet floor that must not regress,
+# NOT a quality claim — raise it again as the testable surface grows. See
+# ADR-002.
+fail_under = 76

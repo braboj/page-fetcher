@@ -36,7 +36,7 @@ from pathlib import Path
 from .cache import FileCache
 from .detection import is_bot_blocked, is_error_page
 from .network import NetworkFetcher
-from .source import ContentMode, FetchOptions, Transport
+from .source import DEFAULT_WAIT_MS, ContentMode, FetchOptions, Transport
 
 # argv[0] is the program name, so anything useful needs at least one more.
 _MIN_ARGV_WITH_TARGET = 2
@@ -72,6 +72,28 @@ def _parse_transport(argv: list[str]) -> Transport:
     if "--js" in argv:
         return Transport.PLAYWRIGHT
     return Transport.AUTO
+
+
+def _parse_wait_ms(argv: list[str]) -> int:
+    """Milliseconds for --wait, defaulting to DEFAULT_WAIT_MS.
+
+    Raises ValueError so main() reports it the way every other bad
+    argument is reported. Parsing this inline used to put an unguarded
+    int() in main's body, so `--wait abc` produced a traceback where an
+    unusable --cache-dir produced a clean message.
+    """
+    raw = _flag_value(argv, "--wait")
+    if raw is None:
+        return DEFAULT_WAIT_MS
+    try:
+        wait_ms = int(raw)
+    except ValueError:
+        raise ValueError(
+            f"--wait expects a whole number of milliseconds, got {raw!r}"
+        ) from None
+    if wait_ms < 0:
+        raise ValueError(f"--wait cannot be negative, got {wait_ms}")
+    return wait_ms
 
 
 def _flag_value(argv: list[str], flag: str) -> str | None:
@@ -123,9 +145,11 @@ def _collect_urls(argv: list[str], batch_file: str | None) -> list[str]:
         else:
             batch_path = Path(batch_file)
             if not batch_path.exists():
-                print(f"Batch file not found: {batch_file}", file=sys.stderr)
-                sys.exit(1)
+                print(f"Error: batch file not found: {batch_file}", file=sys.stderr)
+                sys.exit(EXIT_ALL_FAILED)
             lines = batch_path.read_text(encoding="utf-8").splitlines()
+        # Blank lines and # comments let a URL list be annotated and
+        # partially disabled without deleting entries.
         for raw_line in lines:
             line = raw_line.strip()
             if line and not line.startswith("#"):
@@ -184,11 +208,15 @@ def main() -> None:
         print("Run `py -m pagefetch --help` for usage.", file=sys.stderr)
         sys.exit(EXIT_ALL_FAILED)
 
+    # Both the cache directory and --wait are rejected here rather than
+    # deeper in, so a bad argument never reaches a fetch and always
+    # reports the same way.
     try:
         cache = _make_cache(argv)
+        wait_ms = _parse_wait_ms(argv)
     except ValueError as e:
         print(f"Error: {e}", file=sys.stderr)
-        sys.exit(1)
+        sys.exit(EXIT_ALL_FAILED)
 
     if "--clean-cache" in argv:
         _clean_cache(cache, dry_run="--dry-run" in argv)
@@ -197,7 +225,6 @@ def main() -> None:
     mode = ContentMode.HTML if "--html" in argv else ContentMode.TEXT
     transport = _parse_transport(argv)
     use_cache = "--no-cache" not in argv
-    wait_ms = int(_flag_value(argv, "--wait") or 500)
     output_dir = _flag_value(argv, "--output-dir")
     batch_file = _flag_value(argv, "--batch")
 

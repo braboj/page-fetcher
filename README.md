@@ -202,10 +202,11 @@ pre-commit install
 py -m pytest
 ```
 
-Expect 98 passing tests in well under a second. The escalation logic is
-tested by stubbing the four tier methods, so the suite needs no network and
-no browser. The browser-tier method bodies require headed Chrome and are
-validated by hand.
+The suite runs in a couple of seconds and touches nothing outside the
+repository: no network, no browser, and no query of the host's process
+list. The escalation logic is tested by stubbing the four tier methods.
+The browser-tier method bodies require headed Chrome and are validated by
+hand.
 
 To exercise the browser tiers locally, add the optional engines:
 
