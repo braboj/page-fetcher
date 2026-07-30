@@ -121,6 +121,19 @@ py -m pagefetch --clean-cache --dry-run   # list junk, delete nothing
 
 `--dry-run` prints the entries it would remove and exits without deleting.
 
+### Exit codes
+
+| Code | Meaning                                                     |
+| ---- | ----------------------------------------------------------- |
+| 0    | Every requested URL returned content                        |
+| 1    | Nothing came back, or the arguments were rejected           |
+| 2    | A batch returned content for some URLs but not all          |
+
+A failed fetch writes nothing to stdout, so `py -m pagefetch "$url" >
+page.txt && process page.txt` stops rather than processing an empty file.
+Partial batch failure has its own code because "some pages are missing" and
+"nothing came back" usually call for different handling.
+
 ### Library
 
 Inject a `PageSource` into your own code so it can be faked in tests:

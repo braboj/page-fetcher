@@ -23,6 +23,11 @@ Usage:
 
     py -m pagefetch <url> --cache-dir DIR          # use a specific cache dir
                                                    # (overrides $PAGEFETCH_CACHE_DIR)
+
+Exit codes:
+    0   every requested URL returned content
+    1   nothing came back, or the arguments were rejected
+    2   a batch returned content for some URLs but not all
 """
 
 import sys
@@ -36,6 +41,15 @@ from .source import ContentMode, FetchOptions, Transport
 # argv[0] is the program name, so anything useful needs at least one more.
 _MIN_ARGV_WITH_TARGET = 2
 
+# Exit codes. A fetch that returns nothing used to exit 0, so a caller
+# writing `pagefetch "$url" > page.txt && process page.txt` processed an
+# empty file and never knew. Partial batch failure gets its own code
+# because "some pages are missing" and "nothing came back" call for
+# different handling in a pipeline.
+EXIT_OK = 0
+EXIT_ALL_FAILED = 1
+EXIT_PARTIAL = 2
+
 _VALUE_FLAGS = {"--wait", "--batch", "--output-dir", "--cache-dir"}
 _BARE_FLAGS = {
     "--html",
@@ -45,7 +59,9 @@ _BARE_FLAGS = {
     "--uc",
     "--clean-cache",
     "--dry-run",
+    "--help",
 }
+_HELP_FLAGS = {"--help", "-h"}
 
 
 def _parse_transport(argv: list[str]) -> Transport:
@@ -64,6 +80,27 @@ def _flag_value(argv: list[str], flag: str) -> str | None:
         if idx + 1 < len(argv):
             return argv[idx + 1]
     return None
+
+
+def _unknown_flags(argv: list[str]) -> list[str]:
+    """Arguments that look like flags but are not recognized.
+
+    Skips the value that follows a value flag, exactly as _collect_urls
+    does, so `--batch -` does not report "-" and a value that happens to
+    start with a dash is never read as a flag.
+    """
+    unknown: list[str] = []
+    skip_next = False
+    for arg in argv[1:]:
+        if skip_next:
+            skip_next = False
+            continue
+        if arg in _VALUE_FLAGS:
+            skip_next = True
+            continue
+        if arg.startswith("--") and arg not in _BARE_FLAGS:
+            unknown.append(arg)
+    return unknown
 
 
 def _collect_urls(argv: list[str], batch_file: str | None) -> list[str]:
@@ -132,7 +169,20 @@ def main() -> None:
     argv = sys.argv
     if len(argv) < _MIN_ARGV_WITH_TARGET:
         print(__doc__)
-        sys.exit(1)
+        sys.exit(EXIT_ALL_FAILED)
+
+    if _HELP_FLAGS.intersection(argv[1:]):
+        print(__doc__)
+        return
+
+    # Checked before anything else acts on argv. A discarded flag used to
+    # mean the command ran with the default instead — and for --clean-cache
+    # that inverts the operation, since a mistyped --dry-run deletes.
+    unknown = _unknown_flags(argv)
+    if unknown:
+        print(f"Error: unknown flag: {', '.join(unknown)}", file=sys.stderr)
+        print("Run `py -m pagefetch --help` for usage.", file=sys.stderr)
+        sys.exit(EXIT_ALL_FAILED)
 
     try:
         cache = _make_cache(argv)
@@ -154,7 +204,7 @@ def main() -> None:
     urls = _collect_urls(argv, batch_file)
     if not urls:
         print(__doc__)
-        sys.exit(1)
+        sys.exit(EXIT_ALL_FAILED)
 
     opts = FetchOptions(
         mode=mode, transport=transport, wait_ms=wait_ms, use_cache=use_cache
@@ -167,16 +217,34 @@ def main() -> None:
     try:
         if len(urls) == 1 and not output_dir:
             result = fetcher.fetch(urls[0], opts)
-            sys.stdout.buffer.write(result.content.encode("utf-8", errors="replace"))
-            sys.stdout.buffer.write(b"\n")
+            if result.content:
+                sys.stdout.buffer.write(
+                    result.content.encode("utf-8", errors="replace")
+                )
+                sys.stdout.buffer.write(b"\n")
+            if not result.ok:
+                print(f"Error: no content fetched for {result.url}", file=sys.stderr)
+                sys.exit(EXIT_ALL_FAILED)
             return
 
         results = fetcher.fetch_batch(urls, opts)
     except ValueError as e:
         print(f"Error: {e}", file=sys.stderr)
-        sys.exit(1)
+        sys.exit(EXIT_ALL_FAILED)
 
     _write_batch_output(results, output_dir, mode)
+    sys.exit(_batch_exit_code(results))
+
+
+def _batch_exit_code(results) -> int:
+    """EXIT_OK if every URL returned content, EXIT_ALL_FAILED if none did,
+    EXIT_PARTIAL otherwise. An empty batch is not a failure."""
+    if not results:
+        return EXIT_OK
+    failed = sum(1 for r in results if not r.ok)
+    if failed == 0:
+        return EXIT_OK
+    return EXIT_ALL_FAILED if failed == len(results) else EXIT_PARTIAL
 
 
 def _write_batch_output(results, output_dir: str | None, mode: ContentMode) -> None:
