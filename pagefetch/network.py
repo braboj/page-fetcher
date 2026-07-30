@@ -170,6 +170,22 @@ class _BatchSession:
         """True when the batch loop should fetch through Nodriver."""
         return self.nd_browser is not None and self.loop is not None
 
+    @staticmethod
+    def _release(what: str, release) -> None:
+        """Run one teardown step, reporting a failure instead of raising.
+
+        Every step is independent. A browser that has already died raises
+        from stop(), and letting that propagate skipped the steps after it
+        — leaving exactly the leak this class exists to prevent, in the
+        one situation where cleanup matters most. close() also runs in a
+        finally, so raising here would replace whatever the batch was
+        returning.
+        """
+        try:
+            release()
+        except Exception as e:
+            print(f"[batch] Could not release {what}: {e}", file=sys.stderr)
+
     def close(self) -> None:
         """Release everything this session holds, in dependency order.
 
@@ -179,11 +195,14 @@ class _BatchSession:
         run, invisibly, since nothing in the process complained.
         """
         if self.nd_browser is not None:
-            self.nd_browser.stop()
+            self._release("the Nodriver browser", self.nd_browser.stop)
         if self.loop is not None:
-            self.loop.close()
+            self._release("the event loop", self.loop.close)
         if self.sb_context is not None:
-            self.sb_context.__exit__(None, None, None)
+            self._release(
+                "the UC session",
+                lambda: self.sb_context.__exit__(None, None, None),
+            )
 
 
 def _scroll_page_js() -> str:
