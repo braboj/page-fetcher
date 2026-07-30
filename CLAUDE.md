@@ -44,6 +44,9 @@ of truth. Agent-specific placement rules:
   `detection.py`
 - Anything Windows-specific or side-effectful on the host goes in
   `chrome.py` and nowhere else
+- Never widen what `ChromeReaper` is willing to kill without re-reading
+  ADR-005 — it may only kill Chrome descended from this interpreter, and
+  must kill nothing when ownership cannot be established
 - `source.py` MUST NOT import from any other package module — it is the
   contract every other module depends on
 - New tests go in `pagefetch/tests/`, one file per concern, named
@@ -138,6 +141,9 @@ Follow `templates/base/core/testing.md` and
 
 - The suite runs with no network and no browser — escalation is tested
   by stubbing the four tier methods
+- No test may enumerate or signal host processes. A `conftest` fixture
+  stubs both reaper queries; it exempts `test_chrome_reaper.py`, so a new
+  test file that exercises the reaper has to stub them itself
 - Browser-tier method bodies need a headed Chrome and are validated by
   hand; they are the bulk of what is uncovered
 - The coverage floor in `pyproject.toml` is a ratchet — raise it against

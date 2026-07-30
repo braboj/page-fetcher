@@ -106,6 +106,18 @@ once in `is_cacheable_junk` and is shared by the read-time scrub and the
 `--clean-cache` sweep — keep it there rather than duplicating it at a call
 site.
 
+### 2.4 Change what gets cleaned up after a browser tier
+
+`ChromeReaper` kills OS processes, so read
+[ADR-005](decisions/005-chrome-ownership-by-ancestry.md) before touching
+it. Two rules it must keep: only Chrome descended from this interpreter
+may be killed, and when ownership cannot be established nothing is
+tracked. Widening either has already cost a real browser process once.
+
+Tests must not reach the host. A `conftest` fixture stubs both process
+queries for every test but `test_chrome_reaper.py`; a new test file that
+exercises the reaper has to stub them itself.
+
 ## 3. Quality
 
 Three layers: the editor, `pre-commit`, and CI. CI repeats every hook,
@@ -174,6 +186,16 @@ workflow by hand.
 
 Runtime dependencies stay empty. Anything that would add one to
 `dependencies` in `pyproject.toml` needs an ADR first.
+
+The pip strategy is `increase-if-necessary`, so a floor moves only when a
+new version is genuinely required. Every version in `pyproject.toml` is a
+lower bound and raising one narrows what a consumer may install — most of
+all on the `browsers` extra. The default `increase` strategy lifts every
+floor to the newest release regardless, which is not what a library wants.
+
+Bumping floors does not widen what gets tested: CI installs `-e ".[dev]"`
+and resolves to the newest release satisfying each floor, so the toolchain
+already runs at current versions whatever the floors say.
 
 ### 4.2 Architecture decisions
 

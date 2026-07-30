@@ -79,11 +79,37 @@ closed every finding. 33 findings, 14 tickets, 14 PRs.
   coverage floor has to track the lowest matrix leg rather than any single
   measurement.
 
+**Cross-repo: the PerimeterX spike**
+
+Checked `Imbra-Ltd/wuseria` for tickets this package inherited. Only
+wuseria#865 is PerimeterX and it had already been carried over as #9 — but
+the carry-over took the body only. Six of its seven comments were left
+behind, including a screenshot of the Press & Hold challenge that existed
+nowhere else. Archived onto #9 verbatim with original authors and
+timestamps. #9 was also missing a priority label; wuseria#865 had P4, so
+the `P4` label was created here and applied.
+
+Also retested wuseria#556, which lists ePHOTOzine, Digital Camera World
+and CineD as sites that block automated fetches and proposes five manual
+workarounds. All three now fetch on tier 1 — plain urllib, ~1s each, no
+browser, 15/15 content markers present including the lab figures the issue
+depends on. Reported there rather than transferring the issue: it is
+scoped to a human workflow and to wuseria's PLAYBOOK, not to this package.
+The retest is three articles from one residential IP and does not settle
+the batch case.
+
 **Not done**
 
-- #9 (PerimeterX spike) remains open; it predates the audit.
+- #9 (PerimeterX spike) remains open; it predates the audit and none of
+  its acceptance criteria were attempted. The cheapest one — testing
+  whether challenge frequency tracks request velocity — is still the
+  right next step.
+- wuseria#556 left open pending a retest against the real scoring batch.
 - ADR-002's coverage rationale is still accurate, but the floor has moved
   three times since it was written.
+- `--js --uc --nodriver` together resolves to UC. That was undefined by
+  test before #36 and is now pinned as-is; whether it should instead be
+  an error is an open question, not a decision.
 
 ---
 
