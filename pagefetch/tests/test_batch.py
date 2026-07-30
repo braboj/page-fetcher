@@ -212,6 +212,89 @@ def test_forced_nodriver_skips_the_probe(fetcher, urllib_tier, monkeypatch):
     assert nodriver.started is True
 
 
+def test_persistent_nodriver_serves_a_cache_hit_without_fetching(
+    fetcher, urllib_tier, cache, monkeypatch
+):
+    # #15: this path drives the browser directly instead of going through
+    # _escalate, and it never consulted the cache — so a batch holding a
+    # headed browser re-fetched every URL it already had.
+    nodriver = _FakeNodriverModule()
+    monkeypatch.setitem(sys.modules, "nodriver", nodriver)
+    urllib_tier(fetcher, _BOT_BLOCKED)
+    fetched: list[str] = []
+
+    async def fake_fetch(browser, url, mode, wait_ms):
+        fetched.append(url)
+        return "freshly fetched"
+
+    monkeypatch.setattr(fetcher, "_nodriver_fetch_with_browser", fake_fetch)
+    cache.write("https://a.test", ContentMode.TEXT, "cached body")
+
+    results = fetcher.fetch_batch(["https://a.test"], FetchOptions(use_cache=True))
+
+    assert fetched == []
+    assert results[0].content == "cached body"
+    assert results[0].tier_used == "cache"
+
+
+def test_persistent_nodriver_caches_what_it_fetches(
+    fetcher, urllib_tier, cache, monkeypatch
+):
+    nodriver = _FakeNodriverModule()
+    monkeypatch.setitem(sys.modules, "nodriver", nodriver)
+    urllib_tier(fetcher, _BOT_BLOCKED)
+
+    async def fake_fetch(browser, url, mode, wait_ms):
+        return "nodriver body"
+
+    monkeypatch.setattr(fetcher, "_nodriver_fetch_with_browser", fake_fetch)
+    fetcher.fetch_batch(["https://a.test"], FetchOptions(use_cache=True))
+
+    assert cache.read("https://a.test", ContentMode.TEXT) == "nodriver body"
+
+
+def test_persistent_nodriver_scrubs_a_junk_cache_entry(
+    fetcher, urllib_tier, cache, monkeypatch
+):
+    # Junk must self-heal on this path too, not just through _fetch_single.
+    nodriver = _FakeNodriverModule()
+    monkeypatch.setitem(sys.modules, "nodriver", nodriver)
+    urllib_tier(fetcher, _BOT_BLOCKED)
+
+    async def fake_fetch(browser, url, mode, wait_ms):
+        return "real body"
+
+    monkeypatch.setattr(fetcher, "_nodriver_fetch_with_browser", fake_fetch)
+    cache.write("https://a.test", ContentMode.TEXT, "<title>404 Not Found</title>")
+
+    results = fetcher.fetch_batch(["https://a.test"], FetchOptions(use_cache=True))
+
+    assert results[0].content == "real body"
+    assert cache.read("https://a.test", ContentMode.TEXT) == "real body"
+
+
+def test_batch_writes_each_entry_once(fetcher, urllib_tier, no_browser_tiers, cache):
+    # _fetch_single wrote, then _run_batch wrote the same bytes again — and
+    # on a cache hit it rewrote the entry with its own contents.
+    no_browser_tiers(fetcher)
+    urllib_tier(fetcher, {"https://a.test": "body"})
+    writes: list[str] = []
+    original = cache.write
+
+    def counting_write(url, mode, content):
+        writes.append(url)
+        original(url, mode, content)
+
+    cache.write = counting_write
+
+    fetcher.fetch_batch(["https://a.test"], FetchOptions(use_cache=True))
+    assert writes == ["https://a.test"]
+
+    writes.clear()
+    fetcher.fetch_batch(["https://a.test"], FetchOptions(use_cache=True))
+    assert writes == []
+
+
 def test_forced_playwright_opens_no_persistent_session(
     fetcher, urllib_tier, no_browser_tiers, monkeypatch
 ):
