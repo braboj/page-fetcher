@@ -417,6 +417,77 @@ def test_close_closes_the_event_loop(fetcher, urllib_tier, monkeypatch):
     assert loop.is_closed() is True
 
 
+class _DeadBrowser:
+    """A browser that has already gone away — stop() raises."""
+
+    def stop(self):
+        raise RuntimeError("browser already dead")
+
+
+class _ExplodingLoop:
+    def close(self):
+        raise RuntimeError("loop already closed")
+
+
+def test_close_closes_the_loop_even_when_the_browser_stop_fails(capsys):
+    # #20: teardown was three unguarded statements, so the first failure
+    # skipped the rest. A dead browser is the normal case after a crash
+    # mid-batch — exactly when the cleanup matters most.
+    loop = asyncio.new_event_loop()
+    session = _BatchSession(nd_browser=_DeadBrowser(), loop=loop)
+
+    session.close()
+
+    assert loop.is_closed() is True
+    assert "Could not release the Nodriver browser" in capsys.readouterr().err
+
+
+def test_close_exits_the_uc_context_even_when_the_loop_close_fails(capsys):
+    context = _FakeSbContext()
+    session = _BatchSession(
+        loop=_ExplodingLoop(), sb_session=object(), sb_context=context
+    )
+
+    session.close()
+
+    assert context.exited is True
+    assert "Could not release the event loop" in capsys.readouterr().err
+
+
+def test_close_never_raises_out_of_the_batch(capsys):
+    # close() runs in _run_batch's finally, so raising would replace the
+    # results the batch had already collected.
+    context = _FakeSbContext()
+    monkey = _BatchSession(
+        nd_browser=_DeadBrowser(),
+        loop=_ExplodingLoop(),
+        sb_session=object(),
+        sb_context=context,
+    )
+
+    monkey.close()
+
+    assert context.exited is True
+    assert capsys.readouterr().err.count("Could not release") == 2
+
+
+def test_a_dead_browser_does_not_lose_the_batch_results(
+    fetcher, urllib_tier, monkeypatch
+):
+    nodriver = _FakeNodriverModule(browser=_DeadBrowser())
+    monkeypatch.setitem(sys.modules, "nodriver", nodriver)
+    urllib_tier(fetcher, _BOT_BLOCKED)
+
+    async def fake_fetch(browser, url, mode, wait_ms):
+        return "body"
+
+    monkeypatch.setattr(fetcher, "_nodriver_fetch_with_browser", fake_fetch)
+
+    results = fetcher.fetch_batch(["https://a.test"], FetchOptions(use_cache=False))
+
+    assert results[0].content == "body"
+
+
 def test_failed_nodriver_launch_does_not_strand_a_loop(
     fetcher, urllib_tier, monkeypatch
 ):
