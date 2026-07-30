@@ -50,12 +50,17 @@ py -m mypy                  # -> Success: no issues found in N source files
 py -m pytest --cov=pagefetch
 ```
 
-The test run ends with the suite count and the coverage floor:
+The test run ends with the suite count and the coverage verdict, in this
+shape:
 
 ```text
-212 passed in 4.21s
-Required test coverage of 70.0% reached. Total coverage: 73.16%
+N passed in <a couple of seconds>
+Required test coverage of <floor>% reached. Total coverage: <measured>%
 ```
+
+What matters is that nothing failed and coverage *reached* the floor —
+the floor is a ratchet that moves, so the numbers here would go stale if
+they were pinned. `pyproject.toml` holds the current one.
 
 Then fetch a real page to confirm tier 1 works end to end:
 

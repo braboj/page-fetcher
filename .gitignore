@@ -29,6 +29,9 @@ htmlcov/
 *.swp
 *.swo
 
+# Crash dumps — Cygwin/Git-Bash tools drop these in the working directory
+*.stackdump
+
 # OS
 .DS_Store
 Thumbs.db
