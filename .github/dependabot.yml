@@ -10,8 +10,21 @@ updates:
       actions:
         patterns: ["*"]
 
+  # pagefetch is a library: every version in pyproject.toml is a lower
+  # bound, and raising one narrows what a consumer may install. Dependabot
+  # defaults to `increase`, which lifts each floor to the newest release
+  # whether or not anything needs it — it proposed nodriver>=0.35 ->
+  # >=0.50.3 and setuptools>=77 -> >=83 with no feature behind either.
+  # `increase-if-necessary` moves a floor only when the new version is
+  # genuinely required, and leaves it alone otherwise.
+  #
+  # This does not weaken the update flow: CI installs `-e ".[dev]"`, which
+  # resolves to the newest release satisfying each floor, so the toolchain
+  # is already exercised at current versions regardless of where the
+  # floors sit.
   - package-ecosystem: pip
     directory: /
+    versioning-strategy: increase-if-necessary
     schedule:
       interval: weekly
     groups:
