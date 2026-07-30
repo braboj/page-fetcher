@@ -23,6 +23,11 @@ Usage:
 
     py -m pagefetch <url> --cache-dir DIR          # use a specific cache dir
                                                    # (overrides $PAGEFETCH_CACHE_DIR)
+
+Exit codes:
+    0   every requested URL returned content
+    1   nothing came back, or the arguments were rejected
+    2   a batch returned content for some URLs but not all
 """
 
 import sys
@@ -35,6 +40,15 @@ from .source import ContentMode, FetchOptions, Transport
 
 # argv[0] is the program name, so anything useful needs at least one more.
 _MIN_ARGV_WITH_TARGET = 2
+
+# Exit codes. A fetch that returns nothing used to exit 0, so a caller
+# writing `pagefetch "$url" > page.txt && process page.txt` processed an
+# empty file and never knew. Partial batch failure gets its own code
+# because "some pages are missing" and "nothing came back" call for
+# different handling in a pipeline.
+EXIT_OK = 0
+EXIT_ALL_FAILED = 1
+EXIT_PARTIAL = 2
 
 _VALUE_FLAGS = {"--wait", "--batch", "--output-dir", "--cache-dir"}
 _BARE_FLAGS = {
@@ -167,16 +181,34 @@ def main() -> None:
     try:
         if len(urls) == 1 and not output_dir:
             result = fetcher.fetch(urls[0], opts)
-            sys.stdout.buffer.write(result.content.encode("utf-8", errors="replace"))
-            sys.stdout.buffer.write(b"\n")
+            if result.content:
+                sys.stdout.buffer.write(
+                    result.content.encode("utf-8", errors="replace")
+                )
+                sys.stdout.buffer.write(b"\n")
+            if not result.ok:
+                print(f"Error: no content fetched for {result.url}", file=sys.stderr)
+                sys.exit(EXIT_ALL_FAILED)
             return
 
         results = fetcher.fetch_batch(urls, opts)
     except ValueError as e:
         print(f"Error: {e}", file=sys.stderr)
-        sys.exit(1)
+        sys.exit(EXIT_ALL_FAILED)
 
     _write_batch_output(results, output_dir, mode)
+    sys.exit(_batch_exit_code(results))
+
+
+def _batch_exit_code(results) -> int:
+    """EXIT_OK if every URL returned content, EXIT_ALL_FAILED if none did,
+    EXIT_PARTIAL otherwise. An empty batch is not a failure."""
+    if not results:
+        return EXIT_OK
+    failed = sum(1 for r in results if not r.ok)
+    if failed == 0:
+        return EXIT_OK
+    return EXIT_ALL_FAILED if failed == len(results) else EXIT_PARTIAL
 
 
 def _write_batch_output(results, output_dir: str | None, mode: ContentMode) -> None:
