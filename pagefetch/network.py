@@ -27,7 +27,7 @@ from pathlib import Path
 from typing import Any
 
 from .cache import FileCache
-from .chrome import ChromeReaper
+from .chrome import ChromeReaper, default_reaper
 from .detection import (
     html_to_text,
     is_bot_blocked,
@@ -231,7 +231,9 @@ class NetworkFetcher(PageSource):
     ) -> None:
         self._cache = cache or FileCache()
         self._ua = user_agent
-        self._reaper = reaper or ChromeReaper()
+        # Shared by default: a reaper per fetcher registered an atexit
+        # handler per fetcher, none of which were ever removed.
+        self._reaper = reaper or default_reaper()
 
     # --- public PageSource interface ---------------------------------
 
