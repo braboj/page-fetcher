@@ -70,8 +70,9 @@ branch merges.
 
 ```bash
 git checkout main && git pull
-git diff --stat main <branch>   # no output means the content landed
-git branch -D <branch>
+gh pr view <N> --json state,headRefOid --jq '"\(.state) \(.headRefOid)"'
+git rev-parse <branch>
+git branch -D <branch>   # only when state is MERGED and the SHAs match
 ```
 
 `git branch --merged main` does **not** list a squash-merged branch, and
@@ -80,9 +81,34 @@ branch tip is not an ancestor of `main` and the filter drops it. A cleanup
 loop built on `--merged` therefore succeeds silently while deleting
 nothing.
 
-The empty `git diff` is what makes `-D` safe — it compares content rather
-than history, so it holds under squash. Never reach for `-D` without it;
-that is the flag that discards unmerged work.
+Comparing content instead — `git diff main <branch>` — is not a
+substitute. It cannot distinguish "the branch holds unmerged work" from
+"`main` has moved ahead of the branch"; both read as a non-empty diff.
+Anything merged after the branch was cut produces one. Neither does
+ancestry (`git log <merged-head>..<branch>`) nor `refs/pull/<N>/head`
+settle it, because a rebase gives the same work a new SHA on both sides.
+
+The PR record is the authority instead. `state: MERGED` says the pushed
+work landed, and `headRefOid` is the exact commit that was squashed — it
+survives the head branch's deletion. When it equals the local tip, every
+commit on the branch was pushed and is in `main`, so `-D` discards
+nothing.
+
+When the two SHAs differ, stop. It means either the remote head was
+rewritten — `gh pr update-branch` does that, leaving the local branch on
+the commit it replaced — or there are local commits that were never
+pushed, and only the second is dangerous. Do not guess which: run
+`git log --oneline <headRefOid>..<branch>` and read what comes back
+before deleting anything.
+
+Better, avoid the ambiguity. After any remote-side rewrite, resync
+before the PR merges, so the local tip and `headRefOid` still agree at
+cleanup time:
+
+```bash
+git fetch origin <branch>
+git reset --hard origin/<branch>
+```
 
 ## 2. Domain operations
 
