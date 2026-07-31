@@ -70,8 +70,19 @@ branch merges.
 
 ```bash
 git checkout main && git pull
-git branch --merged main | grep -v main | xargs git branch -d
+git diff --stat main <branch>   # no output means the content landed
+git branch -D <branch>
 ```
+
+`git branch --merged main` does **not** list a squash-merged branch, and
+every PR here is squash-merged: the squash commit is a new object, so the
+branch tip is not an ancestor of `main` and the filter drops it. A cleanup
+loop built on `--merged` therefore succeeds silently while deleting
+nothing.
+
+The empty `git diff` is what makes `-D` safe — it compares content rather
+than history, so it holds under squash. Never reach for `-D` without it;
+that is the flag that discards unmerged work.
 
 ## 2. Domain operations
 
