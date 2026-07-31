@@ -6,6 +6,62 @@ git already holds.
 
 ---
 
+## 2026-07-31 — Getting the post-merge branch check right
+
+**Tool**: Claude Code (Opus 5)
+
+Housekeeping again, and mostly a session about one paragraph of
+`PLAYBOOK.md` that took three PRs to get correct. No package code
+changed.
+
+**Changes**
+
+- Merged #42, left open and green at the end of the previous session.
+- Rewrote the post-merge cleanup check in §1.5 twice — first from
+  `git branch --merged` to a content diff (#43), then from the content
+  diff to the PR record (#45).
+- Corrected the `P0`–`P3` straggler in §1.4 (#44), the instance #42
+  missed in `CLAUDE.md`.
+- Cross-referenced the local resync from §1.3, where the remote rewrite
+  is issued (#46).
+
+**PRs merged**: #42, #43, #44, #45, #46
+
+**Issues created and closed**: none
+
+**Decisions**
+
+- *ADR-004 keeps its `P0`–`P3`.* The same slip is at line 62, but the
+  decision the ADR records is "adopt the template's label scheme", which
+  is correct — the range was a mis-transcribed parenthetical, not a
+  different decision. ADRs are immutable once merged, and superseding
+  ADR-004 would retire four other decisions that are still current. The
+  reasoning lives in #44's body so the next reader who hits the line
+  finds it.
+
+**Learned**
+
+- A "safe to delete" check has to be exercised against a branch whose
+  history was rewritten, not just a clean one. Both broken versions
+  passed on the happy path — cut a branch, push it, merge it — and
+  neither failure is visible there. `--merged` fails under squash;
+  the content diff that replaced it fails whenever `main` moves ahead,
+  which a rebase or any intervening merge guarantees.
+- The two fallbacks that look authoritative are not. Ancestry
+  (`git log <merged-head>..<branch>`) and `refs/pull/<N>/head` both fail
+  the same way, because a rebase gives the same work a new SHA on each
+  side. Only the PR record survives: `state: MERGED` plus a `headRefOid`
+  equal to the local tip.
+- Branch protection requires branches be up to date, so any second PR
+  queued behind a first needs `gh pr update-branch`. That is what
+  creates the stale clone, so the rebase case is the normal case here,
+  not an edge one.
+- The upstream `scope.md` ships the same broken `--merged` cleanup in
+  its session-startup list, so every project generated from it inherits
+  the defect.
+
+---
+
 ## 2026-07-30 — Branch hygiene and the priority label range
 
 **Tool**: Claude Code (Opus 5)
