@@ -49,7 +49,7 @@ gh pr update-branch <N> --rebase
 ### 1.4 Issues
 
 Every issue carries exactly one type label (`bug`, `task`, `spike`) and one
-priority label (`P0`–`P3`), applied at creation.
+priority label (`P0`–`P4`), applied at creation.
 
 ```bash
 gh issue create --title "<imperative sentence-case title>" \
