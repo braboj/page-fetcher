@@ -46,6 +46,15 @@ git push origin --delete <deleted-branch>
 gh pr update-branch <N> --rebase
 ```
 
+`gh pr update-branch` rewrites the head on GitHub and leaves your clone
+on the commit it replaced. Resync before the PR merges, or the cleanup
+check in §1.5 has nothing valid to compare against:
+
+```bash
+git fetch origin <branch>
+git reset --hard origin/<branch>
+```
+
 ### 1.4 Issues
 
 Every issue carries exactly one type label (`bug`, `task`, `spike`) and one
