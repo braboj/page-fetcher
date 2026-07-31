@@ -6,6 +6,49 @@ git already holds.
 
 ---
 
+## 2026-07-30 — Branch hygiene and the priority label range
+
+**Tool**: Claude Code (Opus 5)
+
+A short housekeeping session following the audit. No package code changed.
+
+**Changes**
+
+- Deleted `origin/fix/detection-anchoring`, left behind when PR #27
+  squash-merged. Its commit `7c82ccd` had a diff identical to main's
+  `015dc66`, so nothing was lost.
+- Enabled `delete_branch_on_merge` on the repository. The branch above
+  existed only because the setting was off; every merged PR was leaving its
+  head branch behind.
+- Corrected the priority label range in `CLAUDE.md` from `P0`–`P3` to
+  `P0`–`P4`.
+
+**PRs merged**: none — #42 was open and green at session end
+
+**Issues created and closed**: none
+
+**Decisions**
+
+- *The template is the authority on the label taxonomy, not CLAUDE.md.*
+  The mismatch first read as issue #9 carrying an out-of-convention `P4`.
+  It was the reverse: `base/workflow/issues.md` and `platform/github.md`
+  both define P0–P4, and the repo's labels already matched. The document
+  had drifted from the template it inherits from, so the document was what
+  changed.
+- *Type labels stay the `bug` / `task` / `spike` subset.* `issues.md` also
+  lists `epic` and `incident`, but states the taxonomy is project-specific.
+  A single headless library has no production incidents to log and no
+  initiatives large enough to warrant epics.
+
+**Learned**
+
+- `delete_branch_on_merge` fires on merge only, not on close — an abandoned
+  branch still lingers. It also skips the delete while another open PR
+  targets that branch as its base, so it does not remove the need for the
+  stacked-PR rule in `CLAUDE.md`.
+
+---
+
 ## 2026-07-30 — 360 audit and full remediation
 
 **Tool**: Claude Code (Opus 5)

@@ -61,6 +61,13 @@ label carries the type.
 
 ### 1.5 After merge
 
+The remote head branch is deleted automatically on merge, so only the
+local one needs cleaning up. The setting fires on merge only — a PR
+closed unmerged still leaves its branch behind. It has not been
+established whether it is skipped while a stacked PR targets the branch,
+so §1.3 still applies in full: retarget the dependent PR before the base
+branch merges.
+
 ```bash
 git checkout main && git pull
 git branch --merged main | grep -v main | xargs git branch -d
