@@ -73,12 +73,12 @@ py -m pytest --cov=pagefetch    # tests with the coverage floor enforced
 ### 2.1 Git
 
 - `main` is protected — never commit directly
-- Branch naming: `<type>/<linear-id>-<scope>` — e.g.
-  `feat/bra-42-cache-key`. Types: feat, fix, docs, chore. The Linear
-  identifier attaches the PR to the ticket and moves it through In
-  Progress and In Review; without it the ticket still closes on merge,
-  but jumps straight to Done. Omit the identifier only when there is no
-  ticket
+- Branch naming: `<type>/<TICKET>-<scope>` — e.g.
+  `feat/BRA-42-cache-key`. Types: feat, fix, docs, chore. The Linear
+  ticket goes in upper case, as Linear displays it. It attaches the PR
+  to the ticket and moves it through In Progress and In Review; without
+  it the ticket still closes on merge, but jumps straight to Done. Omit
+  it only when there is no ticket
 - Commits: `<type>(<scope>): <summary>` — feat, fix, chore, docs,
   refactor
 - PR titles: same format with the issue number(s) at the end
