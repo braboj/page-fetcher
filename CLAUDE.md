@@ -80,7 +80,9 @@ py -m pytest --cov=pagefetch    # tests with the coverage floor enforced
 - PR titles: same format with the issue number(s) at the end
 - Issue titles: sentence case, imperative verb, no type prefix
 - Every issue gets exactly one type label (`bug`, `task`, `spike`) and
-  one priority label (`P0`–`P4`), applied at creation
+  one severity label (`P0`–`P3`), applied at creation. `P4` is a
+  deferral marker, not a severity — it accompanies a severity rather
+  than replacing one (ADR-021 upstream)
 - One concern per PR
 - Never delete a base branch while a stacked PR points at it — that
   closes the stacked PR instead of retargeting it
