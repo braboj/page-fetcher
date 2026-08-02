@@ -101,9 +101,9 @@ py -m pytest --cov=pagefetch    # tests with the coverage floor enforced
   identifier in one is a dead reference after a migration
 - Issue titles: sentence case, imperative verb, no type prefix
 - Every issue gets exactly one type label (`bug`, `task`, `spike`) and
-  one severity label (`P0`–`P3`), applied at creation. `P4` is a
-  deferral marker, not a severity — it accompanies a severity rather
-  than replacing one (ADR-021 upstream)
+  one severity label (`P0`–`P3`), applied at creation. There is no
+  deferral label — the chain's optional `P4` is retired here, and a
+  deferral is recorded where its reasoning is (ADR-011)
 - One concern per PR
 - Never delete a base branch while a stacked PR points at it — that
   closes the stacked PR instead of retargeting it
