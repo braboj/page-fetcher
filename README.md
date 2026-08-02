@@ -237,9 +237,7 @@ py -m pip install -e ".[browsers]"
 playwright install chromium
 ```
 
-`pre-commit install` wires the first four of these to run on every commit.
-CI repeats all of them on every pull request, because hooks can be skipped
-with `--no-verify`. Run any one directly:
+The gate is four checks, each runnable on its own:
 
 ```bash
 py -m ruff check .          # lint
@@ -248,10 +246,14 @@ py -m mypy                  # type check
 py -m pytest --cov=pagefetch
 ```
 
-A coverage floor fails the build when coverage drops below it. The value
-lives in `fail_under` in `pyproject.toml` and ratchets upward as coverage
-improves, so read it there rather than here. What remains uncovered is the
-browser-tier method bodies, which need a headed Chrome and cannot run in CI.
+`pre-commit install` runs the first three on every commit, plus a secret
+scan. CI runs all four on every pull request, because a hook can be skipped
+with `--no-verify`.
+
+The test command also enforces a coverage floor. Its value lives in
+`fail_under` in `pyproject.toml` and ratchets upward as coverage improves,
+so read it there rather than here. What stays uncovered is the browser-tier
+method bodies, which need a headed Chrome and cannot run in CI.
 
 ## Configuration reference
 
