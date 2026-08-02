@@ -265,17 +265,10 @@ highest first:
 | `PAGEFETCH_CACHE_DIR`        | path | unset                | Environment variable        |
 | built-in default             | path | `./.cache/pagefetch` | Relative to the working dir |
 
-The CLI flag and the constructor argument are the same tier — the flag is
-how the CLI passes the explicit argument. The environment variable lets a
-consuming project point every entry point at one cache directory without the
-package hardcoding any project layout. An unusable path raises a
-`ValueError` at construction naming the source that supplied it; see
-[Architecture](docs/ARCHITECTURE.md#why-configuration-stays-minimal).
-
 ## Known limitations
 
 - `headed` opens a Chrome window, so it cannot run in CI or on a host with
-  no display. AUTO falls through to `headless`, wasting one attempt.
+  no display.
 - `headless` costs ~18-24s, most of it Chrome launch overhead.
 - PerimeterX "Press & Hold" blocks every tier.
 - Each URL launches its own browser unless you use batch mode.
