@@ -170,12 +170,13 @@ py -m pytest --cov=pagefetch    # tests with the coverage floor enforced
 
 ### 2.7 README
 
-- Badges directly under the H1, then the subtitle, then the lede
-- Capability bullets live under `## Features`
-- Never cite an ADR from the README. Link `docs/ARCHITECTURE.md` and let
-  that document cite the record
+The title block order, the `## Features` heading and the ban on citing a
+decision record were overrides here until upstream adopted all three. They
+now come from `templates/base/core/readme.md` — do not restate them.
+
 - No figure that moves (coverage, byte counts) — point at the file that
-  holds it
+  holds it. Filed upstream as `solid-ai-templates#907`; drop this bullet
+  when that lands
 
 ## 3. Quality
 
