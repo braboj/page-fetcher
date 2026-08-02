@@ -274,15 +274,12 @@ package hardcoding any project layout. An unusable path raises a
 
 ## Known limitations
 
-- The `headed` tier opens a Chrome window, so it cannot run in CI or on a
-  host with no display. AUTO still reaches `headless` after it fails there,
-  at the cost of one wasted attempt.
-- The `headless` tier costs ~18-24s minimum from Chrome launch overhead.
-- PerimeterX "Press & Hold" (Adorama) blocks every automated tier.
-- Single-URL mode launches a new browser per call; use batch mode for many
-  URLs.
-- The scheme check is an allowlist, not SSRF protection — it does not stop
-  requests to private addresses. See
+- `headed` opens a Chrome window, so it cannot run in CI or on a host with
+  no display. AUTO falls through to `headless`, wasting one attempt.
+- `headless` costs ~18-24s, most of it Chrome launch overhead.
+- PerimeterX "Press & Hold" blocks every tier.
+- Each URL launches its own browser unless you use batch mode.
+- The scheme check is an allowlist, not SSRF protection. See
   [Architecture](docs/ARCHITECTURE.md#url-schemes-and-what-this-is-not).
 
 ## Links
@@ -294,9 +291,6 @@ package hardcoding any project layout. An unusable path raises a
   pattern, the quality checks, maintenance
 - [Dev journal](docs/dev-journal.md) — what changed each session and why
 - [Audits](docs/audits/) — 360-degree assessments, one report per run
-- Upstream history: the package grew inside
-  [Imbra-Ltd/wuseria](https://github.com/Imbra-Ltd/wuseria) as
-  `tools/pagefetch/` before being extracted into this repository
 
 ## License
 
