@@ -65,8 +65,7 @@ if result.ok:
 ```
 
 That prints the tier that served the page and the size of the body — for
-this URL, `urllib` and a few hundred kilobytes of raw HTML. Tier 1 handled
-it, so no browser was launched.
+this URL, `http` and a few hundred kilobytes of raw HTML.
 
 ## Usage
 
@@ -82,17 +81,23 @@ Stdout carries the stripped page text. A successful tier 1 fetch says
 nothing on stderr — the tiers only narrate when they escalate:
 
 ```text
-[urllib] Not real content (559 bytes) — escalating
-[auto] Skipping Playwright (bot protection), trying Nodriver...
+[http] Not real content (559 bytes) — escalating
+[auto] Skipping js (bot protection), trying headed...
 ```
 
-Force a specific tier, change the output mode, or bypass the cache:
+Force one transport instead of letting the fetcher escalate:
+
+```bash
+py -m pagefetch <url> --http       # plain request only, never escalate
+py -m pagefetch <url> --js         # browser that renders JavaScript
+py -m pagefetch <url> --headed     # bot bypass, needs a display
+py -m pagefetch <url> --headless   # bot bypass, no display needed
+```
+
+Change the output, the wait, or the cache:
 
 ```bash
 py -m pagefetch <url> --html       # raw HTML instead of stripped text
-py -m pagefetch <url> --js         # force Playwright
-py -m pagefetch <url> --nodriver   # force Nodriver (headed)
-py -m pagefetch <url> --uc         # force SeleniumBase UC
 py -m pagefetch <url> --wait 5000  # extra post-load wait (ms)
 py -m pagefetch <url> --no-cache   # refetch, ignoring any cached copy
 py -m pagefetch <url> --cache-dir DIR
@@ -158,7 +163,7 @@ under test as it will in production.
 | `FetchOptions`   | `mode`, `transport`, `wait_ms`, `use_cache`     |
 | `FetchResult`    | `url`, `content`, `tier_used`, `ok`             |
 | `ContentMode`    | `TEXT` (stripped) / `HTML` (raw)                |
-| `Transport`      | `AUTO` / `PLAYWRIGHT` / `NODRIVER` / `UC`       |
+| `Transport`      | `AUTO` / `HTTP` / `JS` / `HEADED` / `HEADLESS`  |
 | `is_bot_blocked` | Pure bot-detection predicate                    |
 
 Point the cache somewhere specific:
@@ -169,21 +174,6 @@ from pagefetch import NetworkFetcher, FileCache
 
 fetcher = NetworkFetcher(cache=FileCache(cache_dir=Path("/my/cache")))
 ```
-
-## Dependencies
-
-| Dependency        | Tier | Required | License    |
-| ----------------- | ---- | -------- | ---------- |
-| `urllib` (stdlib) | 1    | always   | PSF        |
-| `playwright`      | 2    | optional | Apache-2.0 |
-| `nodriver`        | 3    | optional | AGPL-3.0   |
-| `seleniumbase`    | 4    | optional | MIT        |
-
-The three browser engines live in the `browsers` extra
-(`pip install ".[browsers]"`). A missing one skips its tier with a message
-on stderr rather than failing. `nodriver` is AGPL-3.0 and affects you only
-if you distribute a service built on tier 3 — see
-[Architecture](docs/ARCHITECTURE.md#nodriver-and-the-agpl).
 
 ## Project structure
 
@@ -211,6 +201,8 @@ if you distribute a service built on tier 3 — see
 
 ## Development setup
 
+Clone the repository, install the dependencies and run the test suite:
+
 ```bash
 git clone https://github.com/braboj/page-fetcher.git
 cd page-fetcher
@@ -219,12 +211,6 @@ pre-commit install
 py -m pytest
 ```
 
-The suite runs in a couple of seconds and touches nothing outside the
-repository: no network, no browser, and no query of the host's process
-list. The escalation logic is tested by stubbing the four tier methods.
-The browser-tier method bodies require headed Chrome and are validated by
-hand.
-
 To exercise the browser tiers locally, add the optional engines:
 
 ```bash
@@ -232,11 +218,7 @@ py -m pip install -e ".[browsers]"
 playwright install chromium
 ```
 
-### The gate
-
-`pre-commit install` wires the first four of these to run on every commit.
-CI repeats all of them on every pull request, because hooks can be skipped
-with `--no-verify`. Run any one directly:
+The gate is four checks, each runnable on its own:
 
 ```bash
 py -m ruff check .          # lint
@@ -245,12 +227,9 @@ py -m mypy                  # type check
 py -m pytest --cov=pagefetch
 ```
 
-A coverage floor fails the build when coverage drops below it. The value
-lives in `fail_under` in `pyproject.toml` and ratchets upward as coverage
-improves, so read it there rather than here. What remains uncovered is the
-browser-tier method bodies, which need a headed Chrome and cannot run in CI.
-See [ADR-002](docs/decisions/002-python-toolchain-and-ci.md) for why the
-floor is measured against reality rather than set to an aspiration.
+`pre-commit install` runs the first three on every commit, plus a secret
+scan. CI runs all four on every pull request, because a hook can be skipped
+with `--no-verify`.
 
 ## Configuration reference
 
@@ -264,23 +243,14 @@ highest first:
 | `PAGEFETCH_CACHE_DIR`        | path | unset                | Environment variable        |
 | built-in default             | path | `./.cache/pagefetch` | Relative to the working dir |
 
-The CLI flag and the constructor argument are the same tier — the flag is
-how the CLI passes the explicit argument. The environment variable lets a
-consuming project point every entry point at one cache directory without the
-package hardcoding any project layout. An unusable path raises a
-`ValueError` at construction naming the source that supplied it; see
-[Architecture](docs/ARCHITECTURE.md#why-configuration-stays-minimal).
-
 ## Known limitations
 
-- Nodriver requires headed mode — a Chrome window opens, so it is unusable
-  in CI.
-- UC mode costs ~18-24s minimum from Chrome launch overhead.
-- PerimeterX "Press & Hold" (Adorama) blocks every automated tier.
-- Single-URL mode launches a new browser per call; use batch mode for many
-  URLs.
-- The scheme check is an allowlist, not SSRF protection — it does not stop
-  requests to private addresses. See
+- **headed** opens a Chrome window, so it cannot run in CI or on a host with
+  no display.
+- **headless** costs ~18-24s, most of it Chrome launch overhead.
+- PerimeterX "Press & Hold" blocks every tier.
+- Each URL launches its own browser unless you use batch mode.
+- The scheme check is an allowlist, not SSRF protection. See
   [Architecture](docs/ARCHITECTURE.md#url-schemes-and-what-this-is-not).
 
 ## Links
@@ -292,21 +262,25 @@ package hardcoding any project layout. An unusable path raises a
   pattern, the quality checks, maintenance
 - [Dev journal](docs/dev-journal.md) — what changed each session and why
 - [Audits](docs/audits/) — 360-degree assessments, one report per run
-- [Architecture Decision Records](docs/decisions/) — why the package was
-  extracted, how the toolchain and CI gate were chosen, and what the URL
-  scheme allowlist does and does not promise
-- Upstream history: the package grew inside
-  [Imbra-Ltd/wuseria](https://github.com/Imbra-Ltd/wuseria) as
-  `tools/pagefetch/`, where two earlier decision records still cover it —
-  [ADR-035](https://github.com/Imbra-Ltd/wuseria/blob/main/docs/decisions/035-pagefetch-package-and-brandkit.md)
-  on the package extraction and the standard-library-only contract, and
-  [ADR-037](https://github.com/Imbra-Ltd/wuseria/blob/main/docs/decisions/037-pagefetch-cache-validity-no-ttl.md)
-  on content-based cache validity
+
+## Dependencies
+
+| Dependency        | Tier       | Required | License    |
+| ----------------- | ---------- | -------- | ---------- |
+| `urllib` (stdlib) | `http`     | always   | PSF        |
+| `playwright`      | `js`       | optional | Apache-2.0 |
+| `nodriver`        | `headed`   | optional | AGPL-3.0   |
+| `seleniumbase`    | `headless` | optional | MIT        |
+
+The three browser engines live in the `browsers` extra
+(`pip install ".[browsers]"`). A missing one skips its tier with a message
+on stderr rather than failing.
 
 ## License
 
 MIT — see [LICENSE](LICENSE).
 
 The optional `nodriver` dependency is AGPL-3.0 and is not covered by this
-license; see [Dependencies](#dependencies) for what that means if you
-distribute a service built on tier 3.
+license. It affects you only if you install it and then distribute a
+network service built on the **headed** tier; see
+[Architecture](docs/ARCHITECTURE.md#nodriver-and-the-agpl).

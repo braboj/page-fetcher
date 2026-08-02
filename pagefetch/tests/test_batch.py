@@ -130,7 +130,7 @@ def test_each_result_reports_its_tier_and_ok_flag(
     results = fetcher.fetch_batch(
         ["https://a.test", "https://missing.test"], FetchOptions(use_cache=False)
     )
-    assert (results[0].ok, results[0].tier_used) == (True, "urllib")
+    assert (results[0].ok, results[0].tier_used) == (True, "http")
     assert (results[1].ok, results[1].tier_used) == (False, "none")
     assert results[1].content == ""
 
@@ -190,7 +190,7 @@ def test_auto_mode_starts_nodriver_when_the_probe_is_bot_blocked(
 
     results = fetcher.fetch_batch(["https://a.test"], FetchOptions(use_cache=False))
     assert nodriver.started is True
-    assert results[0].tier_used == "nodriver"
+    assert results[0].tier_used == "headed"
     assert results[0].content == "nodriver body for https://a.test"
 
 
@@ -205,7 +205,7 @@ def test_forced_nodriver_skips_the_probe(fetcher, urllib_tier, monkeypatch):
     monkeypatch.setattr(fetcher, "_nodriver_fetch_with_browser", fake_fetch)
     fetcher.fetch_batch(
         ["https://a.test"],
-        FetchOptions(transport=Transport.NODRIVER, use_cache=False),
+        FetchOptions(transport=Transport.HEADED, use_cache=False),
     )
     # The transport was chosen explicitly, so tier 1 is never consulted.
     assert calls == []
@@ -304,7 +304,7 @@ def test_forced_playwright_opens_no_persistent_session(
     calls = urllib_tier(fetcher, "body")
     fetcher.fetch_batch(
         ["https://a.test"],
-        FetchOptions(transport=Transport.PLAYWRIGHT, use_cache=False),
+        FetchOptions(transport=Transport.JS, use_cache=False),
     )
     assert nodriver.started is False
     assert calls == []
@@ -318,7 +318,7 @@ def test_forced_uc_opens_a_uc_session(fetcher, urllib_tier, monkeypatch):
         fetcher, "_fetch_uc_with_session", lambda sb, url, mode, wait: "uc body"
     )
     results = fetcher.fetch_batch(
-        ["https://a.test"], FetchOptions(transport=Transport.UC, use_cache=False)
+        ["https://a.test"], FetchOptions(transport=Transport.HEADLESS, use_cache=False)
     )
     assert seleniumbase.context.entered is True
     assert seleniumbase.kwargs == {"uc": True, "headless": True}
@@ -393,7 +393,7 @@ def test_uc_session_is_exited_at_the_end(fetcher, urllib_tier, monkeypatch):
         fetcher, "_fetch_uc_with_session", lambda sb, url, mode, wait: "uc body"
     )
     fetcher.fetch_batch(
-        ["https://a.test"], FetchOptions(transport=Transport.UC, use_cache=False)
+        ["https://a.test"], FetchOptions(transport=Transport.HEADLESS, use_cache=False)
     )
     assert seleniumbase.context.exited is True
 

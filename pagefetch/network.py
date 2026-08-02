@@ -1,15 +1,19 @@
 """NetworkFetcher — the real four-tier auto-escalating page fetcher.
 
 Tier strategy (auto mode escalates on failure):
-  1. urllib (plain HTTP)        — fastest (~1s), most static pages
-  2. Playwright (headless)      — JS-rendered pages (~5-9s)
-  3. Nodriver (headed Chrome)   — bot-protected sites (~6-8s)
-  4. SeleniumBase UC mode       — headless bot bypass fallback (~18-24s)
+  1. http     (urllib)           — fastest (~1s), most static pages
+  2. js       (Playwright)       — JS-rendered pages (~5-9s)
+  3. headed   (Nodriver)         — bot bypass, needs a display (~6-8s)
+  4. headless (SeleniumBase UC)  — bot bypass, no display (~18-24s)
 
-Auto mode tries urllib first. If bot protection is detected, it skips
-Playwright (which would fail the same way) and goes straight to Nodriver,
-then UC. If urllib fails for another reason (404, timeout), it tries
-Playwright, then Nodriver, then UC.
+Auto mode tries http first. If bot protection is detected, it skips js
+(which would fail the same way) and goes straight to headed, then
+headless. If http fails for another reason (404, timeout), it tries js,
+then headed, then headless.
+
+The tiers are named for what they require of the caller, not for the
+library behind them; ADR-006 records why the two bot-bypass tiers both
+exist and why headless is last despite the name.
 
 Third-party browser libraries are imported lazily inside each tier so the
 package works with only the standard library installed — unavailable tiers
@@ -50,7 +54,8 @@ DEFAULT_USER_AGENT = (
     "Chrome/131.0.0.0 Safari/537.36"
 )
 
-# Sentinel: urllib detected bot protection (skip Playwright, go to Nodriver/UC).
+# Sentinel: the http tier detected bot protection (skip js, go to the
+# headed/headless bypass tiers).
 _BOT_BLOCKED = "@@BOT_BLOCKED@@"
 # Sentinel: response is a 404 / gone error page. Terminal — do not escalate
 # (every tier returns the same error) and do not cache.
@@ -281,7 +286,7 @@ class NetworkFetcher(PageSource):
         try:
             from playwright.sync_api import sync_playwright
         except ImportError:
-            print("[playwright] Not installed", file=sys.stderr)
+            print("[js] Not installed", file=sys.stderr)
             return False
         try:
             with sync_playwright() as p:
@@ -295,7 +300,7 @@ class NetworkFetcher(PageSource):
                 browser.close()
             return True
         except Exception as e:
-            print(f"[playwright] {e}", file=sys.stderr)
+            print(f"[js] {e}", file=sys.stderr)
             return False
 
     # --- tier 1: urllib ----------------------------------------------
@@ -326,10 +331,10 @@ class NetworkFetcher(PageSource):
         except urllib.error.HTTPError as e:
             # Non-200: never cached. A hard 404/410 is terminal (escalation
             # would hit the same error); other codes fall through to escalate.
-            print(f"[urllib] HTTP {e.code}", file=sys.stderr)
+            print(f"[http] HTTP {e.code}", file=sys.stderr)
             return _ERROR_PAGE if e.code in (404, 410) else None
         except Exception as e:
-            print(f"[urllib] {e}", file=sys.stderr)
+            print(f"[http] {e}", file=sys.stderr)
             return None
 
         try:
@@ -341,7 +346,7 @@ class NetworkFetcher(PageSource):
             # handing back mojibake that would pass the size gate and be
             # cached as if it were a page.
             print(
-                f"[urllib] Could not decompress "
+                f"[http] Could not decompress "
                 f"{content_encoding or 'response'} body: {e}",
                 file=sys.stderr,
             )
@@ -351,7 +356,7 @@ class NetworkFetcher(PageSource):
         # don't cache, don't escalate — the product page is genuinely gone.
         # Checked before the size/bot gate because error pages are also short.
         if is_error_page(html):
-            print("[urllib] 404 / gone error page", file=sys.stderr)
+            print("[http] 404 / gone error page", file=sys.stderr)
             return _ERROR_PAGE
 
         # Treat bot-blocks AND implausibly short throttle/error stubs the
@@ -360,7 +365,7 @@ class NetworkFetcher(PageSource):
         # can be much shorter than the threshold after tag stripping.
         if not looks_like_real_content(html):
             print(
-                f"[urllib] Not real content ({len(html)} bytes) — escalating",
+                f"[http] Not real content ({len(html)} bytes) — escalating",
                 file=sys.stderr,
             )
             return _BOT_BLOCKED
@@ -379,7 +384,7 @@ class NetworkFetcher(PageSource):
         try:
             from playwright.sync_api import sync_playwright
         except ImportError:
-            print("[playwright] Not installed", file=sys.stderr)
+            print("[js] Not installed", file=sys.stderr)
             return None
 
         try:
@@ -394,7 +399,7 @@ class NetworkFetcher(PageSource):
                 html = page.content()
                 if not looks_like_real_content(html):
                     print(
-                        f"[playwright] Not real content ({len(html)} bytes)",
+                        f"[js] Not real content ({len(html)} bytes)",
                         file=sys.stderr,
                     )
                     browser.close()
@@ -410,7 +415,7 @@ class NetworkFetcher(PageSource):
                 browser.close()
                 return content
         except Exception as e:
-            print(f"[playwright] {e}", file=sys.stderr)
+            print(f"[js] {e}", file=sys.stderr)
             return None
 
     # --- tier 3: Nodriver --------------------------------------------
@@ -420,7 +425,7 @@ class NetworkFetcher(PageSource):
         try:
             import nodriver as uc_nd
         except ImportError:
-            print("[nodriver] Not installed", file=sys.stderr)
+            print("[headed] Not installed", file=sys.stderr)
             return None
 
         import asyncio
@@ -434,7 +439,7 @@ class NetworkFetcher(PageSource):
                 page = await browser.get(url)
                 return await self._nodriver_read_page(page, mode, wait_ms)
             except Exception as e:
-                print(f"[nodriver] {e}", file=sys.stderr)
+                print(f"[headed] {e}", file=sys.stderr)
                 return None
             finally:
                 if browser:
@@ -443,7 +448,7 @@ class NetworkFetcher(PageSource):
         try:
             return asyncio.run(_fetch())
         except Exception as e:
-            print(f"[nodriver] {e}", file=sys.stderr)
+            print(f"[headed] {e}", file=sys.stderr)
             return None
 
     async def _nodriver_read_page(
@@ -472,7 +477,7 @@ class NetworkFetcher(PageSource):
             await page.sleep(interval)
             interval = min(interval * 1.5, 2.0)
         else:
-            print("[nodriver] Bot detection page still present", file=sys.stderr)
+            print("[headed] Bot detection page still present", file=sys.stderr)
             return None
 
         if wait_ms > DEFAULT_WAIT_MS:
@@ -487,7 +492,7 @@ class NetworkFetcher(PageSource):
         html = await page.get_content()
         if not looks_like_real_content(html):
             print(
-                f"[nodriver] Not real content ({len(html)} bytes)",
+                f"[headed] Not real content ({len(html)} bytes)",
                 file=sys.stderr,
             )
             return None
@@ -502,7 +507,7 @@ class NetworkFetcher(PageSource):
             page = await browser.get(url)
             return await self._nodriver_read_page(page, mode, wait_ms)
         except Exception as e:
-            print(f"[nodriver] {e}", file=sys.stderr)
+            print(f"[headed] {e}", file=sys.stderr)
             return None
 
     # --- tier 4: SeleniumBase UC -------------------------------------
@@ -513,7 +518,7 @@ class NetworkFetcher(PageSource):
         try:
             from seleniumbase import SB
         except ImportError:
-            print("[uc] SeleniumBase not installed", file=sys.stderr)
+            print("[headless] SeleniumBase not installed", file=sys.stderr)
             return None
 
         try:
@@ -522,7 +527,7 @@ class NetworkFetcher(PageSource):
                 self._reaper.track_new_since(pids_before)
                 return self._fetch_uc_with_session(sb, url, mode, wait_ms)
         except Exception as e:
-            print(f"[uc] {e}", file=sys.stderr)
+            print(f"[headless] {e}", file=sys.stderr)
             return None
 
     def _fetch_uc_with_session(
@@ -533,7 +538,7 @@ class NetworkFetcher(PageSource):
             sb.open(url)
             if not self._uc_wait_for_page(sb):
                 print(
-                    "[uc] Bot detection page still present after timeout",
+                    "[headless] Bot detection page still present after timeout",
                     file=sys.stderr,
                 )
                 return None
@@ -542,11 +547,14 @@ class NetworkFetcher(PageSource):
             self._uc_wait_for_scroll(sb)
             html = sb.get_page_source()
             if not looks_like_real_content(html):
-                print(f"[uc] Not real content ({len(html)} bytes)", file=sys.stderr)
+                print(
+                    f"[headless] Not real content ({len(html)} bytes)",
+                    file=sys.stderr,
+                )
                 return None
             return html if mode is ContentMode.HTML else html_to_text(html)
         except Exception as e:
-            print(f"[uc] {e}", file=sys.stderr)
+            print(f"[headless] {e}", file=sys.stderr)
             return None
 
     @staticmethod
@@ -659,22 +667,31 @@ class NetworkFetcher(PageSource):
         """Run the tier strategy for opts.transport. Returns (content, tier)."""
         mode, wait_ms = opts.mode, opts.wait_ms
 
-        if opts.transport is Transport.UC:
+        if opts.transport is Transport.HEADLESS:
             content = self._uc_either(sb_session, url, mode, wait_ms)
-            return content, "uc" if content else "none"
+            return content, "headless" if content else "none"
 
-        if opts.transport is Transport.NODRIVER:
+        if opts.transport is Transport.HEADED:
             content = self._nodriver_either(url, mode, wait_ms)
-            return content, "nodriver" if content else "none"
+            return content, "headed" if content else "none"
 
-        if opts.transport is Transport.PLAYWRIGHT:
+        if opts.transport is Transport.JS:
             content = self._fetch_playwright(url, mode, wait_ms) or ""
-            return content, "playwright" if content else "none"
+            return content, "js" if content else "none"
+
+        if opts.transport is Transport.HTTP:
+            # No escalation: a caller forcing this tier is asking for the
+            # cheap path only. A bot wall or error page is a failure here,
+            # not a reason to launch a browser they ruled out.
+            result = self._fetch_urllib(url, mode)
+            if result and result not in (_BOT_BLOCKED, _ERROR_PAGE):
+                return result, "http"
+            return "", "none"
 
         # AUTO: urllib first, then escalate.
         result = self._fetch_urllib(url, mode)
         if result and result not in (_BOT_BLOCKED, _ERROR_PAGE):
-            return result, "urllib"
+            return result, "http"
 
         if result == _ERROR_PAGE:
             # Genuine 404/gone: terminal. No escalation (same error), no cache.
@@ -684,28 +701,28 @@ class NetworkFetcher(PageSource):
         if result == _BOT_BLOCKED:
             # Bot protection: skip Playwright (it would fail too).
             print(
-                "[auto] Skipping Playwright (bot protection), trying Nodriver...",
+                "[auto] Skipping js (bot protection), trying headed...",
                 file=sys.stderr,
             )
             content = self._nodriver_either(url, mode, wait_ms)
             if content:
-                return content, "nodriver"
-            print("[auto] Nodriver failed, escalating to UC...", file=sys.stderr)
+                return content, "headed"
+            print("[auto] headed failed, escalating to headless...", file=sys.stderr)
             content = self._uc_either(sb_session, url, mode, wait_ms)
-            return content, "uc" if content else "none"
+            return content, "headless" if content else "none"
 
         # Non-bot failure (404, timeout): Playwright, then Nodriver, then UC.
-        print("[auto] Escalating to Playwright...", file=sys.stderr)
+        print("[auto] Escalating to js...", file=sys.stderr)
         content = self._fetch_playwright(url, mode, wait_ms) or ""
         if content:
-            return content, "playwright"
-        print("[auto] Escalating to Nodriver...", file=sys.stderr)
+            return content, "js"
+        print("[auto] Escalating to headed...", file=sys.stderr)
         content = self._nodriver_either(url, mode, wait_ms)
         if content:
-            return content, "nodriver"
-        print("[auto] Escalating to UC...", file=sys.stderr)
+            return content, "headed"
+        print("[auto] Escalating to headless...", file=sys.stderr)
         content = self._uc_either(sb_session, url, mode, wait_ms)
-        return content, "uc" if content else "none"
+        return content, "headless" if content else "none"
 
     def _nodriver_either(self, url, mode, wait_ms) -> str:
         """Nodriver fetch. The batch loop drives the persistent browser
@@ -730,9 +747,9 @@ class NetworkFetcher(PageSource):
         alone — launching a headed browser for a batch that plain HTTP can
         serve costs far more than one wasted request.
         """
-        if opts.transport is Transport.NODRIVER:
+        if opts.transport is Transport.HEADED:
             return True, False
-        if opts.transport is Transport.UC:
+        if opts.transport is Transport.HEADLESS:
             return False, True
         if opts.transport is Transport.AUTO and urls:
             probe = self._fetch_urllib(urls[0], opts.mode)
@@ -835,7 +852,7 @@ class NetworkFetcher(PageSource):
             or ""
         )
         self._write_cache(url, opts, content)
-        return content, "nodriver" if content else "none"
+        return content, "headed" if content else "none"
 
     def _run_batch(self, urls: list[str], opts: FetchOptions) -> list[FetchResult]:
         """Fetch many URLs through one persistent browser session.

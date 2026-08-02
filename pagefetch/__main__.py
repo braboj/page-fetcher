@@ -1,19 +1,19 @@
 """Command-line interface for pagefetch.
 
-Thin wrapper over NetworkFetcher that preserves the original
-fetch-page.py CLI surface exactly.
+Thin wrapper over NetworkFetcher.
 
 Usage:
     py -m pagefetch <url>                          # single URL, auto mode
     py -m pagefetch <url> --html                   # raw HTML output
-    py -m pagefetch <url> --js                     # force Playwright
-    py -m pagefetch <url> --nodriver               # force Nodriver (headed)
-    py -m pagefetch <url> --uc                     # force SeleniumBase UC
+    py -m pagefetch <url> --http                   # force plain HTTP
+    py -m pagefetch <url> --js                     # force a JS-rendering browser
+    py -m pagefetch <url> --headed                 # force bot bypass (needs display)
+    py -m pagefetch <url> --headless               # force bot bypass (no display)
     py -m pagefetch <url> --wait 5000              # extra wait (ms)
     py -m pagefetch <url> --no-cache               # bypass cache
 
     py -m pagefetch --batch urls.txt               # batch from file
-    py -m pagefetch --batch urls.txt --nodriver    # batch with Nodriver
+    py -m pagefetch --batch urls.txt --headed      # batch with bot bypass
     py -m pagefetch --batch urls.txt --output-dir out/  # save to files
     py -m pagefetch url1 url2 url3                 # batch from args
     echo url | py -m pagefetch --batch -           # batch from stdin
@@ -54,9 +54,10 @@ _VALUE_FLAGS = {"--wait", "--batch", "--output-dir", "--cache-dir"}
 _BARE_FLAGS = {
     "--html",
     "--no-cache",
+    "--http",
     "--js",
-    "--nodriver",
-    "--uc",
+    "--headed",
+    "--headless",
     "--clean-cache",
     "--dry-run",
     "--help",
@@ -65,12 +66,19 @@ _HELP_FLAGS = {"--help", "-h"}
 
 
 def _parse_transport(argv: list[str]) -> Transport:
-    if "--uc" in argv:
-        return Transport.UC
-    if "--nodriver" in argv:
-        return Transport.NODRIVER
+    """The transport to force, or AUTO when no transport flag is given.
+
+    Flags passed together resolve to the most escalated one rather than
+    being rejected, which is what the CLI has always done.
+    """
+    if "--headless" in argv:
+        return Transport.HEADLESS
+    if "--headed" in argv:
+        return Transport.HEADED
     if "--js" in argv:
-        return Transport.PLAYWRIGHT
+        return Transport.JS
+    if "--http" in argv:
+        return Transport.HTTP
     return Transport.AUTO
 
 
