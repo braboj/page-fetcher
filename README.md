@@ -175,21 +175,6 @@ from pagefetch import NetworkFetcher, FileCache
 fetcher = NetworkFetcher(cache=FileCache(cache_dir=Path("/my/cache")))
 ```
 
-## Dependencies
-
-| Dependency        | Tier       | Required | License    |
-| ----------------- | ---------- | -------- | ---------- |
-| `urllib` (stdlib) | `http`     | always   | PSF        |
-| `playwright`      | `js`       | optional | Apache-2.0 |
-| `nodriver`        | `headed`   | optional | AGPL-3.0   |
-| `seleniumbase`    | `headless` | optional | MIT        |
-
-The three browser engines live in the `browsers` extra
-(`pip install ".[browsers]"`). A missing one skips its tier with a message
-on stderr rather than failing. `nodriver` is AGPL-3.0 and affects you only
-if you distribute a service built on tier 3 — see
-[Architecture](docs/ARCHITECTURE.md#nodriver-and-the-agpl).
-
 ## Project structure
 
 | Path                       | Purpose                                            |
@@ -278,10 +263,24 @@ highest first:
 - [Dev journal](docs/dev-journal.md) — what changed each session and why
 - [Audits](docs/audits/) — 360-degree assessments, one report per run
 
+## Dependencies
+
+| Dependency        | Tier       | Required | License    |
+| ----------------- | ---------- | -------- | ---------- |
+| `urllib` (stdlib) | `http`     | always   | PSF        |
+| `playwright`      | `js`       | optional | Apache-2.0 |
+| `nodriver`        | `headed`   | optional | AGPL-3.0   |
+| `seleniumbase`    | `headless` | optional | MIT        |
+
+The three browser engines live in the `browsers` extra
+(`pip install ".[browsers]"`). A missing one skips its tier with a message
+on stderr rather than failing.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
 
 The optional `nodriver` dependency is AGPL-3.0 and is not covered by this
-license; see [Dependencies](#dependencies) for what that means if you
-distribute a service built on tier 3.
+license. It affects you only if you install it and then distribute a
+network service built on the **headed** tier; see
+[Architecture](docs/ARCHITECTURE.md#nodriver-and-the-agpl).
