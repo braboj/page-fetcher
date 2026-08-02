@@ -16,22 +16,16 @@ plausible content.
 
 ## Features
 
-- **Escalation** — plain HTTP first, a browser only when the response is a
-  bot wall, an error page, or too short to be real
 - **Detection** — bot walls, throttle pages and soft-404s, spotted in the
-  response body. A tier that cannot help is skipped
-- **Output** — stripped page text or the raw HTML
+  response body
 - **Batch mode** — many pages in one browser session, so the browser
   launches once rather than per URL
 - **Caching** — on disk, keyed by URL and content mode, with no TTL
 - **Self-healing** — junk entries are deleted on read and re-fetched, or
   swept with `--clean-cache`
-- **Compression** — gzip and deflate, decoded even from servers that
-  compress without declaring it
 - **URL allowlist** — anything that is not http or https is rejected before
   a request is made or a browser is launched
 - **Testable** — swap in a `FakeFetcher` and consuming code needs no network
-- **No dependencies** — tier 1 is standard library only
 
 ## Quick start
 
