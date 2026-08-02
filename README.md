@@ -65,8 +65,7 @@ if result.ok:
 ```
 
 That prints the tier that served the page and the size of the body — for
-this URL, `http` and a few hundred kilobytes of raw HTML. Tier 1 handled
-it, so no browser was launched.
+this URL, `http` and a few hundred kilobytes of raw HTML.
 
 ## Usage
 
@@ -94,11 +93,6 @@ py -m pagefetch <url> --js         # browser that renders JavaScript
 py -m pagefetch <url> --headed     # bot bypass, needs a display
 py -m pagefetch <url> --headless   # bot bypass, no display needed
 ```
-
-These name what a tier needs, not the library behind it. `--headed` and
-`--headless` both get past bot protection and differ only in whether a
-display is available; `--headed` is what AUTO tries first because it is
-faster. See [ADR-006](docs/decisions/006-two-bot-bypass-tiers.md).
 
 Change the output, the wait, or the cache:
 
@@ -243,8 +237,6 @@ py -m pip install -e ".[browsers]"
 playwright install chromium
 ```
 
-### The gate
-
 `pre-commit install` wires the first four of these to run on every commit.
 CI repeats all of them on every pull request, because hooks can be skipped
 with `--no-verify`. Run any one directly:
@@ -260,8 +252,6 @@ A coverage floor fails the build when coverage drops below it. The value
 lives in `fail_under` in `pyproject.toml` and ratchets upward as coverage
 improves, so read it there rather than here. What remains uncovered is the
 browser-tier method bodies, which need a headed Chrome and cannot run in CI.
-See [ADR-002](docs/decisions/002-python-toolchain-and-ci.md) for why the
-floor is measured against reality rather than set to an aspiration.
 
 ## Configuration reference
 
@@ -304,16 +294,9 @@ package hardcoding any project layout. An unusable path raises a
   pattern, the quality checks, maintenance
 - [Dev journal](docs/dev-journal.md) — what changed each session and why
 - [Audits](docs/audits/) — 360-degree assessments, one report per run
-- [Architecture Decision Records](docs/decisions/) — why the package was
-  extracted, how the toolchain and CI gate were chosen, and what the URL
-  scheme allowlist does and does not promise
 - Upstream history: the package grew inside
   [Imbra-Ltd/wuseria](https://github.com/Imbra-Ltd/wuseria) as
-  `tools/pagefetch/`, where two earlier decision records still cover it —
-  [ADR-035](https://github.com/Imbra-Ltd/wuseria/blob/main/docs/decisions/035-pagefetch-package-and-brandkit.md)
-  on the package extraction and the standard-library-only contract, and
-  [ADR-037](https://github.com/Imbra-Ltd/wuseria/blob/main/docs/decisions/037-pagefetch-cache-validity-no-ttl.md)
-  on content-based cache validity
+  `tools/pagefetch/` before being extracted into this repository
 
 ## License
 
