@@ -31,15 +31,14 @@ the code to understand the failure.
 
 ### 1.3 Stacked pull requests
 
-When a change depends on an unmerged branch, base the PR on that branch
-rather than `main`. Merge bottom-up, and **do not pass `--delete-branch`
-while a stacked PR still points at the branch** — that closes the stacked
-PR instead of retargeting it.
+The rules are in `base/core/git.md` — `Squash-merge safety`,
+`De-stacking a dependent branch` and `Merging a stack`. Read them there.
+What follows is only what this repository does differently, plus the
+commands.
 
-This repository squash-merges, so each merge breaks the PR above it. `main`
-gains one commit holding the merged changes while the next branch still
-carries the originals — identical content, divergent history, which GitHub
-reports as a conflict. After each merge:
+**De-stacking deviates from the template.** Upstream requires branching
+fresh off the updated `main` and cherry-picking the dependent branch's own
+commits into a new PR. This repository merges `main` in instead:
 
 ```bash
 gh pr edit <next> --base main
@@ -49,18 +48,17 @@ git merge origin/main            # resolve in favour of the branch
 git push
 ```
 
-Merge `main` in rather than rebasing. A rebase produces cleaner history but
-needs a force-push, and the squash discards the extra merge commit anyway —
-`main` looks identical either way.
+Both routes avoid the force-push, which is the rule that matters, and
+under squash merge both leave `main` byte-identical. The difference is
+that opening a new PR discards the review history on the old one, and a
+merge commit the squash deletes is not much of a cost against that.
+Proposed upstream as `solid-ai-templates#919`; if that lands, this stops
+being a deviation.
 
-Upstream `base/core/git.md` prescribes a different recovery for this: branch
-fresh off the updated `main`, cherry-pick only the dependent branch's own
-commits, and open a new PR. That yields a cleaner diff at the cost of losing
-the review history on the existing PR. Both avoid the force-push, which is
-the rule that matters. Reconcile the two when the templates submodule is
-next bumped — the upstream sections are `Squash-merge safety`,
-`De-stacking a dependent branch` and `Merging a stack`, none of which are in
-the pinned revision yet.
+The same step is needed for PRs that were never stacked. Branch protection
+requires the head to be up to date, so the second of any two PRs merged
+back to back needs `main` merged in first — even when the two touch
+disjoint files.
 
 If the base branch gets deleted while a stacked PR points at it:
 
@@ -96,12 +94,11 @@ label carries the type.
 
 ### 1.5 After merge
 
-The remote head branch is deleted automatically on merge, so only the
-local one needs cleaning up. The setting fires on merge only — a PR
-closed unmerged still leaves its branch behind. It has not been
-established whether it is skipped while a stacked PR targets the branch,
-so §1.3 still applies in full: retarget the dependent PR before the base
-branch merges.
+`platform/github.md` `[ID: platform-github-branch-cleanup]` carries the
+rule and the reasoning: verify against the PR record, never against
+`git branch --merged`, and inspect a `headRefOid` mismatch by content
+before deleting. The remote head branch is deleted automatically here, so
+only the local one needs cleaning up.
 
 ```bash
 git checkout main && git pull
@@ -110,40 +107,11 @@ git rev-parse <branch>
 git branch -D <branch>   # only when state is MERGED and the SHAs match
 ```
 
-`git branch --merged main` does **not** list a squash-merged branch, and
-every PR here is squash-merged: the squash commit is a new object, so the
-branch tip is not an ancestor of `main` and the filter drops it. A cleanup
-loop built on `--merged` therefore succeeds silently while deleting
-nothing.
-
-Comparing content instead — `git diff main <branch>` — is not a
-substitute. It cannot distinguish "the branch holds unmerged work" from
-"`main` has moved ahead of the branch"; both read as a non-empty diff.
-Anything merged after the branch was cut produces one. Neither does
-ancestry (`git log <merged-head>..<branch>`) nor `refs/pull/<N>/head`
-settle it, because a rebase gives the same work a new SHA on both sides.
-
-The PR record is the authority instead. `state: MERGED` says the pushed
-work landed, and `headRefOid` is the exact commit that was squashed — it
-survives the head branch's deletion. When it equals the local tip, every
-commit on the branch was pushed and is in `main`, so `-D` discards
-nothing.
-
-When the two SHAs differ, stop. It means either the remote head was
-rewritten — `gh pr update-branch` does that, leaving the local branch on
-the commit it replaced — or there are local commits that were never
-pushed, and only the second is dangerous. Do not guess which: run
-`git log --oneline <headRefOid>..<branch>` and read what comes back
-before deleting anything.
-
-Better, avoid the ambiguity. After any remote-side rewrite, resync
-before the PR merges, so the local tip and `headRefOid` still agree at
-cleanup time:
-
-```bash
-git fetch origin <branch>
-git reset --hard origin/<branch>
-```
+The mismatch case is routine in this repository rather than exceptional,
+because branch protection requires the head to be up to date: any PR that
+needed `main` merged in, or that `gh pr update-branch` rewrote, leaves the
+clone behind the head that was squashed. Resyncing before the PR merges
+(§1.3) means the question never arises.
 
 Then close the tracker ticket by hand. The integration attaches the pull
 request to it and stops there — it does not transition state on merge.
