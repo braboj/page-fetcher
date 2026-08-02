@@ -333,6 +333,54 @@ the revision this repository pins.
 The distinction only disappears when the pin equals HEAD, which is
 briefly and rarely.
 
+### 4.6 Move a path the tooling knows about
+
+`pyproject.toml` is not the only file pinning a path. The move to `src/`
+(ADR-010) touched three excludes outside it, and the ticket that planned
+the move listed none of them:
+
+| File | What it pins |
+| -- | -- |
+| `.gitattributes` | the fixture directory, held binary |
+| `.github/codeql-config.yml` | the same directory, in `paths-ignore` |
+| `.pre-commit-config.yaml` | the same directory, in three hooks |
+
+Enumerate them from the tree, not from the plan:
+
+```bash
+grep -rn "<old/path>" --include="*.toml" --include="*.yml" \
+     --include="*.yaml" --include="*.md" --include="*.py" . \
+  | grep -v docs/solid-ai-templates
+```
+
+`.gitattributes` is the one that fails quietly: it holds the captured
+HTML fixtures byte-for-byte, and line-ending normalization would rewrite
+them into a test failure that reads as a detection bug.
+
+Then compare counts before and after. `python-lib.md` requires this
+because a colliding exclude drops a whole directory from a scan while CI
+stays green:
+
+```bash
+py -m ruff format --check .   # file count
+py -m mypy                    # source count
+py -m pytest --cov=pagefetch  # tests, statements, coverage
+```
+
+Identical counts are the pass condition — a drop means a pattern started
+matching, not that code changed.
+
+Finally, re-run the commands the documents claim. A path move can break a
+documented workflow without breaking the gate: the move to `src/` left the
+README telling readers to clone and immediately run `py -m pagefetch`,
+which had only ever worked because the package sat at the root.
+
+Building the wheel to check it leaves `build/` and `*.egg-info` in the
+tree. Both are gitignored, so `git status` stays clean and nothing flags
+them — build into a scratch directory, or delete them in the same step.
+
+## 5. Releases
+
 Not published to PyPI. Consumers clone the repository or add it as a
 submodule, so `main` is the release surface: it must stay green, and the
 README must describe what is actually on it.

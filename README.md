@@ -34,8 +34,13 @@ Prerequisites: Python 3.10 or later.
 ```bash
 git clone https://github.com/braboj/page-fetcher.git
 cd page-fetcher
+py -m pip install -e .
 py -m pagefetch https://en.wikipedia.org/wiki/Web_scraping
 ```
+
+The install is required, not a convenience — the package lives in `src/`,
+so it is not importable from a bare checkout. Tier 1 pulls in no
+dependencies.
 
 That prints the page text to stdout — tens of kilobytes of it, starting:
 
@@ -44,8 +49,8 @@ Web scraping - Wikipedia Jump to content Main menu Main menu move to
 sidebar hide Navigation Main page Contents Current events Random article
 ```
 
-To use it as a library, run Python from the repository root so
-`import pagefetch` resolves:
+To use it as a library, `import pagefetch` from anywhere — the install
+above is what resolves it, not the working directory:
 
 ```python
 from pagefetch import NetworkFetcher, FetchOptions, ContentMode

@@ -6,6 +6,91 @@ git already holds.
 
 ---
 
+## 2026-08-02 (third session) — The suite was never testing the package
+
+**Tool**: Claude Code (Opus 5)
+
+Asked for a restructure, ran the spike, and the spike found something
+worse than the layout question it was sent to answer: `pagefetch` is not
+installed in this development checkout at all, and all 304 tests pass
+anyway. Every green run in this clone has exercised the working
+directory. The `src/` move went from a template-conformance chore to a
+correctness fix.
+
+**Changes**
+
+- Spiked the layout question against a throwaway copy of `HEAD` (#83),
+  measuring the move end-to-end rather than reasoning about it.
+- ADR-010 decided the move; #84 landed it before any file moved, per
+  `docs.md`'s rule that relocating content is an architectural decision.
+- Executed the move (#85): `pagefetch/` to `src/pagefetch/`,
+  `pagefetch/tests/` to `tests/`, all 22 files tracked as pure renames.
+- Repointed seven `pyproject.toml` settings, plus three path-based
+  excludes the ticket had not listed, plus four documents.
+
+**PRs merged**: #82, #84, #85
+
+**Issues created**: #83 — `solid-ai-templates#938`, `#939`
+
+ADR-010 recorded `Upstream: none`, correctly: adopting `src/` needs
+nothing upstream, since the chain already prescribes it. Both upstream
+issues came out of *executing* the move rather than deciding it — the
+suite's own `sys.path` insert (#938), and the fact that a path move
+breaks documented commands while every gate check stays green (#939).
+A decision-time verdict cannot anticipate those; the end-of-session
+harvest is what catches them.
+
+**Issues closed**: #71, #83. #82 referenced #81 without closing it —
+the submodule bump it tracks has not happened.
+
+**Decisions**
+
+- *The layout deviation had no argument behind it.* CLAUDE.md §1.2 kept
+  the flat layout on two grounds: the package predates this repository,
+  and the cache key scheme is path-independent. The first is history. The
+  second argues the move is *safe* — an argument for moving, filed as an
+  argument against it. Neither survived being asked directly.
+- *A CI job would have been the wrong fix.* The strongest alternative was
+  to keep the layout and add a job that installs the wheel and imports it
+  from a neutral directory. It catches the bug, but only after a
+  contributor has already seen green locally against unpackaged source.
+  A layout that cannot express the failure beats a job that reports it.
+  Recorded in ADR-010 rather than dismissed.
+- *Identical measurements were the evidence, not a disappointment.*
+  `python-lib.md` asks for scanned-file counts compared before and after
+  precisely because a colliding exclude drops a package silently while CI
+  stays green. Tests, coverage, statement counts, ruff's file count,
+  mypy's source count and the built wheel's contents all came out
+  unchanged, which is what proves no pattern started matching.
+
+**What went wrong**
+
+- *The suite carried the bug it was supposed to catch.* `conftest.py`
+  inserted the repository root into `sys.path` so `import pagefetch`
+  resolved without an install — the actual mechanism behind 304 tests
+  passing against an uninstalled package. Nothing in ADR-010 or the
+  ticket predicted it; it surfaced from grepping the tree for stale paths
+  after the move. Repointing it would have quietly reinstated exactly
+  what the ADR decided to end, and the move would have achieved nothing.
+- *The ticket's config table was incomplete, and trusting it would have
+  failed silently.* #71 listed seven `pyproject.toml` settings and one CI
+  line. It missed `.gitattributes`, `.github/codeql-config.yml` and three
+  `.pre-commit-config.yaml` hooks, all pinning the fixture directory. The
+  `.gitattributes` one is the dangerous one: line-ending normalization
+  would have rewritten the frozen HTML snapshots into a failure that
+  reads as a detection bug. Enumerate excludes by grepping the tree, not
+  by reading the ticket that enumerated them once.
+- *Two build artifacts were left in the working tree.* Running
+  `pip wheel .` from the repository root created `build/` and
+  `pagefetch.egg-info/`. Both gitignored, so `git status` stayed clean and
+  nothing flagged them; found by checking directory timestamps against
+  the session. Build into a scratch directory, or clean up in the same
+  step.
+- *A markdown table broke on a column widened in isolation.* Repointing
+  the README's project-structure paths widened column one for nine rows
+  and left eleven behind. `ruff format` does not check markdown tables, so
+  the gate stayed green — the editor's linter caught it.
+
 ## 2026-08-02 (second session) — Retiring the template debt
 
 **Tool**: Claude Code (Opus 5)
