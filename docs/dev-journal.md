@@ -6,6 +6,102 @@ git already holds.
 
 ---
 
+## 2026-08-02 — Transport modes named off their libraries; the tracker demoted
+
+**Tool**: Claude Code (Opus 5)
+
+Started as a README conformance check against the template chain and
+turned into three things: a breaking rename of the transport API, a
+decision about which of GitHub and Linear is authoritative, and four
+template gaps filed upstream.
+
+**Changes**
+
+- Restructured the README and moved its technical half to a new
+  `docs/ARCHITECTURE.md` (#56). The coverage figures it quoted were
+  stale — 65% against a floor of 63% where the measured pair was 79 and
+  76 — so the paragraph now points at `fail_under` rather than restating
+  a number that ratchets.
+- Renamed the transport modes off their libraries (#57): `PLAYWRIGHT`,
+  `NODRIVER` and `UC` became `JS`, `HEADED` and `HEADLESS`, with
+  `Transport.HTTP` and `--http` added because tier 1 could not be forced
+  before. Forcing it does not escalate.
+- Made GitHub the system of record and moved two rationales out of the
+  tracker into ADR-007 and ADR-008 (#58), then recorded how to merge a
+  stack under squash-merge (#61).
+- Fixed corrosim's DOI badge (`braboj/corrosim#335`), which is a
+  different repository but the same session.
+
+**PRs merged**: #56, #57, #58, #61
+
+**Issues created**: #59, #60, #62, #63, #64, #65 —
+`solid-ai-templates#884`, `#885`, `#886`
+
+**Issues closed**: #60
+
+**Decisions**
+
+- *ADR-006 — two bot-bypass tiers.* Nobody had recorded why tiers 3 and
+  4 both exist. Neither this repository nor wuseria ADR-035, which
+  preserved the ladder "byte-for-byte" without arguing for it. They are
+  not redundant: tier 3 is roughly three times faster and tier 4 is the
+  only one that runs without a display. That is also why the names are
+  `HEADED` and `HEADLESS` — the display requirement is the constraint a
+  caller cannot change, whereas which fingerprints each library hides
+  changes without notice.
+- *ADR-007 — GitHub is the system of record.* Tracker data is portable;
+  the lock-in is identifiers written into commit messages and PR titles,
+  and rationale that exists only in a ticket description. A branch name
+  is the one place a tracker identifier belongs, because branches are
+  deleted after merge.
+- *ADR-008 — no licensing document yet.* Nothing is redistributed, so
+  Apache-2.0's NOTICE requirement does not attach. Three named triggers
+  would change that.
+
+**What went wrong**
+
+- *Squash-merging a stack breaks the next PR.* `main` gained one commit
+  holding #56's changes while #57's branch still carried the originals —
+  identical content, divergent history, reported as a conflict. Rebasing
+  was the first instinct and the wrong one: it needs a force-push for no
+  benefit, since the squash discards a merge commit anyway. Now a rule in
+  `CLAUDE.md` §2.1.
+- *The CLAUDE.md audit checked the file against the code but not against
+  the template chain it declares.* It missed that neither platform
+  template was declared, which is why `platform-linear.md`'s composition
+  rule — the code host governs the repository — had never applied here.
+  The user caught it.
+
+**Template feedback**
+
+Three duplicates filed and withdrawn, two genuine rules contributed.
+
+`#884`, `#885` and `#886` restate `#881`, `#882` and `#883`. All three
+originals were already closed, and two were already fixed upstream in
+`bd8f186` and `3a2b7dc`. `#886` was closed as a duplicate with the
+reason recorded; the other two were already closed.
+
+The submodule pointer is what hid it. This repository is pinned at
+`v2.35.0-18-g87493e2`, fifteen commits behind `origin/main`, and the
+fixes are inside those fifteen. Reading the template file in the pinned
+submodule answers "does this rule exist here", which is not the question
+— the question is "has this already been raised", and that needs
+upstream HEAD and the upstream issue list. The same check found that
+`git.md` at HEAD already covers squash-merge safety, de-stacking and
+merging a stack, which would have been a fourth duplicate.
+
+Filed after checking both: `solid-ai-templates#907` (a README MUST NOT
+state a measured figure that moves — coverage, test counts, byte sizes;
+name the file that holds it) and `#908` (name a pluggable tier for what
+it requires of the caller, not for its library, which is ADR-006
+genericized).
+
+**Pending**: #62–#65 are an unstarted README backlog. Whether Linear's
+sync is one-way GitHub → Linear was confirmed by the user, but
+BRA-595/596/600 were left open to close themselves on merge and have not
+been verified. `docs/ARCHITECTURE.md` is an interim home until arc42
+documents exist; ADR-008 names where its licensing section lands then.
+
 ## 2026-07-31 — Getting the post-merge branch check right
 
 **Tool**: Claude Code (Opus 5)
