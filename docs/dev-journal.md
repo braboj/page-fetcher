@@ -6,6 +6,63 @@ git already holds.
 
 ---
 
+## 2026-08-02 (fourth session) — A decision refuted by its own reconciliation
+
+**Tool**: Claude Code (Opus 5)
+
+Two asks, and the second one broke the first. Retired the `P4` deferral
+label in the morning; bumped the templates submodule in the afternoon and
+found that upstream had spent the same range making `P4` load-bearing.
+The gap between the two was about three hours.
+
+**Changes**
+
+- ADR-011 retired `P4` (#87, #88). The argument was that both issues
+  carrying it — #59 and #9 — duplicated a record the repository already
+  held, in ADR-008 and in the README and `ARCHITECTURE.md` respectively,
+  and that a label records *that* something is deferred while carrying
+  nothing about *why*.
+- Bumped the submodule `a835374` → `244d3ff`, v2.37.0-3 to v2.40.0-2
+  (#81, #89). Nineteen commits, not the eight the ticket listed.
+- ADR-012 superseded ADR-011 after the bump refuted its third decision.
+- Dropped CLAUDE.md §5.1's reproduce-before-reporting bullet, which
+  `review.md` now carries upstream.
+- Added the first tracked `.vscode` config — Pylance's type evaluation
+  off so mypy is the only type checker, and `.gitignore` turned from a
+  wholesale ignore into the allowlist `git.md` now prescribes.
+
+**PRs merged**: #88, #89
+
+**Issues created**: #87. **Closed**: #87, #81
+
+ADR-011 named `[ID: base-issues-defer]`'s Backlog-milestoned issue as the
+fallback for when deferral needs to be filterable. Upstream `5a73dc0`,
+inside the range the bump crossed, deleted that mechanism and named `P4`
+in its place: "Do NOT park the work in a named holding milestone
+instead." So the fallback was gone within hours of being written down.
+
+The interesting part is what did *not* fail. Upstream's reasoning is the
+inverse of ADR-011's — it argues a label is the durable half of the pair,
+because a lane's meaning dies when the milestone is closed. That is true
+against a milestone and says nothing about a label against a decision
+record, which was ADR-011's actual comparison. So the deletion survived
+and only the fallback was withdrawn. The temptation was to treat a nearby
+rule moving as the ground moving, and reverse a decision whose facts were
+unchanged: still eight open issues, still two deferrals, both still
+recorded where their reasoning is.
+
+Worth keeping in view: `base-issues-defer` moved twice inside one bumped
+range. ADR-012 says to re-read it on the next bump rather than assume the
+reconciliation holds.
+
+The editor-config item was the session's one genuine conformance gap.
+`quality-gates.md` Layer 1 has required editor config that enables the
+checks since long before this bump — the repository had no `.vscode` at
+all and ignored the directory. The new rules in `22cbb8e` and `df59dca`
+did not create the gap, they made it visible.
+
+---
+
 ## 2026-08-02 (third session) — The suite was never testing the package
 
 **Tool**: Claude Code (Opus 5)
