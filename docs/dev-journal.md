@@ -6,6 +6,68 @@ git already holds.
 
 ---
 
+## 2026-08-02 (sixth session) — The README front matter and the last boolean
+
+**Tool**: Claude Code (Opus 5)
+
+Three issues that all sat on the same ten lines of README, plus the one
+CLI flag that never caught up to the library. Both remaining P2s closed.
+
+**Changes**
+
+- Split the subtitle (#62, #94). The differentiator half keeps the slot;
+  the scope disclaimer moved to Known limitations.
+- Rewrote the lede against the detector (#63, #95). 48/100 → 18/100.
+- Replaced `--html` with `--format`, defaulting to text (#65, #96).
+
+**PRs merged**: #94, #95, #96
+
+**Closed**: #62, #63, #65
+
+The subtitle question turned on one word in `readme.md`: the slot is for
+an italic *differentiator*. That settles both halves at once. "Fetch a
+page by the cheapest means that works" is the differentiator and earns
+the slot — it is not repetition of the lede, because compressing a claim
+the summary then expands is exactly what the heading / badges / subtitle
+/ summary order is for. "Not for bulk scraping" is a limit, and a limit
+placed where nobody has decided to use the tool yet does no work. In
+Known limitations it is read by someone about to scale up, which is the
+only reader it was ever for. The hyphen that prompted the ticket was a
+symptom of one line doing two jobs.
+
+The lede is the more useful result, because it says why five rewrites in
+one session failed. The mechanical pass was clean both times — no marker
+vocabulary, no curly quotes, not one em-dash. Everything that scored was
+structural, and the structure survived every rewrite that only changed
+words. The load-bearing one: "pagefetch selects the transport per
+request" followed by "It issues..., inspects..., and escalates...", an
+abstract topic sentence with its own concrete restatement immediately
+behind it. Deleting the abstract half is the only edit that removes it;
+rewording either half leaves the shape and the reader flags the
+replacement too.
+
+Worth keeping: the three-part list stayed. "Bot wall, error page, body
+too short" is what `detection.py` actually returns, so it is a real list
+and not a reach for three — what gave it away as padding was the broken
+parallelism, two noun phrases and then an adjectival one. Fixing the
+parallelism was the right move, deleting the list would not have been.
+
+`--format` is small but closes the loop on something wuseria ADR-035
+started: the library replaced `raw_html` with `ContentMode` for the
+reason `quality.md` gives, and the CLI kept the boolean for another year.
+The argument that a boolean cannot express its own default is not
+abstract here — before this there was no way to write "text", so a script
+could not state its intent and would have silently followed the default
+if it moved.
+
+One thing found while writing it, not fixed: `_flag_value` returns `None`
+both for "flag absent" and "flag present as the last argument", so a
+trailing `--wait` silently takes the default. `_parse_mode` guards
+against it; `_parse_wait_ms` still does not. Left alone as out of scope
+rather than smuggled in.
+
+---
+
 ## 2026-08-02 (fifth session) — A rule nobody had switched on
 
 **Tool**: Claude Code (Opus 5)
