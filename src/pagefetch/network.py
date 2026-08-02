@@ -234,6 +234,7 @@ class NetworkFetcher(PageSource):
         user_agent: str = DEFAULT_USER_AGENT,
         reaper: ChromeReaper | None = None,
     ) -> None:
+        """Wire the cache, the user agent, and the Chrome reaper."""
         self._cache = cache or FileCache()
         self._ua = user_agent
         # Shared by default: a reaper per fetcher registered an atexit
@@ -243,6 +244,7 @@ class NetworkFetcher(PageSource):
     # --- public PageSource interface ---------------------------------
 
     def fetch(self, url: str, options: FetchOptions | None = None) -> FetchResult:
+        """Fetch one URL, escalating transports until the body looks real."""
         require_supported_scheme(url)
         opts = options or FetchOptions()
         content, tier = self._fetch_single(url, opts)
@@ -251,6 +253,7 @@ class NetworkFetcher(PageSource):
     def fetch_batch(
         self, urls: list[str], options: FetchOptions | None = None
     ) -> list[FetchResult]:
+        """Fetch many URLs in order, reusing one browser session."""
         # Validate the whole list before starting: a batch launches a
         # browser and can run for minutes, so failing on URL 87 of 100
         # after all that work is worse than refusing up front.
@@ -260,6 +263,7 @@ class NetworkFetcher(PageSource):
         return self._run_batch(urls, opts)
 
     def download_bytes(self, url: str, min_size: int = 0) -> bytes | None:
+        """Download raw bytes over HTTP. No escalation — tier 1 only."""
         import urllib.request
 
         require_supported_scheme(url)
@@ -281,6 +285,7 @@ class NetworkFetcher(PageSource):
     def screenshot(
         self, url: str, dest: Path, options: FetchOptions | None = None
     ) -> bool:
+        """Capture a full-page screenshot to dest. Needs the `js` tier."""
         require_supported_scheme(url)
         opts = options or FetchOptions()
         try:
@@ -306,8 +311,10 @@ class NetworkFetcher(PageSource):
     # --- tier 1: urllib ----------------------------------------------
 
     def _fetch_urllib(self, url: str, mode: ContentMode) -> str | None:
-        """Fetch via plain urllib. Returns content, the _BOT_BLOCKED /
-        _ERROR_PAGE sentinel, or None."""
+        """Fetch via plain urllib.
+
+        Returns content, the _BOT_BLOCKED / _ERROR_PAGE sentinel, or None.
+        """
         import urllib.error
         import urllib.request
 
@@ -379,8 +386,10 @@ class NetworkFetcher(PageSource):
     def _fetch_playwright(
         self, url: str, mode: ContentMode, wait_ms: int
     ) -> str | None:
-        """Fetch via headless Chromium. Uses domcontentloaded (not
-        networkidle) — faster on ad-heavy pages."""
+        """Fetch via headless Chromium.
+
+        Uses domcontentloaded (not networkidle) — faster on ad-heavy pages.
+        """
         try:
             from playwright.sync_api import sync_playwright
         except ImportError:
@@ -513,8 +522,11 @@ class NetworkFetcher(PageSource):
     # --- tier 4: SeleniumBase UC -------------------------------------
 
     def _fetch_uc(self, url: str, mode: ContentMode, wait_ms: int) -> str | None:
-        """Fetch via SeleniumBase UC mode. Launches a new session per call;
-        batch mode reuses one via _fetch_uc_with_session."""
+        """Fetch via SeleniumBase UC mode.
+
+        Launches a new session per call; batch mode reuses one via
+        _fetch_uc_with_session.
+        """
         try:
             from seleniumbase import SB
         except ImportError:
@@ -559,8 +571,11 @@ class NetworkFetcher(PageSource):
 
     @staticmethod
     def _uc_wait_for_page(sb, timeout_s: int = 15) -> bool:
-        """Wait past a bot-protection interstitial: first for readyState,
-        then poll the page source for bot detection with backoff."""
+        """Wait past a bot-protection interstitial.
+
+        First for readyState, then poll the page source for bot detection
+        with backoff.
+        """
         import time
 
         deadline = time.monotonic() + timeout_s
@@ -725,8 +740,11 @@ class NetworkFetcher(PageSource):
         return content, "headless" if content else "none"
 
     def _nodriver_either(self, url, mode, wait_ms) -> str:
-        """Nodriver fetch. The batch loop drives the persistent browser
-        directly (see _run_batch); single/escalation fetches are standalone."""
+        """Fetch via the headed tier.
+
+        The batch loop drives the persistent browser directly (see
+        _run_batch); single/escalation fetches are standalone.
+        """
         return self._fetch_nodriver(url, mode, wait_ms) or ""
 
     def _uc_either(self, sb_session, url, mode, wait_ms) -> str:

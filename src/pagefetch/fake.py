@@ -47,6 +47,7 @@ class FakeFetcher(PageSource):
         responses: dict[str, str] | None = None,
         binary: dict[str, bytes] | None = None,
     ) -> None:
+        """Seed the fetcher with per-URL text and binary responses."""
         self._responses = responses or {}
         self._binary = binary or {}
         self.calls: list[str] = []
@@ -54,6 +55,7 @@ class FakeFetcher(PageSource):
         self.screenshot_calls: list[str] = []
 
     def fetch(self, url: str, options: FetchOptions | None = None) -> FetchResult:
+        """Return the mapped body for a URL, or an ok=False empty result."""
         self.calls.append(url)
         opts = options or FetchOptions()
         body = self._responses.get(url, "")
@@ -63,9 +65,11 @@ class FakeFetcher(PageSource):
     def fetch_batch(
         self, urls: list[str], options: FetchOptions | None = None
     ) -> list[FetchResult]:
+        """Fetch each URL in order. No session to reuse, so no batching."""
         return [self.fetch(url, options) for url in urls]
 
     def download_bytes(self, url: str, min_size: int = 0) -> bytes | None:
+        """Return the mapped bytes, or None when unmapped or under size."""
         self.binary_calls.append(url)
         data = self._binary.get(url)
         if data is None or len(data) < min_size:
@@ -75,9 +79,11 @@ class FakeFetcher(PageSource):
     def screenshot(
         self, url: str, dest: Path, options: FetchOptions | None = None
     ) -> bool:
-        """Write a placeholder image to dest, as the real fetcher writes a
-        real one. Returns False without touching dest for an unmapped URL,
-        which is what a failed capture does."""
+        """Write a placeholder image to dest.
+
+        The real fetcher writes a real one. Returns False without touching
+        dest for an unmapped URL, which is what a failed capture does.
+        """
         self.screenshot_calls.append(url)
         if url not in self._responses:
             return False

@@ -64,6 +64,7 @@ class ChromeReaper:
     """Tracks Chrome PIDs spawned by this process and reaps survivors."""
 
     def __init__(self, register_atexit: bool = True) -> None:
+        """Start with no tracked PIDs, optionally reaping them at exit."""
         self._spawned_pids: set[int] = set()
         if register_atexit:
             atexit.register(self.cleanup)

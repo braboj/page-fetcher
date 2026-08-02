@@ -27,8 +27,11 @@ CACHE_DIR_ENV = "PAGEFETCH_CACHE_DIR"
 
 @dataclass
 class CleanReport:
-    """Outcome of a cache sweep. `removed` pairs each purged file with the
-    reason it was junk; `dry_run` means nothing was actually deleted."""
+    """Outcome of a cache sweep.
+
+    `removed` pairs each purged file with the reason it was junk;
+    `dry_run` means nothing was actually deleted.
+    """
 
     removed: list[tuple[Path, str]] = field(default_factory=list)
     kept: int = 0
@@ -39,6 +42,7 @@ class FileCache:
     """A directory of cached page responses and screenshots."""
 
     def __init__(self, cache_dir: Path | None = None):
+        """Resolve the cache directory and confirm it is usable."""
         # Precedence: explicit arg > PAGEFETCH_CACHE_DIR env > CWD-relative
         # default. The default stays portable (not tied to any project
         # layout); a consumer uses the env var to unify all entry points.
@@ -88,28 +92,39 @@ class FileCache:
 
     @staticmethod
     def url_hash(url: str) -> str:
+        """Return the cache key stem for a URL.
+
+        The scheme is fixed: changing the digest, its length, or the
+        suffixes below silently invalidates every existing cache.
+        """
         return hashlib.sha256(url.encode()).hexdigest()[:16]
 
     def key(self, url: str, mode: ContentMode) -> Path:
+        """Return the path a URL's body occupies for the given mode."""
         suffix = ".html" if mode is ContentMode.HTML else ".txt"
         return self.cache_dir / (self.url_hash(url) + suffix)
 
     def screenshot_path(self, url: str) -> Path:
+        """Return the path a URL's screenshot occupies."""
         return self.cache_dir / (self.url_hash(url) + ".png")
 
     def read(self, url: str, mode: ContentMode) -> str | None:
+        """Return the cached body for a URL, or None if there is none."""
         path = self.key(url, mode)
         if path.exists():
             return path.read_text(encoding="utf-8")
         return None
 
     def write(self, url: str, mode: ContentMode, content: str) -> None:
+        """Store a body under the URL's key, creating the directory."""
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.key(url, mode).write_text(content, encoding="utf-8")
 
     def delete(self, url: str, mode: ContentMode) -> bool:
         """Remove one cached entry. Returns True if a file was removed.
-        Idempotent — a missing entry is not an error."""
+
+        Idempotent — a missing entry is not an error.
+        """
         path = self.key(url, mode)
         if path.exists():
             path.unlink()
@@ -117,8 +132,10 @@ class FileCache:
         return False
 
     def entries(self) -> list[Path]:
-        """All cached page bodies (.txt / .html). Screenshots (.png) are not
-        page content and are excluded."""
+        """All cached page bodies (.txt / .html).
+
+        Screenshots (.png) are not page content and are excluded.
+        """
         if not self.cache_dir.exists():
             return []
         return sorted(
