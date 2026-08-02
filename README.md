@@ -8,10 +8,10 @@ _Fetch a page by the cheapest means that works._
 
 A plain HTTP request is enough for static HTML. Pages that render in
 JavaScript, or that block anything that looks automated, need a browser.
-pagefetch selects the transport per request. It issues a plain HTTP request,
-inspects the response body, and escalates to a headless and then a headed
-browser only when the body is a bot wall, an error page, or too small to be
-plausible content.
+pagefetch starts with the HTTP request and reads what comes back. A bot
+wall, an error page, or a body too short to be a real page sends it up a
+tier: first a headless browser, then a headed one. Anything else it
+returns as it stands.
 
 ## Features
 
