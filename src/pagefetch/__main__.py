@@ -166,8 +166,11 @@ def _collect_urls(argv: list[str], batch_file: str | None) -> list[str]:
 
 
 def _classify_junk(body: str) -> str | None:
-    """Reason a cached body is junk, or None to keep it. Order matters only
-    for the label — a page that is both is reported as bot-blocked."""
+    """Reason a cached body is junk, or None to keep it.
+
+    Order matters only for the label — a page that is both is reported as
+    bot-blocked.
+    """
     if is_bot_blocked(body):
         return "bot-blocked"
     if is_error_page(body):
@@ -176,9 +179,12 @@ def _classify_junk(body: str) -> str | None:
 
 
 def _make_cache(argv: list[str]) -> FileCache:
-    """Build a FileCache honoring --cache-dir. A CLI value is passed as the
-    explicit cache_dir (highest precedence: CLI > env > default); absent the
-    flag, FileCache resolves the env var / default itself."""
+    """Build a FileCache honoring --cache-dir.
+
+    A CLI value is passed as the explicit cache_dir (highest precedence:
+    CLI > env > default); absent the flag, FileCache resolves the env var
+    / default itself.
+    """
     cli_dir = _flag_value(argv, "--cache-dir")
     return FileCache(cache_dir=Path(cli_dir) if cli_dir else None)
 
@@ -198,6 +204,7 @@ def _clean_cache(cache: FileCache, dry_run: bool) -> None:
 
 
 def main() -> None:
+    """Run the CLI: parse argv, fetch or clean, exit with a status code."""
     argv = sys.argv
     if len(argv) < _MIN_ARGV_WITH_TARGET:
         print(__doc__)
@@ -272,8 +279,11 @@ def main() -> None:
 
 
 def _batch_exit_code(results) -> int:
-    """EXIT_OK if every URL returned content, EXIT_ALL_FAILED if none did,
-    EXIT_PARTIAL otherwise. An empty batch is not a failure."""
+    """Grade a batch by how many URLs returned content.
+
+    EXIT_OK if every URL did, EXIT_ALL_FAILED if none did, EXIT_PARTIAL
+    otherwise. An empty batch is not a failure.
+    """
     if not results:
         return EXIT_OK
     failed = sum(1 for r in results if not r.ok)
@@ -283,8 +293,11 @@ def _batch_exit_code(results) -> int:
 
 
 def _write_batch_output(results, output_dir: str | None, mode: ContentMode) -> None:
-    """Reproduce the original batch output: one file per URL to a
-    directory (hash-named), or delimited blocks to stdout."""
+    """Write the batch results.
+
+    One file per URL to a directory (hash-named), or delimited blocks to
+    stdout.
+    """
     out_path = Path(output_dir) if output_dir else None
     if out_path:
         out_path.mkdir(parents=True, exist_ok=True)

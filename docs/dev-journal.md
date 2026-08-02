@@ -6,6 +6,62 @@ git already holds.
 
 ---
 
+## 2026-08-02 (fifth session) — A rule nobody had switched on
+
+**Tool**: Claude Code (Opus 5)
+
+Bumped the templates submodule to v2.41.0 and reconciled. Nine commits,
+three files in the resolved chain. The interesting find was not in the
+diff: a rule the chain had carried since the toolchain was set up had
+never been enabled, and it took a *new* rule to make that visible.
+
+**Changes**
+
+- Bumped the submodule `244d3ff` → v2.41.0 (#90, #93).
+- Enabled the Ruff `D` rules with the Google convention and exempted
+  `tests/**`. Wrote seventeen missing docstrings and reflowed sixteen
+  that ran their summary into the description.
+- CLAUDE.md §2.4 stopped restating the tier-naming rule, which
+  `quality.md` now carries upstream.
+- Added the `src/` layout proof to PLAYBOOK §4.6 and recorded why the
+  stale-egg-info failure mode cannot happen here.
+- Spiked #92: `network.py` at 897 lines against the new module-split
+  rule.
+
+**PRs merged**: #93
+
+**Issues created**: #92. **Closed**: #90
+
+`python-lib.md`'s tooling table has listed Ruff `D` rules as the
+docstring gate from the beginning, and CLAUDE.md §2.2 has claimed every
+public symbol has a docstring for just as long. Both were true as
+statements and false as facts: `D` was never in `select`, so nothing
+checked. Turning it on found 260 violations — 211 of them in the suite,
+where a docstring on `test_undecompressable_body_is_not_cached` would
+restate the name and nothing else. That is exactly why the exemption
+`9937d11` added is the enabling change and not a loosening: without it,
+adopting the rule means 209 lines of restatement, and the honest response
+to that bill is to keep not adopting it.
+
+Two of the nine commits reconciled to nothing because this repository had
+already made the argument — `increase-if-necessary` on the pip ecosystem,
+and naming a tier for its requirement rather than its library. Both landed
+here first. That is the second bump in a row where part of the diff was
+this project's own reasoning arriving back from upstream, which changes
+what reconciliation means: the question is not only "what must change
+here" but "what did we already answer, and does the upstream phrasing say
+it better".
+
+One rule was declined on its literal terms. `python-lib.md` wants
+`grep -rn "sys.path" tests/` to return nothing; here it returns
+`conftest.py`'s docstring, which records that the manipulation was removed
+and how the suite came to pass against unpackaged source. Satisfying the
+grep means deleting the account of the defect the rule exists to prevent.
+The check is a proxy; the layout proof — uninstall, then collection must
+fail — is the real test, and that one passes.
+
+---
+
 ## 2026-08-02 (fourth session) — A decision refuted by its own reconciliation
 
 **Tool**: Claude Code (Opus 5)

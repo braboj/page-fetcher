@@ -72,21 +72,29 @@ class PageSource(ABC):
 
     @abstractmethod
     def fetch(self, url: str, options: FetchOptions | None = None) -> FetchResult:
-        """Fetch one URL. Never raises for fetch failure — returns a
-        FetchResult with ok=False and content="" instead."""
+        """Fetch one URL.
+
+        Never raises for fetch failure — returns a FetchResult with
+        ok=False and content="" instead.
+        """
 
     @abstractmethod
     def fetch_batch(
         self, urls: list[str], options: FetchOptions | None = None
     ) -> list[FetchResult]:
         """Fetch many URLs, reusing one browser session where applicable.
-        Order of results matches the input order."""
+
+        Order of results matches the input order.
+        """
 
     @abstractmethod
     def download_bytes(self, url: str, min_size: int = 0) -> bytes | None:
-        """Download raw bytes (images, PDFs). Returns None on failure or
-        when the payload is smaller than min_size. The caller owns the
-        destination path and naming — this is transport only."""
+        """Download raw bytes (images, PDFs).
+
+        Returns None on failure or when the payload is smaller than
+        min_size. The caller owns the destination path and naming — this
+        is transport only.
+        """
 
     @abstractmethod
     def screenshot(

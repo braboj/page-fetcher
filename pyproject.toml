@@ -74,7 +74,11 @@ select = [
     "BLE",  # flake8-blind-except
     "PL",   # pylint
     "RUF",  # ruff-specific
+    "D",    # pydocstyle
 ]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
 # The escalation ladder catches broad exceptions on purpose: any failure
@@ -105,7 +109,11 @@ select = [
 # argument per tier, which trips the argument-count rules. S311 flags
 # `random` as non-cryptographic, which is the point — a seeded generator
 # builds a deterministic incompressible fixture.
-"tests/*" = ["S101", "PLR2004", "PLR0913", "PLR0917", "S311"]
+#
+# D (pydocstyle): a docstring on `test_undecompressable_body_is_not_cached`
+# restates the name. The naming convention already carries a test's intent,
+# so the rule would buy 209 lines of restatement and no information.
+"tests/**" = ["S101", "PLR2004", "PLR0913", "PLR0917", "S311", "D"]
 
 [tool.mypy]
 python_version = "3.10"
