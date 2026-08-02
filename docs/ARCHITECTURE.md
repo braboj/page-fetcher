@@ -80,6 +80,21 @@ throttle detection: "rate limit" on its own is ordinary technical prose and
 only registers alongside a word that a page actually being throttled would
 use.
 
+## Response decoding
+
+Tier 1 advertises `gzip, deflate` and undoes whichever comes back, falling
+back to a raw deflate stream when the zlib header is missing — some servers
+send one.
+
+It also sniffs the gzip magic bytes when the header does not claim gzip,
+because a server that compresses without declaring it is not hypothetical
+and is the worst case here. Decoded as text, an undeclared gzip body becomes
+mojibake, which is comfortably larger than `MIN_REAL_CONTENT_BYTES` — so it
+passes the real-content gate and is written to the cache as though it were a
+page. A declared encoding this tier cannot undo, including any chain of
+them, is rejected for the same reason rather than handed back unchanged.
+Escalating to a browser beats caching garbage.
+
 ## Event-driven waits
 
 Browser tiers poll rather than sleeping a fixed time. They wait for
