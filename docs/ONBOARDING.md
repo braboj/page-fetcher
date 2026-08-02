@@ -86,8 +86,9 @@ rest.
 
 | File                     | Why it matters                                       |
 | ------------------------ | ---------------------------------------------------- |
-| `README.md`              | What the package does and how the ladder works       |
+| `README.md`              | What the package does and how to run it              |
 | `CLAUDE.md`              | The rules this project holds contributors to         |
+| `docs/ARCHITECTURE.md`   | How the ladder, detection and the cache work         |
 | `pagefetch/source.py`    | The `PageSource` contract everything else implements |
 | `pagefetch/network.py`   | The four tiers and the escalation orchestrator       |
 | `pagefetch/detection.py` | The predicates that decide when to escalate          |

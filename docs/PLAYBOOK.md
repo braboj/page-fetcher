@@ -36,7 +36,33 @@ rather than `main`. Merge bottom-up, and **do not pass `--delete-branch`
 while a stacked PR still points at the branch** — that closes the stacked
 PR instead of retargeting it.
 
-If it happens anyway:
+This repository squash-merges, so each merge breaks the PR above it. `main`
+gains one commit holding the merged changes while the next branch still
+carries the originals — identical content, divergent history, which GitHub
+reports as a conflict. After each merge:
+
+```bash
+gh pr edit <next> --base main
+git fetch origin --prune
+git checkout <next-branch>
+git merge origin/main            # resolve in favour of the branch
+git push
+```
+
+Merge `main` in rather than rebasing. A rebase produces cleaner history but
+needs a force-push, and the squash discards the extra merge commit anyway —
+`main` looks identical either way.
+
+Upstream `base/core/git.md` prescribes a different recovery for this: branch
+fresh off the updated `main`, cherry-pick only the dependent branch's own
+commits, and open a new PR. That yields a cleaner diff at the cost of losing
+the review history on the existing PR. Both avoid the force-push, which is
+the rule that matters. Reconcile the two when the templates submodule is
+next bumped — the upstream sections are `Squash-merge safety`,
+`De-stacking a dependent branch` and `Merging a stack`, none of which are in
+the pinned revision yet.
+
+If the base branch gets deleted while a stacked PR points at it:
 
 ```bash
 git push origin origin/main:refs/heads/<deleted-branch>   # recreate the ref
@@ -131,8 +157,11 @@ Tiers live in `network.py` as `_fetch_<name>` methods. A new tier must:
   `ImportError` — a missing optional dependency is never an error
 - run its result through `looks_like_real_content` before returning it
 - be placed in `_escalate` at the point on the ladder its cost justifies
-- be added to the `Transport` enum, the CLI flag set, and the README's tier
-  table
+- be added to the `Transport` enum, the CLI flag set, and the tier table in
+  `docs/ARCHITECTURE.md`
+- be named for what it requires of the caller, not for its library. The
+  `_fetch_<name>` method may name the library it drives; the enum member,
+  the flag, the `tier_used` value and the stderr prefix must not (ADR-006)
 
 ### 2.2 Add a detection pattern
 
