@@ -216,6 +216,8 @@ if you distribute a service built on tier 3 — see
 
 ## Development setup
 
+Clone the repository, install the dependencies and run the test suite:
+
 ```bash
 git clone https://github.com/braboj/page-fetcher.git
 cd page-fetcher
@@ -223,12 +225,6 @@ py -m pip install -e ".[dev]"
 pre-commit install
 py -m pytest
 ```
-
-The suite runs in a couple of seconds and touches nothing outside the
-repository: no network, no browser, and no query of the host's process
-list. The escalation logic is tested by stubbing the four tier methods.
-The browser-tier method bodies require headed Chrome and are validated by
-hand.
 
 To exercise the browser tiers locally, add the optional engines:
 
@@ -250,11 +246,6 @@ py -m pytest --cov=pagefetch
 scan. CI runs all four on every pull request, because a hook can be skipped
 with `--no-verify`.
 
-The test command also enforces a coverage floor. Its value lives in
-`fail_under` in `pyproject.toml` and ratchets upward as coverage improves,
-so read it there rather than here. What stays uncovered is the browser-tier
-method bodies, which need a headed Chrome and cannot run in CI.
-
 ## Configuration reference
 
 `cache_dir` is the only configurable value. It resolves in this precedence,
@@ -269,9 +260,9 @@ highest first:
 
 ## Known limitations
 
-- `headed` opens a Chrome window, so it cannot run in CI or on a host with
+- **headed** opens a Chrome window, so it cannot run in CI or on a host with
   no display.
-- `headless` costs ~18-24s, most of it Chrome launch overhead.
+- **headless** costs ~18-24s, most of it Chrome launch overhead.
 - PerimeterX "Press & Hold" blocks every tier.
 - Each URL launches its own browser unless you use batch mode.
 - The scheme check is an allowlist, not SSRF protection. See
