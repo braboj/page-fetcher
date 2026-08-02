@@ -89,11 +89,13 @@ gh issue create --title "<imperative sentence-case title>" \
                 --label bug --label P1 --body "..."
 ```
 
-There is no deferral label. The chain offers an optional `P4`; this
-repository retired it because a label records that something is deferred
-and cannot record why. A deferral goes in an ADR when it is a decision,
-or in the README or `ARCHITECTURE.md` when it is a standing limitation —
-[ADR-011](decisions/011-retire-the-p4-deferral-label.md) has the
+There is no deferral label. The chain names `P4` as the carrier of
+deferral and offers no alternative — no `Backlog` lane, no milestone.
+This repository declines it, because a label records that something is
+deferred and cannot record why. A deferral goes in an ADR when it is a
+decision, or in the README or `ARCHITECTURE.md` when it is a standing
+limitation, and it is found by reading rather than filtering —
+[ADR-012](decisions/012-correct-adr-011s-deferral-fallback.md) has the
 reasoning. Titles are sentence case with an imperative verb and no type
 prefix — the label carries the type.
 
