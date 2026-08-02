@@ -51,6 +51,9 @@ of truth. Agent-specific placement rules:
   contract every other module depends on
 - New tests go in `pagefetch/tests/`, one file per concern, named
   `test_<concern>.py`
+- Technical explanation goes in `docs/ARCHITECTURE.md`, not the README —
+  the README covers what the package does and how to run it. Decisions go
+  in `docs/decisions/`
 - The package layout is flat, not `src/` — deviation from
   `python-lib.md`, kept because the package predates this repository
   and the key scheme in `cache.py` is path-independent
@@ -78,12 +81,8 @@ py -m pytest --cov=pagefetch    # tests with the coverage floor enforced
   tracker (ADR-007)
 - Branch naming: `<type>/<TICKET>-<scope>` — e.g.
   `feat/BRA-42-cache-key`. Types: feat, fix, docs, chore. The Linear
-  ticket goes in upper case, as Linear displays it. It attaches the PR
-  to the ticket and moves it through In Progress and In Review; without
-  it the ticket still closes on merge, but jumps straight to Done. Omit
-  it only when there is no ticket. A branch is deleted after merge, so
-  this reference is ephemeral — that is why it is the one place a
-  tracker identifier belongs
+  ticket goes in upper case, and is the only permanent-looking place a
+  tracker identifier belongs (ADR-007). Omit it when there is no ticket
 - Commits: `<type>(<scope>): <summary>` — feat, fix, chore, docs,
   refactor
 - PR titles: same format with the GitHub issue number(s) at the end. Not
@@ -142,7 +141,9 @@ py -m pytest --cov=pagefetch    # tests with the coverage floor enforced
   no escalation, no cache — so a false positive loses a page silently
 - Every new pattern needs a positive case in the parametrized test AND a
   negative case proving it does not fire on real content
-- Update the count assertion in `test_detection.py`
+- Update all three count assertions in `test_detection.py` —
+  `BOT_DETECTION_PATTERNS`, `ERROR_PAGE_PATTERNS` and
+  `AMBIGUOUS_ERROR_PAGE_PATTERNS`
 
 ### 2.6 Cache
 
@@ -150,6 +151,15 @@ py -m pytest --cov=pagefetch    # tests with the coverage floor enforced
   changing it silently invalidates every existing cache
 - Keep the junk definition in `is_cacheable_junk` alone; never duplicate
   it at a call site
+
+### 2.7 README
+
+- Badges directly under the H1, then the subtitle, then the lede
+- Capability bullets live under `## Features`
+- Never cite an ADR from the README. Link `docs/ARCHITECTURE.md` and let
+  that document cite the record
+- No figure that moves (coverage, byte counts) — point at the file that
+  holds it
 
 ## 3. Quality
 
