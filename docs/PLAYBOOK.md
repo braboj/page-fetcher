@@ -115,11 +115,17 @@ needed `main` merged in, or that `gh pr update-branch` rewrote, leaves the
 clone behind the head that was squashed. Resyncing before the PR merges
 (§1.3) means the question never arises.
 
-Then close the tracker ticket by hand. The integration attaches the pull
-request to it and stops there — it does not transition state on merge.
+Then close the tracker ticket by hand, until the automation is configured.
 BRA-595, BRA-596 and BRA-600 each sat in `In Progress` with their merged PR
-already linked, and were moved afterwards in a separate pass. ADR-007 left
-this as an open question; the answer is that the sync is link-only.
+already linked, and were moved afterwards in a separate pass.
+
+This is a gap in this workspace's setup, not a limit of the integration.
+`platform/linear.md` already requires configuring the automation to move an
+issue to a `started` state on PR open and a `completed` state on merge, and
+that has not been done. Its issue-sync rule also only closes a tracker
+issue when the code host closes *its counterpart*, so a ticket with no
+GitHub issue behind it has nothing to close it — which is what these three
+were. Configure both and this step goes away.
 
 The GitHub issue is the half that closes itself, and only when the PR body
 carries `Closes #N`. Write the keyword or expect to close that by hand too.
@@ -290,7 +296,42 @@ git add docs/solid-ai-templates
 Commit the moved pointer on its own branch, with the upstream range in the
 message.
 
-## 5. Release and deploy
+Bump before reconciling anything against the templates, and keep the two in
+separate commits. A pointer bump that also edits `CLAUDE.md` hides the
+reconciliation inside the submodule's diff.
+
+### 4.5 Read the templates at the right revision
+
+Two questions, two revisions. Getting them the wrong way round has cost a
+mistake in each direction.
+
+**"Has this already been raised?" — read upstream HEAD.**
+
+```bash
+gh issue list --repo braboj/solid-ai-templates --state all --search "<terms>"
+```
+
+The pin can be dozens of commits behind the answer. Three duplicates were
+filed in one session against issues that were not only already open but
+already fixed upstream. Search closed issues too — a rule that was
+proposed and rejected is worth knowing about before proposing it again,
+and a closed issue is often the one that introduced the text being
+questioned.
+
+**"What does our chain require?" — read the pin.**
+
+```bash
+git -C docs/solid-ai-templates show HEAD:templates/<file>
+```
+
+Never `origin/main`, and never the working tree after a bare `fetch`.
+A rule quoted from HEAD that has not been bumped into the pin does not
+apply here, and citing it makes a local document look conformant when it
+is not. #76 quotes a sentence that reached upstream eight commits after
+the revision this repository pins.
+
+The distinction only disappears when the pin equals HEAD, which is
+briefly and rarely.
 
 Not published to PyPI. Consumers clone the repository or add it as a
 submodule, so `main` is the release surface: it must stay green, and the

@@ -10,6 +10,7 @@ first hour only.
 | -------------- | ------- | ------------------------------------------------ |
 | Python         | 3.10+   | 3.10 and 3.13 are the versions CI runs           |
 | git            | any     | with submodule support                           |
+| GitHub CLI     | any     | `gh` — the PR and issue commands in the playbook |
 | Chrome         | current | only for the browser tiers; not needed for tests |
 
 No database, broker, or other service is required. Tier 1 runs on the
@@ -26,7 +27,12 @@ git clone --recurse-submodules https://github.com/braboj/page-fetcher.git
 cd page-fetcher
 py -m pip install -e ".[dev]"
 pre-commit install
+git config fetch.prune true
 ```
+
+`fetch.prune` matters here because the repository deletes head branches on
+merge. Without it, `origin/<branch>` outlives the branch it points at and
+reads as a branch that refuses to delete.
 
 If you cloned without `--recurse-submodules`:
 
