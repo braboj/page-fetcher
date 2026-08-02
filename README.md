@@ -83,26 +83,31 @@ nothing on stderr — the tiers only narrate when they escalate:
 
 ```text
 [http] Not real content (559 bytes) — escalating
-[auto] Skipping Playwright (bot protection), trying Nodriver...
+[auto] Skipping js (bot protection), trying headed...
 ```
 
-Force a specific tier, change the output mode, or bypass the cache:
+Force one transport instead of letting the fetcher escalate:
 
 ```bash
-py -m pagefetch <url> --html       # raw HTML instead of stripped text
 py -m pagefetch <url> --http       # plain request only, never escalate
 py -m pagefetch <url> --js         # browser that renders JavaScript
 py -m pagefetch <url> --headed     # bot bypass, needs a display
 py -m pagefetch <url> --headless   # bot bypass, no display needed
+```
+
+These name what a tier needs, not the library behind it. `--headed` and
+`--headless` both get past bot protection and differ only in whether a
+display is available; `--headed` is what AUTO tries first because it is
+faster. See [ADR-006](docs/decisions/006-two-bot-bypass-tiers.md).
+
+Change the output, the wait, or the cache:
+
+```bash
+py -m pagefetch <url> --html       # raw HTML instead of stripped text
 py -m pagefetch <url> --wait 5000  # extra post-load wait (ms)
 py -m pagefetch <url> --no-cache   # refetch, ignoring any cached copy
 py -m pagefetch <url> --cache-dir DIR
 ```
-
-The transport flags name what a tier needs, not the library behind it.
-`--headed` and `--headless` both get past bot protection and differ only in
-whether a display is available; `--headed` is what AUTO tries first because
-it is faster. See [ADR-006](docs/decisions/006-two-bot-bypass-tiers.md).
 
 Fetch many pages in one browser session:
 

@@ -54,7 +54,8 @@ DEFAULT_USER_AGENT = (
     "Chrome/131.0.0.0 Safari/537.36"
 )
 
-# Sentinel: urllib detected bot protection (skip Playwright, go to Nodriver/UC).
+# Sentinel: the http tier detected bot protection (skip js, go to the
+# headed/headless bypass tiers).
 _BOT_BLOCKED = "@@BOT_BLOCKED@@"
 # Sentinel: response is a 404 / gone error page. Terminal — do not escalate
 # (every tier returns the same error) and do not cache.
@@ -700,26 +701,26 @@ class NetworkFetcher(PageSource):
         if result == _BOT_BLOCKED:
             # Bot protection: skip Playwright (it would fail too).
             print(
-                "[auto] Skipping Playwright (bot protection), trying Nodriver...",
+                "[auto] Skipping js (bot protection), trying headed...",
                 file=sys.stderr,
             )
             content = self._nodriver_either(url, mode, wait_ms)
             if content:
                 return content, "headed"
-            print("[auto] Nodriver failed, escalating to UC...", file=sys.stderr)
+            print("[auto] headed failed, escalating to headless...", file=sys.stderr)
             content = self._uc_either(sb_session, url, mode, wait_ms)
             return content, "headless" if content else "none"
 
         # Non-bot failure (404, timeout): Playwright, then Nodriver, then UC.
-        print("[auto] Escalating to Playwright...", file=sys.stderr)
+        print("[auto] Escalating to js...", file=sys.stderr)
         content = self._fetch_playwright(url, mode, wait_ms) or ""
         if content:
             return content, "js"
-        print("[auto] Escalating to Nodriver...", file=sys.stderr)
+        print("[auto] Escalating to headed...", file=sys.stderr)
         content = self._nodriver_either(url, mode, wait_ms)
         if content:
             return content, "headed"
-        print("[auto] Escalating to UC...", file=sys.stderr)
+        print("[auto] Escalating to headless...", file=sys.stderr)
         content = self._uc_either(sb_session, url, mode, wait_ms)
         return content, "headless" if content else "none"
 
