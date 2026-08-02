@@ -1,24 +1,21 @@
 """Shared pytest fixtures for the pagefetch test suite.
 
-Adds the package's parent directory to sys.path so `import pagefetch`
-resolves when tests run from anywhere, and provides a temp-dir-backed
-FileCache.
+Provides a temp-dir-backed FileCache and keeps the suite away from the
+host's real process table.
+
+`import pagefetch` resolves through the install, not through sys.path.
+This file used to insert the repository root so the import worked without
+one — which is exactly how the suite came to pass against source that was
+never packaged. ADR-010 moved the package to `src/` to close that off, so
+the manipulation is gone: run the editable install from ONBOARDING §1.
 """
 
-import sys
 from pathlib import Path
 
 import pytest
 
-# The directory holding the package is three levels up from this file
-# (<parent>/pagefetch/tests/conftest.py) — the repo root here, and the
-# host project's package directory when pagefetch is vendored.
-PACKAGE_PARENT = Path(__file__).resolve().parent.parent.parent
-if str(PACKAGE_PARENT) not in sys.path:
-    sys.path.insert(0, str(PACKAGE_PARENT))
-
-from pagefetch import FileCache  # noqa: E402
-from pagefetch.chrome import ChromeReaper  # noqa: E402
+from pagefetch import FileCache
+from pagefetch.chrome import ChromeReaper
 
 
 @pytest.fixture

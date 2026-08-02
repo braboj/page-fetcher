@@ -4,4 +4,4 @@
 # Captured HTML fixtures are frozen byte-for-byte snapshots of real
 # responses. Line-ending normalization would change the test input, so
 # treat them as binary.
-pagefetch/tests/fixtures/** -text
+tests/fixtures/** -text

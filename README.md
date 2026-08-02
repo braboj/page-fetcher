@@ -172,27 +172,27 @@ fetcher = NetworkFetcher(cache=FileCache(cache_dir=Path("/my/cache")))
 
 ## Project structure
 
-| Path                       | Purpose                                            |
-| -------------------------- | -------------------------------------------------- |
-| `pagefetch/`               | The package — import this                          |
-| `pagefetch/source.py`      | `PageSource` ABC and the option / result types     |
-| `pagefetch/network.py`     | `NetworkFetcher` — the four-tier escalation ladder |
-| `pagefetch/detection.py`   | Bot-wall, error-page, and real-content predicates  |
-| `pagefetch/cache.py`       | `FileCache` — on-disk cache and junk sweep         |
-| `pagefetch/chrome.py`      | Chrome / CDP launch helpers for the browser tiers  |
-| `pagefetch/fake.py`        | `FakeFetcher` test double                          |
-| `pagefetch/__main__.py`    | CLI entry point — a thin wrapper over the library  |
-| `pagefetch/tests/`         | pytest suite, including captured HTML fixtures     |
-| `docs/ARCHITECTURE.md`     | How the ladder, detection, and cache work          |
-| `docs/decisions/`          | Architecture Decision Records                      |
-| `docs/audits/`             | 360-degree audit reports, one per run              |
-| `docs/solid-ai-templates/` | Quality conventions — a git submodule              |
-| `docs/ONBOARDING.md`       | Fresh clone to a passing gate                      |
-| `docs/PLAYBOOK.md`         | Operational reference for recurring tasks          |
-| `docs/dev-journal.md`      | Session log — what changed and why                 |
-| `.github/workflows/`       | CI and CodeQL pipelines                            |
-| `CLAUDE.md`                | Project rules for AI agents                        |
-| `pyproject.toml`           | Package metadata and every tool's configuration    |
+| Path                         | Purpose                                            |
+| ---------------------------- | -------------------------------------------------- |
+| `src/pagefetch/`             | The package — import this                          |
+| `src/pagefetch/source.py`    | `PageSource` ABC and the option / result types     |
+| `src/pagefetch/network.py`   | `NetworkFetcher` — the four-tier escalation ladder |
+| `src/pagefetch/detection.py` | Bot-wall, error-page, and real-content predicates  |
+| `src/pagefetch/cache.py`     | `FileCache` — on-disk cache and junk sweep         |
+| `src/pagefetch/chrome.py`    | Chrome / CDP launch helpers for the browser tiers  |
+| `src/pagefetch/fake.py`      | `FakeFetcher` test double                          |
+| `src/pagefetch/__main__.py`  | CLI entry point — a thin wrapper over the library  |
+| `tests/`                     | pytest suite, including captured HTML fixtures     |
+| `docs/ARCHITECTURE.md`       | How the ladder, detection, and cache work          |
+| `docs/decisions/`            | Architecture Decision Records                      |
+| `docs/audits/`               | 360-degree audit reports, one per run              |
+| `docs/solid-ai-templates/`   | Quality conventions — a git submodule              |
+| `docs/ONBOARDING.md`         | Fresh clone to a passing gate                      |
+| `docs/PLAYBOOK.md`           | Operational reference for recurring tasks          |
+| `docs/dev-journal.md`        | Session log — what changed and why                 |
+| `.github/workflows/`         | CI and CodeQL pipelines                            |
+| `CLAUDE.md`                  | Project rules for AI agents                        |
+| `pyproject.toml`             | Package metadata and every tool's configuration    |
 
 ## Development setup
 

@@ -11,9 +11,9 @@ repos:
     hooks:
       - id: trailing-whitespace
         # Captured fixtures are byte-for-byte snapshots of real responses.
-        exclude: ^pagefetch/tests/fixtures/
+        exclude: ^tests/fixtures/
       - id: end-of-file-fixer
-        exclude: ^pagefetch/tests/fixtures/
+        exclude: ^tests/fixtures/
       - id: check-merge-conflict
       - id: check-added-large-files
         args: [--maxkb=2048]
@@ -21,7 +21,7 @@ repos:
       - id: check-yaml
       - id: mixed-line-ending
         args: [--fix=lf]
-        exclude: ^pagefetch/tests/fixtures/
+        exclude: ^tests/fixtures/
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.16.0

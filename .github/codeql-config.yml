@@ -5,4 +5,4 @@ name: "pagefetch CodeQL config"
 # minified JavaScript, which CodeQL reports against as if it were project
 # code. It is not — nothing in it executes here.
 paths-ignore:
-  - "pagefetch/tests/fixtures/**"
+  - "tests/fixtures/**"
