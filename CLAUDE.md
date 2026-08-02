@@ -63,9 +63,10 @@ of truth. Agent-specific placement rules:
 - Technical explanation goes in `docs/ARCHITECTURE.md`, not the README —
   the README covers what the package does and how to run it. Decisions go
   in `docs/decisions/` (ADR-009)
-- The package layout is flat, not `src/` — deviation from
-  `python-lib.md`, kept because the package predates this repository
-  and the key scheme in `cache.py` is path-independent
+- The package layout is flat, not `src/` — a deviation from
+  `python-lib.md` that ADR-010 decided to end. It stands until #71
+  moves the files; do not cite it as a reason to add anything else at
+  the root
 
 ### 1.3 Commands
 
