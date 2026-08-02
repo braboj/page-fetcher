@@ -82,15 +82,17 @@ git reset --hard origin/<branch>
 ### 1.4 Issues
 
 Every issue carries exactly one type label (`bug`, `task`, `spike`) and one
-priority label (`P0`–`P4`), applied at creation.
+severity label (`P0`–`P3`), applied at creation.
 
 ```bash
 gh issue create --title "<imperative sentence-case title>" \
                 --label bug --label P1 --body "..."
 ```
 
-Titles are sentence case with an imperative verb and no type prefix — the
-label carries the type.
+`P4` is a deferral marker rather than a severity, so it joins a severity
+instead of replacing one — a deferred issue carries both, as #59 and #9
+do. Titles are sentence case with an imperative verb and no type prefix —
+the label carries the type.
 
 ### 1.5 After merge
 
