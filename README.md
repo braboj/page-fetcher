@@ -16,21 +16,22 @@ plausible content.
 
 ## Features
 
-- Fetch a URL as text or raw HTML through a four-tier escalation ladder
-- Detect bot walls, throttle pages, and soft-404s in a response body
-- Skip a tier that cannot help — a bot wall sends the fetcher past headless
-  straight to a headed browser
-- Fetch many pages in one browser session, so the browser launches once
-  rather than per URL
-- Ask for gzip and deflate and decode them, including from servers that
+- **Escalation** — plain HTTP first, a browser only when the response is a
+  bot wall, an error page, or too short to be real
+- **Detection** — bot walls, throttle pages and soft-404s, spotted in the
+  response body. A tier that cannot help is skipped
+- **Output** — stripped page text or the raw HTML
+- **Batch mode** — many pages in one browser session, so the browser
+  launches once rather than per URL
+- **Caching** — on disk, keyed by URL and content mode, with no TTL
+- **Self-healing** — junk entries are deleted on read and re-fetched, or
+  swept with `--clean-cache`
+- **Compression** — gzip and deflate, decoded even from servers that
   compress without declaring it
-- Reject anything that is not an http or https URL, before a request is
-  made or a browser is launched
-- Cache responses on disk, keyed by URL and content mode, with no TTL
-- Self-heal a poisoned cache: junk entries are deleted on read and
-  re-fetched, or swept in bulk with `--clean-cache`
-- Run without a single third-party package — tier 1 is standard library only
-- Swap in a `FakeFetcher` so consuming code is testable with no network
+- **URL allowlist** — anything that is not http or https is rejected before
+  a request is made or a browser is launched
+- **Testable** — swap in a `FakeFetcher` and consuming code needs no network
+- **No dependencies** — tier 1 is standard library only
 
 ## Quick start
 
