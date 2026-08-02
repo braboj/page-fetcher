@@ -1,6 +1,6 @@
 # ADR-011: Retire the P4 deferral label
 
-**Status:** Accepted
+**Status:** Superseded by [ADR-012](012-correct-adr-011s-deferral-fallback.md)
 **Date:** 2026-08-02
 
 ## Context
