@@ -245,8 +245,7 @@ highest first:
 - **headless** costs ~18-24s, most of it Chrome launch overhead.
 - PerimeterX "Press & Hold" blocks every tier.
 - Each URL launches its own browser unless you use batch mode.
-- The scheme check is an allowlist, not SSRF protection. See
-  [Architecture](docs/ARCHITECTURE.md#url-schemes-and-what-this-is-not).
+- The scheme check is an allowlist, not SSRF protection.
 
 ## Links
 
