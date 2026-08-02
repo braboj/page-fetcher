@@ -51,6 +51,14 @@ system — the review, audit and documentation rules this project follows.
 Nothing in the package imports it, so a checkout without it still builds
 and tests.
 
+No editor is required, but `.vscode/settings.json` and
+`.vscode/extensions.json` are tracked, so VS Code will offer to install
+the three extensions that surface the gates as you type — Python, Ruff
+and Mypy Type Checker. Accept them. The settings turn Pylance's type
+evaluation off on purpose: mypy is the type checker the gate runs, and
+two checkers at two strictnesses means the editor flags errors CI
+accepts. Completion, hover and rename are unaffected.
+
 ## 3. Verify the setup
 
 Run the gate. All four should pass on a clean checkout:

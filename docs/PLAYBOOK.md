@@ -305,6 +305,14 @@ Bump before reconciling anything against the templates, and keep the two in
 separate commits. A pointer bump that also edits `CLAUDE.md` hides the
 reconciliation inside the submodule's diff.
 
+Re-read the ADRs that record a divergence from the chain before deciding
+what a bumped range means. A rule this repository deliberately does not
+follow can move upstream, and the diff then reads as a gap to close rather
+than a divergence already reasoned about. `base-issues-defer` moved twice
+inside one bumped range and refuted
+[ADR-012](decisions/012-correct-adr-011s-deferral-fallback.md)'s
+predecessor hours after it merged.
+
 ### 4.5 Read the templates at the right revision
 
 Two questions, two revisions. Getting them the wrong way round has cost a

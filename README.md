@@ -196,6 +196,7 @@ fetcher = NetworkFetcher(cache=FileCache(cache_dir=Path("/my/cache")))
 | `docs/PLAYBOOK.md`           | Operational reference for recurring tasks          |
 | `docs/dev-journal.md`        | Session log — what changed and why                 |
 | `.github/workflows/`         | CI and CodeQL pipelines                            |
+| `.vscode/`                   | Editor config mirroring the CI gates — two files   |
 | `CLAUDE.md`                  | Project rules for AI agents                        |
 | `pyproject.toml`             | Package metadata and every tool's configuration    |
 
