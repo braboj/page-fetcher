@@ -9,33 +9,45 @@ response, and how it caches.
 ## Escalation ladder
 
 ```text
-urllib (plain HTTP, ~1s)
+http (plain request, ~1s)
   +- success -> done
-  +- HTTP error (404, timeout) -> Playwright
-  +- bot protection (captcha, 403) -> skip Playwright -> Nodriver
+  +- HTTP error (404, timeout) -> js
+  +- bot protection (captcha, 403) -> skip js -> headed
                                             |
-Playwright (headless Chromium, ~5-9s)       |
+js (~5-9s)                                  |
   +- success -> done                        |
-  +- bot detection / error -> Nodriver <----+
+  +- bot detection / error -> headed <------+
                 |
-Nodriver (headed Chrome via CDP, ~6-8s)
+headed (~6-8s)
   +- success -> done
-  +- failure -> UC
+  +- failure -> headless
                 |
-SeleniumBase UC (headless stealth Chrome, ~18-24s)
+headless (~18-24s)
   +- success -> done
   +- failure -> all tiers failed (content="")
 ```
 
-| Tier | Engine          | Speed   | Mode     | Use case                               |
-| ---- | --------------- | ------- | -------- | -------------------------------------- |
-| 1    | urllib          | ~1s     | —        | Static HTML (most sites)               |
-| 2    | Playwright      | ~5-9s   | headless | JS-rendered content                    |
-| 3    | Nodriver        | ~6-8s   | headed   | Bot-protected sites (no driver binary) |
-| 4    | SeleniumBase UC | ~18-24s | headless | Headless-only fallback                 |
+| Tier       | Engine          | Speed   | Display  | Use case                    |
+| ---------- | --------------- | ------- | -------- | --------------------------- |
+| `http`     | urllib          | ~1s     | —        | Static HTML (most sites)    |
+| `js`       | Playwright      | ~5-9s   | not used | JS-rendered content         |
+| `headed`   | Nodriver        | ~6-8s   | required | Bot bypass, preferred       |
+| `headless` | SeleniumBase UC | ~18-24s | not used | Bot bypass, no display      |
 
-When urllib detects bot protection, Playwright is skipped — it would fail
-the same way — and the fetcher goes straight to Nodriver, then UC.
+When `http` detects bot protection, `js` is skipped — it would fail the same
+way — and the fetcher goes straight to `headed`, then `headless`.
+
+**On the order.** `headed → headless` reads like a step backwards, since
+headless sounds cheaper. It is not: the `headless` tier pays for stealth
+patching plus a cold Chrome launch, which costs more than attaching to
+Chrome over CDP. The ladder is ordered by cost, and the tiers are named for
+what they require of the caller — a display or not — because that is the
+part a caller cannot change. [ADR-006](decisions/006-two-bot-bypass-tiers.md)
+records why both bypass tiers exist.
+
+The engine column is the only place a library name appears in the tier
+model. Swapping any engine leaves the tier names, the CLI flags, and
+`tier_used` unchanged.
 
 ## Detection
 
@@ -180,10 +192,14 @@ a stderr message.
 
 | Site               | Tier       | Notes                                   |
 | ------------------ | ---------- | --------------------------------------- |
-| allphotolenses.com | urllib     | static HTML                             |
-| ttartisan.com      | Playwright | JS-rendered (query-param routing)       |
-| zyoptics.net       | Nodriver   | SiteGround captcha + bot protection     |
-| bhphotovideo.com   | Nodriver   | bypasses Cloudflare (headed)            |
-| viltrox.com        | urllib     | static HTML + Shopify JSON              |
-| mobile01.com       | UC         | Akamai blocks headless browsers         |
+| allphotolenses.com | `http`     | static HTML                             |
+| ttartisan.com      | `js`       | JS-rendered (query-param routing)       |
+| zyoptics.net       | `headed`   | SiteGround captcha + bot protection     |
+| bhphotovideo.com   | `headed`   | bypasses Cloudflare with a real window  |
+| viltrox.com        | `http`     | static HTML + Shopify JSON              |
+| mobile01.com       | `headless` | Akamai blocks plain headless browsers   |
 | adorama.com        | BLOCKED    | PerimeterX "Press & Hold" — manual only |
+
+The column records which tier _succeeded_, not which tiers were tried and
+failed, so it is weak evidence for the two bypass tiers covering different
+sites. See ADR-006.

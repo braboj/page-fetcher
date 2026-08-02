@@ -65,7 +65,7 @@ if result.ok:
 ```
 
 That prints the tier that served the page and the size of the body — for
-this URL, `urllib` and a few hundred kilobytes of raw HTML. Tier 1 handled
+this URL, `http` and a few hundred kilobytes of raw HTML. Tier 1 handled
 it, so no browser was launched.
 
 ## Usage
@@ -82,7 +82,7 @@ Stdout carries the stripped page text. A successful tier 1 fetch says
 nothing on stderr — the tiers only narrate when they escalate:
 
 ```text
-[urllib] Not real content (559 bytes) — escalating
+[http] Not real content (559 bytes) — escalating
 [auto] Skipping Playwright (bot protection), trying Nodriver...
 ```
 
@@ -90,13 +90,19 @@ Force a specific tier, change the output mode, or bypass the cache:
 
 ```bash
 py -m pagefetch <url> --html       # raw HTML instead of stripped text
-py -m pagefetch <url> --js         # force Playwright
-py -m pagefetch <url> --nodriver   # force Nodriver (headed)
-py -m pagefetch <url> --uc         # force SeleniumBase UC
+py -m pagefetch <url> --http       # plain request only, never escalate
+py -m pagefetch <url> --js         # browser that renders JavaScript
+py -m pagefetch <url> --headed     # bot bypass, needs a display
+py -m pagefetch <url> --headless   # bot bypass, no display needed
 py -m pagefetch <url> --wait 5000  # extra post-load wait (ms)
 py -m pagefetch <url> --no-cache   # refetch, ignoring any cached copy
 py -m pagefetch <url> --cache-dir DIR
 ```
+
+The transport flags name what a tier needs, not the library behind it.
+`--headed` and `--headless` both get past bot protection and differ only in
+whether a display is available; `--headed` is what AUTO tries first because
+it is faster. See [ADR-006](docs/decisions/006-two-bot-bypass-tiers.md).
 
 Fetch many pages in one browser session:
 
@@ -158,7 +164,7 @@ under test as it will in production.
 | `FetchOptions`   | `mode`, `transport`, `wait_ms`, `use_cache`     |
 | `FetchResult`    | `url`, `content`, `tier_used`, `ok`             |
 | `ContentMode`    | `TEXT` (stripped) / `HTML` (raw)                |
-| `Transport`      | `AUTO` / `PLAYWRIGHT` / `NODRIVER` / `UC`       |
+| `Transport`      | `AUTO` / `HTTP` / `JS` / `HEADED` / `HEADLESS`  |
 | `is_bot_blocked` | Pure bot-detection predicate                    |
 
 Point the cache somewhere specific:
@@ -172,12 +178,12 @@ fetcher = NetworkFetcher(cache=FileCache(cache_dir=Path("/my/cache")))
 
 ## Dependencies
 
-| Dependency        | Tier | Required | License    |
-| ----------------- | ---- | -------- | ---------- |
-| `urllib` (stdlib) | 1    | always   | PSF        |
-| `playwright`      | 2    | optional | Apache-2.0 |
-| `nodriver`        | 3    | optional | AGPL-3.0   |
-| `seleniumbase`    | 4    | optional | MIT        |
+| Dependency        | Tier       | Required | License    |
+| ----------------- | ---------- | -------- | ---------- |
+| `urllib` (stdlib) | `http`     | always   | PSF        |
+| `playwright`      | `js`       | optional | Apache-2.0 |
+| `nodriver`        | `headed`   | optional | AGPL-3.0   |
+| `seleniumbase`    | `headless` | optional | MIT        |
 
 The three browser engines live in the `browsers` extra
 (`pip install ".[browsers]"`). A missing one skips its tier with a message
@@ -273,9 +279,10 @@ package hardcoding any project layout. An unusable path raises a
 
 ## Known limitations
 
-- Nodriver requires headed mode — a Chrome window opens, so it is unusable
-  in CI.
-- UC mode costs ~18-24s minimum from Chrome launch overhead.
+- The `headed` tier opens a Chrome window, so it cannot run in CI or on a
+  host with no display. AUTO still reaches `headless` after it fails there,
+  at the cost of one wasted attempt.
+- The `headless` tier costs ~18-24s minimum from Chrome launch overhead.
 - PerimeterX "Press & Hold" (Adorama) blocks every automated tier.
 - Single-URL mode launches a new browser per call; use batch mode for many
   URLs.

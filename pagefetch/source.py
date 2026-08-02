@@ -21,12 +21,19 @@ class ContentMode(Enum):
 
 
 class Transport(Enum):
-    """Which transport tier to use. AUTO escalates on failure."""
+    """Which transport tier to use. AUTO escalates on failure.
 
-    AUTO = "auto"  # urllib, escalating to playwright/nodriver/uc as needed
-    PLAYWRIGHT = "playwright"  # force headless Chromium
-    NODRIVER = "nodriver"  # force headed Chrome via CDP
-    UC = "uc"  # force SeleniumBase UC mode
+    Named for what each tier requires of the caller rather than for the
+    library behind it, so swapping an engine is not a breaking change.
+    HEADED and HEADLESS both get past bot protection and differ only in
+    whether a display is available; see ADR-006.
+    """
+
+    AUTO = "auto"  # http, escalating through the browser tiers as needed
+    HTTP = "http"  # force a plain HTTP request, no browser
+    JS = "js"  # force a browser that renders JavaScript
+    HEADED = "headed"  # force a bot-bypass browser that needs a display
+    HEADLESS = "headless"  # force a bot-bypass browser that needs no display
 
 
 # Post-load settle time the browser tiers apply without being asked. The
@@ -51,9 +58,7 @@ class FetchResult:
 
     url: str
     content: str
-    tier_used: (
-        str  # "urllib" | "playwright" | "nodriver" | "uc" | "cache" | "fake" | "none"
-    )
+    tier_used: str  # "http" | "js" | "headed" | "headless" | "cache" | "fake" | "none"
     ok: bool
 
 

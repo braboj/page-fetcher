@@ -112,9 +112,10 @@ def test_help_prints_usage_and_exits_zero(monkeypatch, capsys, flag):
     ("argv", "expected"),
     [
         (["pagefetch", "https://x.test"], Transport.AUTO),
-        (["pagefetch", "https://x.test", "--js"], Transport.PLAYWRIGHT),
-        (["pagefetch", "https://x.test", "--nodriver"], Transport.NODRIVER),
-        (["pagefetch", "https://x.test", "--uc"], Transport.UC),
+        (["pagefetch", "https://x.test", "--http"], Transport.HTTP),
+        (["pagefetch", "https://x.test", "--js"], Transport.JS),
+        (["pagefetch", "https://x.test", "--headed"], Transport.HEADED),
+        (["pagefetch", "https://x.test", "--headless"], Transport.HEADLESS),
     ],
 )
 def test_transport_selection(argv, expected):
@@ -124,10 +125,12 @@ def test_transport_selection(argv, expected):
 @pytest.mark.parametrize(
     ("flags", "expected"),
     [
-        (["--uc", "--nodriver"], Transport.UC),
-        (["--nodriver", "--js"], Transport.NODRIVER),
-        (["--uc", "--js"], Transport.UC),
-        (["--js", "--uc", "--nodriver"], Transport.UC),
+        (["--headless", "--headed"], Transport.HEADLESS),
+        (["--headed", "--js"], Transport.HEADED),
+        (["--headless", "--js"], Transport.HEADLESS),
+        (["--js", "--headless", "--headed"], Transport.HEADLESS),
+        (["--http", "--js"], Transport.JS),
+        (["--http", "--headless"], Transport.HEADLESS),
     ],
 )
 def test_transport_precedence_is_slowest_wins(flags, expected):

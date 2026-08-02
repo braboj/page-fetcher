@@ -120,6 +120,10 @@ py -m pytest --cov=pagefetch    # tests with the coverage floor enforced
 - A missing optional dependency skips its tier with a stderr message —
   never an error
 - `nodriver` is AGPL-3.0 and stays optional and un-vendored
+- No library name reaches the API or the CLI. `Transport` members, the
+  transport flags, `tier_used` values and the stderr prefixes name what a
+  tier requires of the caller, not the engine behind it (ADR-006). Private
+  method names may still name the library they drive
 
 ### 2.5 Detection patterns
 

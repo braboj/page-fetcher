@@ -26,19 +26,19 @@ def _stub_tiers(fetcher, monkeypatch, urllib_result, pw=None, nd=None, uc=None):
     calls: list[str] = []
 
     def fake_urllib(url, mode):
-        calls.append("urllib")
+        calls.append("http")
         return urllib_result
 
     def fake_pw(url, mode, wait_ms):
-        calls.append("playwright")
+        calls.append("js")
         return pw
 
     def fake_nd(url, mode, wait_ms):
-        calls.append("nodriver")
+        calls.append("headed")
         return nd
 
     def fake_uc(url, mode, wait_ms):
-        calls.append("uc")
+        calls.append("headless")
         return uc
 
     monkeypatch.setattr(fetcher, "_fetch_urllib", fake_urllib)
@@ -48,87 +48,109 @@ def _stub_tiers(fetcher, monkeypatch, urllib_result, pw=None, nd=None, uc=None):
     return calls
 
 
-def test_urllib_success_does_not_escalate(fetcher, monkeypatch):
+def test_http_success_does_not_escalate(fetcher, monkeypatch):
     calls = _stub_tiers(fetcher, monkeypatch, urllib_result="real content")
     result = fetcher.fetch("https://x.test", FetchOptions(use_cache=False))
-    assert calls == ["urllib"]
-    assert result.tier_used == "urllib"
+    assert calls == ["http"]
+    assert result.tier_used == "http"
     assert result.content == "real content"
     assert result.ok is True
 
 
-def test_bot_blocked_skips_playwright_goes_to_nodriver(fetcher, monkeypatch):
+def test_bot_blocked_skips_js_goes_to_headed(fetcher, monkeypatch):
     calls = _stub_tiers(
         fetcher, monkeypatch, urllib_result=_BOT_BLOCKED, nd="from nodriver"
     )
     result = fetcher.fetch("https://x.test", FetchOptions(use_cache=False))
-    assert calls == ["urllib", "nodriver"]  # playwright NOT called
-    assert "playwright" not in calls
-    assert result.tier_used == "nodriver"
+    assert calls == ["http", "headed"]  # playwright NOT called
+    assert "js" not in calls
+    assert result.tier_used == "headed"
 
 
-def test_bot_blocked_nodriver_fails_falls_to_uc(fetcher, monkeypatch):
+def test_bot_blocked_headed_fails_falls_to_headless(fetcher, monkeypatch):
     calls = _stub_tiers(
         fetcher, monkeypatch, urllib_result=_BOT_BLOCKED, nd="", uc="from uc"
     )
     result = fetcher.fetch("https://x.test", FetchOptions(use_cache=False))
-    assert calls == ["urllib", "nodriver", "uc"]
-    assert result.tier_used == "uc"
+    assert calls == ["http", "headed", "headless"]
+    assert result.tier_used == "headless"
 
 
-def test_non_bot_failure_escalates_playwright_then_nodriver_then_uc(
-    fetcher, monkeypatch
-):
+def test_non_bot_failure_escalates_js_then_headed_then_headless(fetcher, monkeypatch):
     calls = _stub_tiers(
         fetcher, monkeypatch, urllib_result=None, pw="", nd="", uc="from uc"
     )
     result = fetcher.fetch("https://x.test", FetchOptions(use_cache=False))
-    assert calls == ["urllib", "playwright", "nodriver", "uc"]
-    assert result.tier_used == "uc"
+    assert calls == ["http", "js", "headed", "headless"]
+    assert result.tier_used == "headless"
 
 
-def test_non_bot_failure_playwright_succeeds_stops_there(fetcher, monkeypatch):
+def test_non_bot_failure_js_succeeds_stops_there(fetcher, monkeypatch):
     calls = _stub_tiers(fetcher, monkeypatch, urllib_result=None, pw="from pw")
     result = fetcher.fetch("https://x.test", FetchOptions(use_cache=False))
-    assert calls == ["urllib", "playwright"]
-    assert result.tier_used == "playwright"
+    assert calls == ["http", "js"]
+    assert result.tier_used == "js"
 
 
 def test_all_tiers_fail_returns_not_ok(fetcher, monkeypatch):
     calls = _stub_tiers(fetcher, monkeypatch, urllib_result=None, pw="", nd="", uc="")
     result = fetcher.fetch("https://x.test", FetchOptions(use_cache=False))
-    assert calls == ["urllib", "playwright", "nodriver", "uc"]
+    assert calls == ["http", "js", "headed", "headless"]
     assert result.ok is False
     assert result.tier_used == "none"
     assert result.content == ""
 
 
-def test_force_uc_uses_only_uc(fetcher, monkeypatch):
+def test_force_http_uses_only_http(fetcher, monkeypatch):
+    calls = _stub_tiers(fetcher, monkeypatch, urllib_result="plain content")
+    result = fetcher.fetch(
+        "https://x.test", FetchOptions(transport=Transport.HTTP, use_cache=False)
+    )
+    assert calls == ["http"]
+    assert result.tier_used == "http"
+    assert result.content == "plain content"
+
+
+def test_force_http_does_not_escalate_on_a_bot_wall(fetcher, monkeypatch):
+    # A caller forcing the cheap tier has ruled out browsers. A bot wall is
+    # a failure here, not a reason to launch one behind their back.
+    calls = _stub_tiers(
+        fetcher, monkeypatch, urllib_result=_BOT_BLOCKED, nd="nd", uc="uc"
+    )
+    result = fetcher.fetch(
+        "https://x.test", FetchOptions(transport=Transport.HTTP, use_cache=False)
+    )
+    assert calls == ["http"]
+    assert result.ok is False
+    assert result.tier_used == "none"
+
+
+def test_force_headless_uses_only_headless(fetcher, monkeypatch):
     calls = _stub_tiers(fetcher, monkeypatch, urllib_result="x", uc="uc only")
     result = fetcher.fetch(
-        "https://x.test", FetchOptions(transport=Transport.UC, use_cache=False)
+        "https://x.test", FetchOptions(transport=Transport.HEADLESS, use_cache=False)
     )
-    assert calls == ["uc"]
-    assert result.tier_used == "uc"
+    assert calls == ["headless"]
+    assert result.tier_used == "headless"
 
 
-def test_force_nodriver_uses_only_nodriver(fetcher, monkeypatch):
+def test_force_headed_uses_only_headed(fetcher, monkeypatch):
     calls = _stub_tiers(fetcher, monkeypatch, urllib_result="x", nd="nd only")
     result = fetcher.fetch(
-        "https://x.test", FetchOptions(transport=Transport.NODRIVER, use_cache=False)
+        "https://x.test", FetchOptions(transport=Transport.HEADED, use_cache=False)
     )
-    assert calls == ["nodriver"]
-    assert result.tier_used == "nodriver"
+    assert calls == ["headed"]
+    assert result.tier_used == "headed"
     assert result.content == "nd only"
 
 
-def test_force_playwright_uses_only_playwright(fetcher, monkeypatch):
+def test_force_js_uses_only_js(fetcher, monkeypatch):
     calls = _stub_tiers(fetcher, monkeypatch, urllib_result="x", pw="pw only")
     result = fetcher.fetch(
-        "https://x.test", FetchOptions(transport=Transport.PLAYWRIGHT, use_cache=False)
+        "https://x.test", FetchOptions(transport=Transport.JS, use_cache=False)
     )
-    assert calls == ["playwright"]
-    assert result.tier_used == "playwright"
+    assert calls == ["js"]
+    assert result.tier_used == "js"
     assert result.content == "pw only"
 
 
@@ -154,8 +176,8 @@ def test_poisoned_cache_is_ignored_and_refetched(fetcher, monkeypatch, cache):
     cache.write("https://x.test", ContentMode.TEXT, "Too Many Requests")
     calls = _stub_tiers(fetcher, monkeypatch, urllib_result="real content now")
     result = fetcher.fetch("https://x.test", FetchOptions(use_cache=True))
-    assert calls == ["urllib"]  # cache was bypassed, real fetch ran
-    assert result.tier_used == "urllib"
+    assert calls == ["http"]  # cache was bypassed, real fetch ran
+    assert result.tier_used == "http"
     assert result.content == "real content now"
 
 
@@ -164,7 +186,7 @@ def test_error_page_is_terminal_and_does_not_escalate(fetcher, monkeypatch):
     # no content. Only urllib runs.
     calls = _stub_tiers(fetcher, monkeypatch, urllib_result=_ERROR_PAGE)
     result = fetcher.fetch("https://x.test", FetchOptions(use_cache=False))
-    assert calls == ["urllib"]
+    assert calls == ["http"]
     assert result.ok is False
     assert result.tier_used == "none"
     assert result.content == ""
@@ -182,7 +204,7 @@ def test_cached_error_page_self_heals(fetcher, monkeypatch, cache):
     cache.write("https://x.test", ContentMode.TEXT, "<title>404 Not Found</title>")
     calls = _stub_tiers(fetcher, monkeypatch, urllib_result="back online")
     result = fetcher.fetch("https://x.test", FetchOptions(use_cache=True))
-    assert calls == ["urllib"]
+    assert calls == ["http"]
     assert result.content == "back online"
 
 
