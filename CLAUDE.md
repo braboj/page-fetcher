@@ -73,15 +73,22 @@ py -m pytest --cov=pagefetch    # tests with the coverage floor enforced
 ### 2.1 Git
 
 - `main` is protected — never commit directly
+- GitHub is the system of record. Linear is a view over it and MUST stay
+  replaceable — nothing that outlives a ticket may exist only in the
+  tracker (ADR-007)
 - Branch naming: `<type>/<TICKET>-<scope>` — e.g.
   `feat/BRA-42-cache-key`. Types: feat, fix, docs, chore. The Linear
   ticket goes in upper case, as Linear displays it. It attaches the PR
   to the ticket and moves it through In Progress and In Review; without
   it the ticket still closes on merge, but jumps straight to Done. Omit
-  it only when there is no ticket
+  it only when there is no ticket. A branch is deleted after merge, so
+  this reference is ephemeral — that is why it is the one place a
+  tracker identifier belongs
 - Commits: `<type>(<scope>): <summary>` — feat, fix, chore, docs,
   refactor
-- PR titles: same format with the issue number(s) at the end
+- PR titles: same format with the GitHub issue number(s) at the end. Not
+  the Linear identifier — a PR title is permanent, and a tracker
+  identifier in one is a dead reference after a migration
 - Issue titles: sentence case, imperative verb, no type prefix
 - Every issue gets exactly one type label (`bug`, `task`, `spike`) and
   one severity label (`P0`–`P3`), applied at creation. `P4` is a

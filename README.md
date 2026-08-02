@@ -272,10 +272,6 @@ highest first:
 | `nodriver`        | `headed`   | optional | AGPL-3.0   |
 | `seleniumbase`    | `headless` | optional | MIT        |
 
-The three browser engines live in the `browsers` extra
-(`pip install ".[browsers]"`). A missing one skips its tier with a message
-on stderr rather than failing.
-
 ## License
 
 MIT — see [LICENSE](LICENSE).
