@@ -1,40 +1,40 @@
 # pagefetch
 
-_Fetch a page by the cheapest means that works._
+![CI](https://github.com/braboj/page-fetcher/actions/workflows/ci.yml/badge.svg)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)
 
-Scraping a handful of sites means meeting a handful of defences. Most pages
-are static HTML that `urllib` handles in about a second. A few render their
-content in JavaScript. A few more sit behind Cloudflare or PerimeterX and
-refuse anything that looks automated.
+_Fetch a page by the cheapest means that works - built for research and
+other low-volume work, not for bulk scraping._
 
-Reaching for a headless browser everywhere costs five to twenty seconds per
-page for content a plain HTTP request would have returned. Reaching for
-`urllib` everywhere fails on the sites that matter most. Hand-picking a
-strategy per site works until the site changes.
+A plain HTTP request is enough for static HTML. Pages that render in
+JavaScript, or that block anything that looks automated, need a browser.
+pagefetch selects the transport per request. It issues a plain HTTP request,
+inspects the response body, and escalates to a headless and then a headed
+browser only when the body is a bot wall, an error page, or too small to be
+plausible content.
 
-`pagefetch` picks the tier for you. It starts with plain HTTP, inspects what
-comes back, and escalates through headless and headed browsers only when the
-response is a bot wall, an error, or implausibly short. Responses are cached
-on disk, and junk is kept out of the cache rather than re-served from it.
+## Features
 
 - Fetch a URL as text or raw HTML through a four-tier escalation ladder
 - Detect bot walls, throttle pages, and soft-404s in a response body
 - Skip a tier that cannot help — a bot wall sends the fetcher past headless
   straight to a headed browser
+- Fetch many pages in one browser session, so the browser launches once
+  rather than per URL
 - Ask for gzip and deflate and decode them, including from servers that
-  compress without declaring it — and escalate rather than hand back a
-  body in an encoding it cannot undo
+  compress without declaring it
 - Reject anything that is not an http or https URL, before a request is
   made or a browser is launched
 - Cache responses on disk, keyed by URL and content mode, with no TTL
-- Self-heal a poisoned cache: junk entries are deleted on read and re-fetched
-- Sweep accumulated junk on demand with `--clean-cache`
+- Self-heal a poisoned cache: junk entries are deleted on read and
+  re-fetched, or swept in bulk with `--clean-cache`
 - Run without a single third-party package — tier 1 is standard library only
 - Swap in a `FakeFetcher` so consuming code is testable with no network
 
 ## Quick start
 
-Prerequisites: Python 3.10 or later. No other package is needed for tier 1.
+Prerequisites: Python 3.10 or later.
 
 ```bash
 git clone https://github.com/braboj/page-fetcher.git
@@ -42,7 +42,7 @@ cd page-fetcher
 py -m pagefetch https://en.wikipedia.org/wiki/Web_scraping
 ```
 
-That prints the page text to stdout — roughly 30 KB of it, starting:
+That prints the page text to stdout — tens of kilobytes of it, starting:
 
 ```text
 Web scraping - Wikipedia Jump to content Main menu Main menu move to
@@ -64,11 +64,9 @@ if result.ok:
     print(result.tier_used, len(result.content))
 ```
 
-That prints `urllib 239100` — tier 1 handled it, and the raw HTML is about
-239 KB.
-
-The browser tiers are optional and are skipped when their library is absent
-(see [Dependencies](#dependencies)).
+That prints the tier that served the page and the size of the body — for
+this URL, `urllib` and a few hundred kilobytes of raw HTML. Tier 1 handled
+it, so no browser was launched.
 
 ## Usage
 
@@ -100,8 +98,7 @@ py -m pagefetch <url> --no-cache   # refetch, ignoring any cached copy
 py -m pagefetch <url> --cache-dir DIR
 ```
 
-Fetch many pages in one browser session — this is what makes bot-protected
-batches affordable, since the browser launches once rather than per URL:
+Fetch many pages in one browser session:
 
 ```bash
 py -m pagefetch --batch urls.txt                    # one URL per line
@@ -109,9 +106,6 @@ py -m pagefetch --batch -                           # from stdin
 py -m pagefetch url1 url2 url3                      # from arguments
 py -m pagefetch --batch urls.txt --output-dir out/  # one file per URL
 ```
-
-Three bot-protected pages take about 16 seconds as a batch, against roughly
-27 seconds fetched one at a time.
 
 Purge junk that accumulated in the cache before the current guards existed:
 
@@ -124,11 +118,11 @@ py -m pagefetch --clean-cache --dry-run   # list junk, delete nothing
 
 ### Exit codes
 
-| Code | Meaning                                                     |
-| ---- | ----------------------------------------------------------- |
-| 0    | Every requested URL returned content                        |
-| 1    | Nothing came back, or the arguments were rejected           |
-| 2    | A batch returned content for some URLs but not all          |
+| Code | Meaning                                            |
+| ---- | -------------------------------------------------- |
+| 0    | Every requested URL returned content               |
+| 1    | Nothing came back, or the arguments were rejected  |
+| 2    | A batch returned content for some URLs but not all |
 
 A failed fetch writes nothing to stdout, so `py -m pagefetch "$url" >
 page.txt && process page.txt` stops rather than processing an empty file.
@@ -153,10 +147,7 @@ assert scrape(FakeFetcher({url: "<html>...</html>"}), url) == "<html>...</html>"
 Map values are page bodies — the HTML a real fetch would have returned.
 `FakeFetcher` derives TEXT mode from them the same way `NetworkFetcher`
 does, by stripping tags, so code that reads both modes sees them differ
-under test as it will in production. Canned content with no markup comes
-back unchanged apart from collapsed whitespace. `screenshot` writes a
-placeholder PNG to the destination rather than only reporting success, so
-a test may assert the file exists.
+under test as it will in production.
 
 | Symbol           | Purpose                                         |
 | ---------------- | ----------------------------------------------- |
@@ -179,26 +170,44 @@ from pagefetch import NetworkFetcher, FileCache
 fetcher = NetworkFetcher(cache=FileCache(cache_dir=Path("/my/cache")))
 ```
 
+## Dependencies
+
+| Dependency        | Tier | Required | License    |
+| ----------------- | ---- | -------- | ---------- |
+| `urllib` (stdlib) | 1    | always   | PSF        |
+| `playwright`      | 2    | optional | Apache-2.0 |
+| `nodriver`        | 3    | optional | AGPL-3.0   |
+| `seleniumbase`    | 4    | optional | MIT        |
+
+The three browser engines live in the `browsers` extra
+(`pip install ".[browsers]"`). A missing one skips its tier with a message
+on stderr rather than failing. `nodriver` is AGPL-3.0 and affects you only
+if you distribute a service built on tier 3 — see
+[Architecture](docs/ARCHITECTURE.md#nodriver-and-the-agpl).
+
 ## Project structure
 
-| Path                     | Purpose                                            |
-| ------------------------ | -------------------------------------------------- |
-| `pagefetch/`             | The package — import this                          |
-| `pagefetch/source.py`    | `PageSource` ABC and the option / result types     |
-| `pagefetch/network.py`   | `NetworkFetcher` — the four-tier escalation ladder |
-| `pagefetch/detection.py` | Bot-wall, error-page, and real-content predicates  |
-| `pagefetch/cache.py`     | `FileCache` — on-disk cache and junk sweep         |
-| `pagefetch/chrome.py`    | Chrome / CDP launch helpers for the browser tiers  |
-| `pagefetch/fake.py`      | `FakeFetcher` test double                          |
-| `pagefetch/__main__.py`  | CLI entry point — a thin wrapper over the library  |
-| `pagefetch/tests/`       | pytest suite, including captured HTML fixtures     |
-| `docs/decisions/`        | Architecture Decision Records                      |
-| `docs/audits/`           | 360-degree audit reports, one per run              |
-| `docs/ONBOARDING.md`     | Fresh clone to a passing gate                      |
-| `docs/PLAYBOOK.md`       | Operational reference for recurring tasks          |
-| `docs/dev-journal.md`    | Session log — what changed and why                 |
-| `CLAUDE.md`              | Project rules for AI agents                        |
-| `pyproject.toml`         | Package metadata and every tool's configuration    |
+| Path                       | Purpose                                            |
+| -------------------------- | -------------------------------------------------- |
+| `pagefetch/`               | The package — import this                          |
+| `pagefetch/source.py`      | `PageSource` ABC and the option / result types     |
+| `pagefetch/network.py`     | `NetworkFetcher` — the four-tier escalation ladder |
+| `pagefetch/detection.py`   | Bot-wall, error-page, and real-content predicates  |
+| `pagefetch/cache.py`       | `FileCache` — on-disk cache and junk sweep         |
+| `pagefetch/chrome.py`      | Chrome / CDP launch helpers for the browser tiers  |
+| `pagefetch/fake.py`        | `FakeFetcher` test double                          |
+| `pagefetch/__main__.py`    | CLI entry point — a thin wrapper over the library  |
+| `pagefetch/tests/`         | pytest suite, including captured HTML fixtures     |
+| `docs/ARCHITECTURE.md`     | How the ladder, detection, and cache work          |
+| `docs/decisions/`          | Architecture Decision Records                      |
+| `docs/audits/`             | 360-degree audit reports, one per run              |
+| `docs/solid-ai-templates/` | Quality conventions — a git submodule              |
+| `docs/ONBOARDING.md`       | Fresh clone to a passing gate                      |
+| `docs/PLAYBOOK.md`         | Operational reference for recurring tasks          |
+| `docs/dev-journal.md`      | Session log — what changed and why                 |
+| `.github/workflows/`       | CI and CodeQL pipelines                            |
+| `CLAUDE.md`                | Project rules for AI agents                        |
+| `pyproject.toml`           | Package metadata and every tool's configuration    |
 
 ## Development setup
 
@@ -236,12 +245,12 @@ py -m mypy                  # type check
 py -m pytest --cov=pagefetch
 ```
 
-Coverage sits at roughly 65% with a floor of 63% that fails the build if it
-drops. What remains uncovered is the browser-tier method bodies, which need
-a headed Chrome and cannot run in CI; everything reachable without one is
-tested, including the batch session lifecycle. See
-[ADR-002](docs/decisions/002-python-toolchain-and-ci.md) for why the floor
-is measured against reality rather than set to an aspiration.
+A coverage floor fails the build when coverage drops below it. The value
+lives in `fail_under` in `pyproject.toml` and ratchets upward as coverage
+improves, so read it there rather than here. What remains uncovered is the
+browser-tier method bodies, which need a headed Chrome and cannot run in CI.
+See [ADR-002](docs/decisions/002-python-toolchain-and-ci.md) for why the
+floor is measured against reality rather than set to an aspiration.
 
 ## Configuration reference
 
@@ -258,198 +267,9 @@ highest first:
 The CLI flag and the constructor argument are the same tier — the flag is
 how the CLI passes the explicit argument. The environment variable lets a
 consuming project point every entry point at one cache directory without the
-package hardcoding any project layout.
-
-The resolved directory is validated at construction, not at first write. A
-path that is an existing file, or whose nearest existing ancestor is missing
-or read-only, raises a `ValueError` naming the source that supplied it. The
-directory itself is created lazily on first write.
-
-Configuration is deliberately lightweight: one environment variable and one
-CLI flag, validated with the standard library. A typed settings object
-(Pydantic) and `.env` loading are not used — they would add dependencies
-that break the standard-library-only contract for tier 1, and they are
-overkill for a single knob. Revisit if the package grows several config
-values (user agent, timeouts, tier toggles, concurrency), at which point a
-typed settings object would be introduced across all of them.
-
-## How it works
-
-```text
-urllib (plain HTTP, ~1s)
-  +- success -> done
-  +- HTTP error (404, timeout) -> Playwright
-  +- bot protection (captcha, 403) -> skip Playwright -> Nodriver
-                                            |
-Playwright (headless Chromium, ~5-9s)       |
-  +- success -> done                        |
-  +- bot detection / error -> Nodriver <----+
-                |
-Nodriver (headed Chrome via CDP, ~6-8s)
-  +- success -> done
-  +- failure -> UC
-                |
-SeleniumBase UC (headless stealth Chrome, ~18-24s)
-  +- success -> done
-  +- failure -> all tiers failed (content="")
-```
-
-| Tier | Engine          | Speed   | Mode     | Use case                               |
-| ---- | --------------- | ------- | -------- | -------------------------------------- |
-| 1    | urllib          | ~1s     | —        | Static HTML (most sites)               |
-| 2    | Playwright      | ~5-9s   | headless | JS-rendered content                    |
-| 3    | Nodriver        | ~6-8s   | headed   | Bot-protected sites (no driver binary) |
-| 4    | SeleniumBase UC | ~18-24s | headless | Headless-only fallback                 |
-
-When urllib detects bot protection, Playwright is skipped — it would fail
-the same way — and the fetcher goes straight to Nodriver, then UC.
-
-### Bot detection
-
-A response is treated as a bot-detection interstitial when it matches a
-known pattern (Cloudflare "Just a moment" / `challenge-platform`, "Checking
-your browser", 403/429/Access Denied titles, "Too Many Requests" /
-rate-limit / "unusual traffic" throttles, PerimeterX markers, cookie walls)
-or is a short HTML page with a meta-refresh redirect. See `detection.py`.
-
-`looks_like_real_content(html, min_bytes=10_000)` is the broader gate: a
-response that is bot-blocked, a 404/gone error page, or implausibly short is
-not real content. This catches throttle and error stubs carrying no
-recognizable bot text — a retailer's 7-8 KB "slow down" page, for instance.
-Such responses are never cached or re-served, and in auto mode they trigger
-escalation to a browser tier instead of being accepted.
-
-`is_error_page(html)` recognizes 404/410 and soft-404 bodies, where a
-discontinued product is served as HTTP 200 with a "page not found" body. A
-genuine 404 is terminal: it is not cached and does not escalate, since every
-tier returns the same error.
-
-Because that verdict is terminal, two phrases are held to a higher bar. "No
-longer available" and "has been discontinued" mean the page is gone on a
-stub and mean one variant is out of stock in the body copy of a perfectly
-good product page, so they count only below the size floor, where there is
-too little else on the page for the phrase to be incidental. Everything
-else — a 404 or 410 title, "page not found", "the page you requested could
-not be found" — is decisive at any size. The same reasoning applies to
-throttle detection: "rate limit" on its own is ordinary technical prose and
-only registers alongside a word that a page actually being throttled would
-use.
-
-### Event-driven waits
-
-Browser tiers poll rather than sleeping a fixed time. They wait for
-`document.readyState === "complete"`, poll the page source with exponential
-backoff (0.5s to a 2s cap, 15s timeout) until bot-detection patterns
-disappear, then scroll and poll `scrollHeight` until it stabilizes. This
-adapts to the actual security handshake time instead of guessing it.
-
-### Cache
-
-Responses are cached by `sha256(url)[:16]` plus a `.txt` or `.html` suffix.
-Text and HTML variants are cached separately. The key scheme is fixed —
-changing it would invalidate existing caches.
-
-Only real content is cached. On read, a cached body that is recognizably a
-bot or throttle page, or a 404/gone error page, is ignored, deleted, and
-re-fetched — so a cache poisoned before this guard existed, or one whose
-product was discontinued after caching, self-heals on the next fetch rather
-than re-serving junk. `--clean-cache` does the same sweep in bulk. The junk
-definition (`is_cacheable_junk`) is shared by the read-time scrub and the
-sweep, so the two never drift.
-
-The cache has no TTL — validity is decided by content, not age. Specs rarely
-change, discontinuation surfaces as a 404, and price refreshes are
-deliberate `--no-cache` passes.
-
-`--no-cache` is a refresh, not a bypass: it decides whether a cached body is
-_served_, not whether a fresh one is _stored_. The fetch ignores whatever is
-on disk and then replaces it, so the next ordinary fetch gets the new copy
-rather than the stale one it just skipped. Every path honors this the same
-way — single, batch, and a batch holding a persistent browser.
-
-## Dependencies
-
-| Dependency        | Tier | Required | License    |
-| ----------------- | ---- | -------- | ---------- |
-| `urllib` (stdlib) | 1    | always   | PSF        |
-| `playwright`      | 2    | optional | Apache-2.0 |
-| `nodriver`        | 3    | optional | AGPL-3.0   |
-| `seleniumbase`    | 4    | optional | MIT        |
-
-All three live in the `browsers` extra (`pip install ".[browsers]"`).
-Missing optional dependencies are handled gracefully — the tier is skipped
-with a message on stderr.
-
-**On `nodriver` and the AGPL.** `pagefetch` is MIT licensed and stays MIT.
-It does not vendor, bundle, or redistribute `nodriver`; the tier 3 import is
-lazy and is skipped when the package is absent, so installing `pagefetch`
-alone pulls in no AGPL code. The AGPL becomes your concern if you install
-`nodriver` and then distribute a network service built on the combination —
-the scenario section 13 of the AGPL covers, which obliges you to offer your
-service's source to its users. If that applies to you, install only
-`playwright` and `seleniumbase` and leave tier 3 out; the ladder degrades to
-three tiers and skips Nodriver with a stderr message.
-
-## Performance history
-
-- **v1** — Playwright-only, `networkidle` wait. ~5-9s everywhere; failed on
-  bot-protected sites.
-- **v2** — three tiers (urllib, Playwright, UC). Normal ~1s; bot ~27s.
-- **v3** — skip Playwright on bot detection; `domcontentloaded` over
-  `networkidle`; event-driven UC waits. Normal ~1s, JS ~5-9s, bot ~18-24s.
-- **v4** — persistent-browser batch mode. Three bot-protected pages: ~60s to
-  ~27s.
-- **v5** — Nodriver tier (CDP, no driver binary), preferred over UC in auto.
-  Three bot-protected pages: 27s to 16s.
-- **v6** — refactored from a single 748-line script into this package
-  (`PageSource` ABC, `NetworkFetcher`, `FakeFetcher`), CLI wrapping the
-  class. Behavior preserved.
-- **v7** — throttle pages no longer poison the cache: broader bot detection
-  (429 / rate-limit / "unusual traffic" / PerimeterX / Cloudflare challenge
-  runtime) and a `looks_like_real_content` size floor, so implausibly short
-  stubs escalate instead of being cached.
-- **v8** — 404 / gone handling and cache validity by content. A 404, 410, or
-  soft-404 is terminal; cached error bodies self-heal on read. No TTL.
-- **v9** — cache cleanup: junk entries are deleted rather than just ignored
-  when scrubbed on read, and `--clean-cache` sweeps on demand.
-
-### Sites tested
-
-| Site               | Tier       | Notes                                   |
-| ------------------ | ---------- | --------------------------------------- |
-| allphotolenses.com | urllib     | static HTML                             |
-| ttartisan.com      | Playwright | JS-rendered (query-param routing)       |
-| zyoptics.net       | Nodriver   | SiteGround captcha + bot protection     |
-| bhphotovideo.com   | Nodriver   | bypasses Cloudflare (headed)            |
-| viltrox.com        | urllib     | static HTML + Shopify JSON              |
-| mobile01.com       | UC         | Akamai blocks headless browsers         |
-| adorama.com        | BLOCKED    | PerimeterX "Press & Hold" — manual only |
-
-## URL schemes, and what this is not
-
-Every entry point rejects a URL whose scheme is not `http` or `https`,
-raising `ValueError` before any request or browser launch:
-
-```text
->>> NetworkFetcher().fetch("file:///etc/passwd")
-ValueError: 'file:///etc/passwd' uses the 'file' scheme; pagefetch only
-fetches http, https
-```
-
-`urllib` would otherwise read that file and hand it back as page content.
-
-**This is a scheme allowlist, not SSRF protection.** It does nothing to
-stop an `http://` request to `localhost`, `169.254.169.254`, or anything
-else on a private network. If the URLs you pass originate from user input,
-a config you do not control, or a redirect chain, you still need your own
-filter — resolving the host and checking the address, re-checked after
-every redirect. `require_supported_scheme` and `ALLOWED_SCHEMES` are
-exported so you can apply the same check at your own boundary.
-
-That is a deliberate boundary rather than an omission; [ADR-003](docs/decisions/003-url-scheme-allowlist.md)
-records why blocking private ranges here would break ordinary intranet and
-localhost fetching while offering a guarantee this layer cannot honestly
-make.
+package hardcoding any project layout. An unusable path raises a
+`ValueError` at construction naming the source that supplied it; see
+[Architecture](docs/ARCHITECTURE.md#why-configuration-stays-minimal).
 
 ## Known limitations
 
@@ -459,19 +279,22 @@ make.
 - PerimeterX "Press & Hold" (Adorama) blocks every automated tier.
 - Single-URL mode launches a new browser per call; use batch mode for many
   URLs.
+- The scheme check is an allowlist, not SSRF protection — it does not stop
+  requests to private addresses. See
+  [Architecture](docs/ARCHITECTURE.md#url-schemes-and-what-this-is-not).
 
 ## Links
 
+- [Architecture](docs/ARCHITECTURE.md) — the escalation ladder, detection
+  rules, cache behaviour, and performance history
 - [Onboarding](docs/ONBOARDING.md) — fresh clone to a passing gate
 - [Playbook](docs/PLAYBOOK.md) — git workflow, adding a tier or a detection
   pattern, the quality checks, maintenance
 - [Dev journal](docs/dev-journal.md) — what changed each session and why
 - [Audits](docs/audits/) — 360-degree assessments, one report per run
-- [Architecture Decision Records](docs/decisions/) —
-  [ADR-001](docs/decisions/001-extract-pagefetch-into-standalone-repo.md)
-  records this package's extraction from its original home, and
-  [ADR-002](docs/decisions/002-python-toolchain-and-ci.md) the toolchain
-  and CI gate
+- [Architecture Decision Records](docs/decisions/) — why the package was
+  extracted, how the toolchain and CI gate were chosen, and what the URL
+  scheme allowlist does and does not promise
 - Upstream history: the package grew inside
   [Imbra-Ltd/wuseria](https://github.com/Imbra-Ltd/wuseria) as
   `tools/pagefetch/`, where two earlier decision records still cover it —
