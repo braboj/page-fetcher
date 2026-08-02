@@ -212,8 +212,6 @@ Follow `templates/base/core/review.md` priority order, applying
 `templates/base/core/quality.md` as the standard. Project-specific
 additions:
 
-- Reproduce a claimed defect before reporting it — a finding asserted
-  from reading alone is a hypothesis
 - Treat a silent terminal verdict as a correctness defect, not a
   usability one: returning `ok=False` for a page that exists is the
   worst failure this package has
