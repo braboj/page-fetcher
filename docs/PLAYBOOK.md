@@ -211,6 +211,11 @@ py -m ruff format --check .   # what CI runs
 Per-file rule exemptions live in `pyproject.toml` with a comment giving the
 reason. Fix the code rather than widening a rule.
 
+Docstrings are part of the lint: the `D` rules run with the Google
+convention, so a public symbol without one fails `ruff check`. The suite is
+exempt — a docstring on a test named after its assertion restates the name,
+and the naming convention already carries the intent.
+
 ### 3.2 Type checking (mypy)
 
 ```bash
@@ -391,6 +396,26 @@ which had only ever worked because the package sat at the root.
 Building the wheel to check it leaves `build/` and `*.egg-info` in the
 tree. Both are gitignored, so `git status` stays clean and nothing flags
 them — build into a scratch directory, or delete them in the same step.
+
+A stale `*.egg-info` is worse than untidy when it sits in the repository
+root: the root is on `sys.path` ahead of `site-packages`, so the leftover
+shadows the freshly written `dist-info` and the version stays stale even
+after a clean `pip install -e .`. Under `src/` the directory is written to
+`src/`, which is not on `sys.path`, so ADR-010 closed that path here — the
+fix (`rm -rf ./*.egg-info` before reinstalling) is for a flat layout.
+
+The layout itself has a proof, and it is the only check that catches a
+suite still importing from the tree:
+
+```bash
+py -m pip uninstall -y pagefetch
+py -m pytest --collect-only   # MUST fail: ModuleNotFoundError
+py -m pip install -e ".[dev]"
+```
+
+A suite that still collects has not adopted the layout, it has only moved
+files. Nothing else detects this — lint, types and coverage all pass either
+way.
 
 ## 5. Releases
 
