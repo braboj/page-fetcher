@@ -58,15 +58,15 @@ of truth. Agent-specific placement rules:
   must kill nothing when ownership cannot be established
 - `source.py` MUST NOT import from any other package module — it is the
   contract every other module depends on
-- New tests go in `pagefetch/tests/`, one file per concern, named
+- New tests go in `tests/`, one file per concern, named
   `test_<concern>.py`
 - Technical explanation goes in `docs/ARCHITECTURE.md`, not the README —
   the README covers what the package does and how to run it. Decisions go
   in `docs/decisions/` (ADR-009)
-- The package layout is flat, not `src/` — a deviation from
-  `python-lib.md` that ADR-010 decided to end. It stands until #71
-  moves the files; do not cite it as a reason to add anything else at
-  the root
+- The package is `src/pagefetch/` and the suite is `tests/`, per
+  `python-lib.md` (ADR-010). A checkout with nothing installed cannot
+  import the package — that is the layout working, not a broken clone.
+  Run the editable install in §1.3 first
 
 ### 1.3 Commands
 

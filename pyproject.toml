@@ -45,10 +45,12 @@ Issues = "https://github.com/braboj/page-fetcher/issues"
 pagefetch = "pagefetch.__main__:main"
 
 [tool.setuptools.packages.find]
-include = ["pagefetch*"]
+where = ["src"]
 # Tests ship with the repository, not the wheel — the captured HTML
-# fixtures alone are larger than the package.
-exclude = ["pagefetch.tests*"]
+# fixtures alone are larger than the package. Under the src/ layout they
+# sit outside the package, so nothing has to exclude them by hand
+# (ADR-010).
+include = ["pagefetch*"]
 
 [tool.ruff]
 line-length = 88
@@ -93,21 +95,23 @@ select = [
 # each tier as it succeeds. Collapsing that into one exit point would
 # need a result variable threaded through every branch, which reads worse
 # than the early returns.
-"pagefetch/network.py" = ["BLE001", "S110", "PLC0415", "PLR0911"]
+"src/pagefetch/network.py" = ["BLE001", "S110", "PLC0415", "PLR0911"]
 # S607 (partial executable path): `tasklist` is resolved via PATH on
 # purpose — hardcoding a System32 path breaks on non-default Windows
 # installs, and the call is already best-effort.
-"pagefetch/chrome.py" = ["BLE001", "S110", "S607"]
+"src/pagefetch/chrome.py" = ["BLE001", "S110", "S607"]
 # pytest's assert-based style (S101 flags every assertion) and its habit
 # of comparing against literals (PLR2004). The tier-stub helper takes one
 # argument per tier, which trips the argument-count rules. S311 flags
 # `random` as non-cryptographic, which is the point — a seeded generator
 # builds a deterministic incompressible fixture.
-"pagefetch/tests/*" = ["S101", "PLR2004", "PLR0913", "PLR0917", "S311"]
+"tests/*" = ["S101", "PLR2004", "PLR0913", "PLR0917", "S311"]
 
 [tool.mypy]
 python_version = "3.10"
-files = ["pagefetch"]
+# The package and its suite are two roots under the src/ layout. Listing
+# only "src" would silently stop type-checking the tests.
+files = ["src", "tests"]
 # The browser tiers are lazily imported and optional, so their stubs are
 # absent in a plain `pip install -e .` checkout and in CI.
 ignore_missing_imports = true
@@ -116,14 +120,15 @@ warn_redundant_casts = true
 warn_unused_ignores = true
 
 [tool.pytest.ini_options]
-testpaths = ["pagefetch/tests"]
+testpaths = ["tests"]
 addopts = "-q"
 
 [tool.coverage.run]
+# Named as an import, so it resolves through the install rather than the
+# working directory — which is the whole point of the src/ layout
+# (ADR-010). The suite sits outside the package now, so no omit pattern is
+# needed to keep it out of the figure.
 source = ["pagefetch"]
-# Measure the package, not the suite that exercises it — including tests
-# reports them at 100% and inflates the headline number.
-omit = ["pagefetch/tests/*"]
 
 [tool.coverage.report]
 show_missing = true

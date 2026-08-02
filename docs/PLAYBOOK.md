@@ -339,4 +339,4 @@ README must describe what is actually on it.
 
 Version lives in `pyproject.toml` and follows SemVer. Bump it in its own
 commit when the public API changes — the exported names in
-`pagefetch/__init__.py`, the CLI flags, or the exit codes.
+`src/pagefetch/__init__.py`, the CLI flags, or the exit codes.

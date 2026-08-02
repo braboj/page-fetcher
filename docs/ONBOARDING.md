@@ -30,6 +30,12 @@ pre-commit install
 git config fetch.prune true
 ```
 
+The editable install is a precondition, not a convenience. The package
+lives in `src/`, so a checkout with nothing installed cannot import it and
+the suite fails to collect with `ModuleNotFoundError: No module named
+'pagefetch'`. That is the layout doing its job — it is what stops tests
+passing against source that was never packaged (ADR-010).
+
 `fetch.prune` matters here because the repository deletes head branches on
 merge. Without it, `origin/<branch>` outlives the branch it points at and
 reads as a branch that refuses to delete.
@@ -90,15 +96,15 @@ playwright install chromium
 Read these in order. The README's "Project structure" section lists the
 rest.
 
-| File                     | Why it matters                                       |
-| ------------------------ | ---------------------------------------------------- |
-| `README.md`              | What the package does and how to run it              |
-| `CLAUDE.md`              | The rules this project holds contributors to         |
-| `docs/ARCHITECTURE.md`   | How the ladder, detection and the cache work         |
-| `pagefetch/source.py`    | The `PageSource` contract everything else implements |
-| `pagefetch/network.py`   | The four tiers and the escalation orchestrator       |
-| `pagefetch/detection.py` | The predicates that decide when to escalate          |
-| `docs/decisions/`        | Why the boundaries are where they are                |
+| File                         | Why it matters                                       |
+| ---------------------------- | ---------------------------------------------------- |
+| `README.md`                  | What the package does and how to run it              |
+| `CLAUDE.md`                  | The rules this project holds contributors to         |
+| `docs/ARCHITECTURE.md`       | How the ladder, detection and the cache work         |
+| `src/pagefetch/source.py`    | The `PageSource` contract everything else implements |
+| `src/pagefetch/network.py`   | The four tiers and the escalation orchestrator       |
+| `src/pagefetch/detection.py` | The predicates that decide when to escalate          |
+| `docs/decisions/`            | Why the boundaries are where they are                |
 
 ## 5. Project context
 
