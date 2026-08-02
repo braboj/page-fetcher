@@ -21,9 +21,9 @@ here rather than resolved through it:
 
 - `templates/platform/github.md` — CI, SAST, secret detection,
   dependency management, and the `Gate` status check
-- `templates/platform/linear.md` — the tracker only. Where a rule
-  appears in both, GitHub governs the repository and Linear governs the
-  tracker (ADR-007)
+- A tracker platform template is declared alongside it and governs the
+  tracker only. Where a rule appears in both, GitHub governs the
+  repository. ADR-007 names the tracker currently in use
 
 Also applied, outside the chain: `templates/base/workflow/scope.md`
 (session protocol) and `templates/base/workflow/360.md` (audits).
@@ -85,17 +85,18 @@ py -m pytest --cov=pagefetch    # tests with the coverage floor enforced
 ### 2.1 Git
 
 - `main` is protected — never commit directly
-- GitHub is the system of record. Linear is a view over it and MUST stay
-  replaceable — nothing that outlives a ticket may exist only in the
-  tracker (ADR-007)
+- GitHub is the system of record. The issue tracker is a view over it and
+  MUST stay replaceable — nothing that outlives a ticket may exist only
+  in the tracker (ADR-007)
 - Branch naming: `<type>/<TICKET>-<scope>` — e.g.
-  `feat/BRA-42-cache-key`. Types: feat, fix, docs, chore. The Linear
-  ticket goes in upper case, and is the only permanent-looking place a
-  tracker identifier belongs (ADR-007). Omit it when there is no ticket
+  `feat/BRA-42-cache-key`. Types: feat, fix, docs, chore. The ticket goes
+  in upper case, as the tracker displays it, and a branch name is the
+  only permanent-looking place a tracker identifier belongs (ADR-007).
+  Omit it when there is no ticket
 - Commits: `<type>(<scope>): <summary>` — feat, fix, chore, docs,
   refactor
-- PR titles: same format with the GitHub issue number(s) at the end. Not
-  the Linear identifier — a PR title is permanent, and a tracker
+- PR titles: same format with the GitHub issue number(s) at the end,
+  never a tracker identifier — a PR title is permanent, and a tracker
   identifier in one is a dead reference after a migration
 - Issue titles: sentence case, imperative verb, no type prefix
 - Every issue gets exactly one type label (`bug`, `task`, `spike`) and
