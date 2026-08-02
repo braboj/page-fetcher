@@ -55,11 +55,17 @@ Branch names are ephemeral. PR titles carry the GitHub issue number, which
 lives with the repository and survives any tracker change. Commit messages
 follow the same rule.
 
-**4. Existing commits stay as they are.**
+**4. Existing commits stay as they are; unmerged titles do not.**
 
 Nine commits carry `Refs BRA-…`. Rewriting merged history to remove them
-would cost more than the dead references are worth. PRs #56 and #57 keep
-their `(BRA-…)` titles for the same reason — they predate this record.
+would cost more than the dead references are worth.
+
+Pull request titles are different. This repository squash-merges, so a PR
+title becomes a commit subject on `main` — permanent, and reached by anyone
+reading the log. The three open PRs were retitled to drop their `(BRA-…)`
+suffix before merging, because the cost of doing so was one command each
+and the cost of not doing so was three more dead references in the history
+this record exists to protect.
 
 ## Alternatives considered
 

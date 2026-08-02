@@ -279,5 +279,4 @@ MIT — see [LICENSE](LICENSE).
 
 The optional `nodriver` dependency is AGPL-3.0 and is not covered by this
 license. It affects you only if you install it and then distribute a
-network service built on the **headed** tier; see
-[Architecture](docs/ARCHITECTURE.md#nodriver-and-the-agpl).
+network service built on the **headed** tier.
