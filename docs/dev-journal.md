@@ -6,6 +6,94 @@ git already holds.
 
 ---
 
+## 2026-08-02 (second session) — Retiring the template debt
+
+**Tool**: Claude Code (Opus 5)
+
+Started as a status check and became a bill for eighteen commits of
+unpaid submodule debt. The pin was not sitting idle — it was producing
+wrong work, and three of the four README rules CLAUDE.md carried as
+project overrides had been adopted upstream weeks ago.
+
+**Changes**
+
+- Bumped `solid-ai-templates` from `v2.35.0-18-g87493e2` to
+  `v2.37.0-3-ga835374` (#73), then reconciled against it in three
+  changes: CLAUDE.md §2.7 lost the three rules the template now carries
+  (#74), PLAYBOOK §1.3 and §1.5 lost 33 lines of reasoning that
+  `platform-github-branch-cleanup` and the new `git.md` sections now hold
+  (#75), and §1.4's label rule was corrected (#77).
+- Finished the README Features trim (#69), cutting nine bullets to six.
+- Added the tracker-close step to the after-merge routine (#68).
+- Dropped the deep link from the SSRF limitation bullet (#80).
+
+**PRs merged**: #68, #69, #73, #74, #75, #77, #80
+
+**Issues created**: #67, #70, #71, #72, #76, #78, #79 —
+`solid-ai-templates#916`, `#917`, `#919`, `#923`
+
+**Issues closed**: #64, #67, #72, #76, #79
+
+**Decisions**
+
+- *De-stacking stays a deviation.* Upstream requires branching fresh off
+  `main` and cherry-picking the dependent branch's commits into a new PR.
+  This repository merges `main` in. Both avoid the force-push and both
+  leave `main` byte-identical under squash merge; the difference is that
+  a new PR discards the review history on the old one, which the template
+  does not price. Recorded as a deviation rather than silently kept, and
+  filed upstream as `#919`.
+- *The label rule was wrong in the playbook, not the issues.* §1.4
+  required one priority label from `P0`–`P4`, which #59 and #9 both
+  violate by carrying `P3` and `P4` together. CLAUDE.md §2.1 and
+  `platform-github-labels` agree that `P4` is a deferral marker
+  accompanying a severity. `54e42ec` introduced the error while fixing a
+  different one.
+- *Compression moved rather than being deleted.* #64 said to cut the
+  bullet and keep the detail in the architecture document. That document
+  had no compression section, so cutting alone would have lost the
+  undeclared-gzip case — mojibake clears `MIN_REAL_CONTENT_BYTES` and
+  gets cached as though it were a page. It now has one.
+
+**What went wrong**
+
+- *Two merge rules turned out to be unwritten, and both were found by
+  hitting them.* The tracker integration links a merged PR to its ticket
+  but never transitions state, so BRA-595/596/600 sat in `In Progress`
+  with their merged PRs attached — the open question ADR-007 recorded,
+  answered by observation rather than by checking. Then #69 was refused
+  because branch protection wants the head up to date, which applies to
+  independent PRs merged back to back and not only to stacks. §1.3 framed
+  that as a consequence of stacking, so it did not reach the case.
+- *The plan called for cutting PLAYBOOK §1.5 down to a pointer, and the
+  first attempt duplicated the resync block into §1.3 instead.* Caught on
+  re-reading the rendered section. Deleting prose and adding prose in the
+  same edit hides the addition inside the deletion's diff.
+
+**Template feedback**
+
+Four filed, none duplicates. The upstream issue list was searched before
+each one — the check that was skipped last session, when three duplicates
+went in against already-closed issues.
+
+`#916` is content loss: the Branch cleanup section replaced the
+`## GitHub Pages` heading instead of being inserted above it, so
+`[ID: platform-github-pages]` no longer exists and its two HTTPS rules
+now read as branch rules. It is a regression against `#310`, which
+delivered them, and exactly what `#303` proposes smoke checks for.
+`#917` is a garbled clause in the same section — the bullet that decides
+whether a `headRefOid` mismatch is safe to delete through. `#919` argues
+merging `main` in should be a permitted de-stacking route. `#923` records
+that under required-up-to-date branch protection a batch of N ready PRs
+costs N merges plus N-1 update-and-CI cycles.
+
+**Pending**: `solid-ai-templates#907` and `#908`, contributed last
+session, are still open — CLAUDE.md §2.7's surviving bullet is annotated
+to be deleted if `#907` lands. #78 (`examples/`) is sequenced behind #71
+(`src/` layout) so the path-based config audit happens once.
+
+---
+
 ## 2026-08-02 — Transport modes named off their libraries; the tracker demoted
 
 **Tool**: Claude Code (Opus 5)
