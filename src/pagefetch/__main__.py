@@ -4,7 +4,8 @@ Thin wrapper over NetworkFetcher.
 
 Usage:
     py -m pagefetch <url>                          # single URL, auto mode
-    py -m pagefetch <url> --html                   # raw HTML output
+    py -m pagefetch <url> --format html            # raw HTML output
+    py -m pagefetch <url> --format text            # stripped text (default)
     py -m pagefetch <url> --http                   # force plain HTTP
     py -m pagefetch <url> --js                     # force a JS-rendering browser
     py -m pagefetch <url> --headed                 # force bot bypass (needs display)
@@ -50,9 +51,8 @@ EXIT_OK = 0
 EXIT_ALL_FAILED = 1
 EXIT_PARTIAL = 2
 
-_VALUE_FLAGS = {"--wait", "--batch", "--output-dir", "--cache-dir"}
+_VALUE_FLAGS = {"--wait", "--batch", "--output-dir", "--cache-dir", "--format"}
 _BARE_FLAGS = {
-    "--html",
     "--no-cache",
     "--http",
     "--js",
@@ -63,6 +63,10 @@ _BARE_FLAGS = {
     "--help",
 }
 _HELP_FLAGS = {"--help", "-h"}
+
+# The accepted --format values. ContentMode is the library's type; this
+# maps the CLI's spelling onto it so the two can be named independently.
+_FORMATS = {"text": ContentMode.TEXT, "html": ContentMode.HTML}
 
 
 def _parse_transport(argv: list[str]) -> Transport:
@@ -102,6 +106,26 @@ def _parse_wait_ms(argv: list[str]) -> int:
     if wait_ms < 0:
         raise ValueError(f"--wait cannot be negative, got {wait_ms}")
     return wait_ms
+
+
+def _parse_mode(argv: list[str]) -> ContentMode:
+    """The output format for --format, defaulting to text.
+
+    Raises ValueError so main() reports it like every other bad argument.
+    Absence and emptiness are told apart on purpose: `--format` as the
+    last argument is a mistake, and treating it as "unset" would silently
+    hand back the default the user was trying to override.
+    """
+    if "--format" not in argv:
+        return ContentMode.TEXT
+    accepted = ", ".join(sorted(_FORMATS))
+    raw = _flag_value(argv, "--format")
+    if raw is None:
+        raise ValueError(f"--format expects one of: {accepted}")
+    try:
+        return _FORMATS[raw]
+    except KeyError:
+        raise ValueError(f"--format expects one of: {accepted}, got {raw!r}") from None
 
 
 def _flag_value(argv: list[str], flag: str) -> str | None:
@@ -223,12 +247,13 @@ def main() -> None:
         print("Run `py -m pagefetch --help` for usage.", file=sys.stderr)
         sys.exit(EXIT_ALL_FAILED)
 
-    # Both the cache directory and --wait are rejected here rather than
-    # deeper in, so a bad argument never reaches a fetch and always
+    # The cache directory, --wait and --format are rejected here rather
+    # than deeper in, so a bad argument never reaches a fetch and always
     # reports the same way.
     try:
         cache = _make_cache(argv)
         wait_ms = _parse_wait_ms(argv)
+        mode = _parse_mode(argv)
     except ValueError as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(EXIT_ALL_FAILED)
@@ -237,7 +262,6 @@ def main() -> None:
         _clean_cache(cache, dry_run="--dry-run" in argv)
         return
 
-    mode = ContentMode.HTML if "--html" in argv else ContentMode.TEXT
     transport = _parse_transport(argv)
     use_cache = "--no-cache" not in argv
     output_dir = _flag_value(argv, "--output-dir")

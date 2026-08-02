@@ -14,6 +14,7 @@ from pagefetch.__main__ import (
     DEFAULT_WAIT_MS,
     EXIT_ALL_FAILED,
     _collect_urls,
+    _parse_mode,
     _parse_transport,
     _parse_wait_ms,
     _unknown_flags,
@@ -35,12 +36,12 @@ def _run(monkeypatch, argv):
     ("argv", "expected"),
     [
         (["pagefetch", "https://x.test"], []),
-        (["pagefetch", "https://x.test", "--html"], []),
+        (["pagefetch", "https://x.test", "--format", "html"], []),
         (["pagefetch", "--clean-cache", "--dry-run"], []),
         (["pagefetch", "https://x.test", "--wait", "500"], []),
         (["pagefetch", "--batch", "-"], []),
         (["pagefetch", "--clean-cache", "--dyr-run"], ["--dyr-run"]),
-        (["pagefetch", "https://x.test", "--htlm"], ["--htlm"]),
+        (["pagefetch", "https://x.test", "--fomrat", "html"], ["--fomrat"]),
         (["pagefetch", "https://x.test", "--no-cahce"], ["--no-cahce"]),
         (["pagefetch", "https://x.test", "--a", "--b"], ["--a", "--b"]),
     ],
@@ -177,6 +178,42 @@ def test_bad_wait_exits_cleanly_rather_than_tracebacking(monkeypatch, capsys):
     assert "Traceback" not in err
 
 
+# --- --format ---------------------------------------------------------
+
+
+def test_format_defaults_to_text_when_absent():
+    assert _parse_mode(["pagefetch", "https://x.test"]) is ContentMode.TEXT
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [("text", ContentMode.TEXT), ("html", ContentMode.HTML)],
+)
+def test_format_accepts_both_modes(value, expected):
+    assert _parse_mode(["pagefetch", "https://x.test", "--format", value]) is expected
+
+
+@pytest.mark.parametrize("value", ["bogus", "HTML", "txt", ""])
+def test_format_rejects_an_unknown_value(value):
+    with pytest.raises(ValueError, match="expects one of: html, text"):
+        _parse_mode(["pagefetch", "https://x.test", "--format", value])
+
+
+def test_format_without_a_value_is_rejected():
+    # Distinct from absence on purpose: falling back to the default here
+    # would hand back exactly what the user was trying to override.
+    with pytest.raises(ValueError, match="expects one of: html, text"):
+        _parse_mode(["pagefetch", "https://x.test", "--format"])
+
+
+def test_bad_format_exits_cleanly_rather_than_tracebacking(monkeypatch, capsys):
+    code = _run(monkeypatch, ["https://x.test", "--format", "bogus"])
+    assert code == EXIT_ALL_FAILED
+    err = capsys.readouterr().err
+    assert err.startswith("Error: --format expects one of: html, text")
+    assert "Traceback" not in err
+
+
 # --- batch input ------------------------------------------------------
 
 
@@ -244,6 +281,6 @@ def test_no_arguments_prints_usage_and_exits_non_zero(monkeypatch, capsys):
 def test_flags_without_a_url_print_usage_and_exit_non_zero(monkeypatch, capsys):
     # Arguments were given, so the argv-length check passes, but nothing
     # in them is a URL to fetch.
-    code = _run(monkeypatch, ["--html", "--no-cache"])
+    code = _run(monkeypatch, ["--format", "html", "--no-cache"])
     assert code == EXIT_ALL_FAILED
     assert "py -m pagefetch <url>" in capsys.readouterr().out

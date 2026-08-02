@@ -96,7 +96,8 @@ py -m pagefetch <url> --headless   # bot bypass, no display needed
 Change the output, the wait, or the cache:
 
 ```bash
-py -m pagefetch <url> --html       # raw HTML instead of stripped text
+py -m pagefetch <url> --format html  # raw HTML instead of stripped text
+py -m pagefetch <url> --format text  # stripped text, the default
 py -m pagefetch <url> --wait 5000  # extra post-load wait (ms)
 py -m pagefetch <url> --no-cache   # refetch, ignoring any cached copy
 py -m pagefetch <url> --cache-dir DIR
