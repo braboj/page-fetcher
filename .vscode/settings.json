@@ -1,0 +1,38 @@
+{
+  // Pylance runs its own type analysis at a strictness the CI gate does
+  // not use. Two checkers at two strictnesses means the editor reports
+  // diagnostics `py -m mypy` accepts, so "green in CI" stops meaning
+  // "green in the editor". Only the diagnostics layer defers here —
+  // completion, hover and rename are unaffected.
+  "python.analysis.typeCheckingMode": "off",
+
+  // mypy through its own extension, so the live diagnostics come from the
+  // checker the Gate runs. Workspace scope matches `files = ["src",
+  // "tests"]` in pyproject.toml; the default open-files scope would miss
+  // an error in a file the contributor has not opened.
+  "mypy-type-checker.reportingScope": "workspace",
+  "mypy-type-checker.preferDaemon": true,
+
+  // ruff is the linter and the formatter, both configured in
+  // pyproject.toml. Format on save keeps `ruff format --check .` from
+  // being the first thing a contributor fails on.
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.ruff": "explicit",
+      "source.organizeImports.ruff": "explicit"
+    }
+  },
+
+  // The submodule carries its own toolchain and its own CI, and ruff
+  // already excludes it in pyproject.toml. Excluding it here too keeps it
+  // out of the editor's search and file watcher.
+  "files.watcherExclude": {
+    "**/docs/solid-ai-templates/**": true
+  },
+
+  // Line length 88, matching pyproject.toml — the rule applies to prose in
+  // Markdown here as well, which is where most of this repository lives.
+  "editor.rulers": [88]
+}

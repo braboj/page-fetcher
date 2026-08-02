@@ -23,9 +23,13 @@ htmlcov/
 *.pem
 *.key
 
-# IDE and editor
+# IDE and editor — .vscode is an allowlist, not a wholesale ignore. The
+# two tracked files mirror the CI gates, and leaving them untracked makes
+# every contributor reproduce the Pylance-defers-to-mypy setup by hand.
 .idea/
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 *.swp
 *.swo
 

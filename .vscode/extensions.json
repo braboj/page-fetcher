@@ -1,0 +1,10 @@
+{
+  // The three extensions that surface the CI gates live in the editor.
+  // Without them settings.json is inert: it turns Pylance's type checking
+  // off and routes diagnostics to extensions a contributor may not have.
+  "recommendations": [
+    "ms-python.python",
+    "charliermarsh.ruff",
+    "ms-python.mypy-type-checker"
+  ]
+}
