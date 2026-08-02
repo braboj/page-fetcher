@@ -106,6 +106,12 @@ py -m pytest --cov=pagefetch    # tests with the coverage floor enforced
 - One concern per PR
 - Never delete a base branch while a stacked PR points at it — that
   closes the stacked PR instead of retargeting it
+- This repository squash-merges, so after merging the base of a stack,
+  retarget the next PR and merge `main` into its branch before merging
+  it. The squash leaves that branch carrying commits whose content is
+  already on `main`, which GitHub reports as a conflict
+- Merge `main` in rather than rebasing — a rebase needs a force-push,
+  and the squash discards the extra merge commit anyway
 
 ### 2.2 Python
 
