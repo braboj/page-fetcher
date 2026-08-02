@@ -145,6 +145,19 @@ git fetch origin <branch>
 git reset --hard origin/<branch>
 ```
 
+Then close the tracker ticket by hand. The integration attaches the pull
+request to it and stops there — it does not transition state on merge.
+BRA-595, BRA-596 and BRA-600 each sat in `In Progress` with their merged PR
+already linked, and were moved afterwards in a separate pass. ADR-007 left
+this as an open question; the answer is that the sync is link-only.
+
+The GitHub issue is the half that closes itself, and only when the PR body
+carries `Closes #N`. Write the keyword or expect to close that by hand too.
+
+ADR-007 also keeps the tracker replaceable, which is why the step is
+recorded as the action rather than as a path through one vendor's UI: move
+the ticket to its terminal state, in whichever tracker is in use.
+
 ## 2. Domain operations
 
 ### 2.1 Add a transport tier
