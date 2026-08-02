@@ -16,6 +16,15 @@ Key references — the resolved `stack-python-lib` chain:
 - `templates/base/workflow/quality-gates.md`
 - `templates/stack/python-lib.md`
 
+Platform templates are orthogonal to the stack chain and are declared
+here rather than resolved through it:
+
+- `templates/platform/github.md` — CI, SAST, secret detection,
+  dependency management, and the `Gate` status check
+- A tracker platform template is declared alongside it and governs the
+  tracker only. Where a rule appears in both, GitHub governs the
+  repository. ADR-007 names the tracker currently in use
+
 Also applied, outside the chain: `templates/base/workflow/scope.md`
 (session protocol) and `templates/base/workflow/360.md` (audits).
 
@@ -51,6 +60,9 @@ of truth. Agent-specific placement rules:
   contract every other module depends on
 - New tests go in `pagefetch/tests/`, one file per concern, named
   `test_<concern>.py`
+- Technical explanation goes in `docs/ARCHITECTURE.md`, not the README —
+  the README covers what the package does and how to run it. Decisions go
+  in `docs/decisions/`
 - The package layout is flat, not `src/` — deviation from
   `python-lib.md`, kept because the package predates this repository
   and the key scheme in `cache.py` is path-independent
@@ -73,15 +85,19 @@ py -m pytest --cov=pagefetch    # tests with the coverage floor enforced
 ### 2.1 Git
 
 - `main` is protected — never commit directly
+- GitHub is the system of record. The issue tracker is a view over it and
+  MUST stay replaceable — nothing that outlives a ticket may exist only
+  in the tracker (ADR-007)
 - Branch naming: `<type>/<TICKET>-<scope>` — e.g.
-  `feat/BRA-42-cache-key`. Types: feat, fix, docs, chore. The Linear
-  ticket goes in upper case, as Linear displays it. It attaches the PR
-  to the ticket and moves it through In Progress and In Review; without
-  it the ticket still closes on merge, but jumps straight to Done. Omit
-  it only when there is no ticket
+  `feat/BRA-42-cache-key`. Types: feat, fix, docs, chore. The ticket goes
+  in upper case, as the tracker displays it, and a branch name is the
+  only permanent-looking place a tracker identifier belongs (ADR-007).
+  Omit it when there is no ticket
 - Commits: `<type>(<scope>): <summary>` — feat, fix, chore, docs,
   refactor
-- PR titles: same format with the issue number(s) at the end
+- PR titles: same format with the GitHub issue number(s) at the end,
+  never a tracker identifier — a PR title is permanent, and a tracker
+  identifier in one is a dead reference after a migration
 - Issue titles: sentence case, imperative verb, no type prefix
 - Every issue gets exactly one type label (`bug`, `task`, `spike`) and
   one severity label (`P0`–`P3`), applied at creation. `P4` is a
@@ -135,7 +151,9 @@ py -m pytest --cov=pagefetch    # tests with the coverage floor enforced
   no escalation, no cache — so a false positive loses a page silently
 - Every new pattern needs a positive case in the parametrized test AND a
   negative case proving it does not fire on real content
-- Update the count assertion in `test_detection.py`
+- Update all three count assertions in `test_detection.py` —
+  `BOT_DETECTION_PATTERNS`, `ERROR_PAGE_PATTERNS` and
+  `AMBIGUOUS_ERROR_PAGE_PATTERNS`
 
 ### 2.6 Cache
 
@@ -143,6 +161,15 @@ py -m pytest --cov=pagefetch    # tests with the coverage floor enforced
   changing it silently invalidates every existing cache
 - Keep the junk definition in `is_cacheable_junk` alone; never duplicate
   it at a call site
+
+### 2.7 README
+
+- Badges directly under the H1, then the subtitle, then the lede
+- Capability bullets live under `## Features`
+- Never cite an ADR from the README. Link `docs/ARCHITECTURE.md` and let
+  that document cite the record
+- No figure that moves (coverage, byte counts) — point at the file that
+  holds it
 
 ## 3. Quality
 
