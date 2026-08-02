@@ -16,6 +16,15 @@ Key references — the resolved `stack-python-lib` chain:
 - `templates/base/workflow/quality-gates.md`
 - `templates/stack/python-lib.md`
 
+Platform templates are orthogonal to the stack chain and are declared
+here rather than resolved through it:
+
+- `templates/platform/github.md` — CI, SAST, secret detection,
+  dependency management, and the `Gate` status check
+- `templates/platform/linear.md` — the tracker only. Where a rule
+  appears in both, GitHub governs the repository and Linear governs the
+  tracker (ADR-007)
+
 Also applied, outside the chain: `templates/base/workflow/scope.md`
 (session protocol) and `templates/base/workflow/360.md` (audits).
 
