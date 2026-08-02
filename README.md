@@ -4,8 +4,7 @@
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)
 
-_Fetch a page by the cheapest means that works - built for research and
-other low-volume work, not for bulk scraping._
+_Fetch a page by the cheapest means that works._
 
 A plain HTTP request is enough for static HTML. Pages that render in
 JavaScript, or that block anything that looks automated, need a browser.
@@ -246,6 +245,9 @@ highest first:
 
 ## Known limitations
 
+- Built for research and other low-volume work. Nothing here rate-limits,
+  backs off, or reads robots.txt, and batch mode fetches sequentially. It
+  is not a bulk scraper.
 - **headed** opens a Chrome window, so it cannot run in CI or on a host with
   no display.
 - **headless** costs ~18-24s, most of it Chrome launch overhead.
