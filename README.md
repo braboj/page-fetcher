@@ -244,6 +244,11 @@ highest first:
 | `PAGEFETCH_CACHE_DIR`        | path | unset                | Environment variable        |
 | built-in default             | path | `./.cache/pagefetch` | Relative to the working dir |
 
+An empty value is an error, not a fallback. `--cache-dir ""` and
+`PAGEFETCH_CACHE_DIR=` both fail naming the source, rather than quietly
+resolving to the next row down — which is what an unset variable expanded
+into a wrapper script would otherwise do.
+
 ## Known limitations
 
 - Built for research and other low-volume work. Nothing here rate-limits,
