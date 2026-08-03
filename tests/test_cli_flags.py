@@ -99,6 +99,51 @@ def test_unknown_flag_is_rejected_before_the_cache_is_built(tmp_path, monkeypatc
     _run(monkeypatch, ["https://x.test", "--cache-dir", str(a_file), "--bogus"])
 
 
+# --- an explicitly empty value ---------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("flag", "expects"),
+    [
+        ("--cache-dir", "a directory path"),
+        ("--output-dir", "a directory path"),
+        ("--batch", "a file path"),
+        ("--wait", "a whole number of milliseconds"),
+        ("--format", "one of"),
+    ],
+)
+def test_empty_flag_value_is_rejected(monkeypatch, capsys, flag, expects):
+    # #98 rejected a value flag with nothing after it. An explicitly empty
+    # value took the other route: _flag_value returned "", and every call
+    # site truth-tested it back into the None an absent flag produces.
+    monkeypatch.delenv("PAGEFETCH_CACHE_DIR", raising=False)
+
+    code = _run(monkeypatch, ["https://x.test", flag, ""])
+
+    assert code == EXIT_ALL_FAILED
+    err = capsys.readouterr().err
+    assert "empty value" in err
+    assert flag in err
+    assert expects in err
+
+
+def test_empty_cache_dir_value_does_not_sweep_the_working_directory(
+    tmp_path, monkeypatch, capsys
+):
+    # The reason it is not merely a precedence nit: the silent fallback
+    # ran the sweep somewhere the caller never named.
+    monkeypatch.delenv("PAGEFETCH_CACHE_DIR", raising=False)
+    monkeypatch.chdir(tmp_path)
+    bystander = tmp_path / "page.html"
+    bystander.write_text("<title>404 Not Found</title>", encoding="utf-8")
+
+    code = _run(monkeypatch, ["--clean-cache", "--cache-dir", ""])
+
+    assert code == EXIT_ALL_FAILED
+    assert bystander.exists()
+    assert "empty value" in capsys.readouterr().err
+
+
 @pytest.mark.parametrize("flag", ["--help", "-h"])
 def test_help_prints_usage_and_exits_zero(monkeypatch, capsys, flag):
     monkeypatch.setattr("sys.argv", ["pagefetch", flag])
