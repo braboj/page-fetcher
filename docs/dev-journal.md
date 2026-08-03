@@ -6,6 +6,107 @@ git already holds.
 
 ---
 
+## 2026-08-03 (ninth session) — A documentation bump with a P1 in it
+
+**Tool**: Claude Code (Opus 5)
+
+Bumped the templates submodule v2.42.0 → v2.44.0 and reconciled, which
+was #104 and the whole agreed scope. Two things came out of it that the
+ticket did not predict: the divergence it was written to re-decide had
+already closed, and the range contained a rule that turned out to be
+about the source tree rather than the documents.
+
+**Changes**
+
+- Pinned v2.44.0, range `be29d59..cf244d9`. Twelve commits, two releases
+  cut hours apart the same day.
+- ADR-013 supersedes ADR-012; ADR-012's status flipped in the same PR.
+- CLAUDE.md §2.1 and §5.2 and PLAYBOOK §1.3, §1.4 and §4.4 reconciled.
+  Three overrides dropped that `git.md` now owns.
+- Filed #107 here, and solid-ai-templates#982 upstream.
+
+**PRs merged**: #106
+
+**Closed**: #104
+
+The deferral question resolved in the direction nobody was watching for.
+Every previous reading of `base-issues-defer` had this repository holding
+a position against the chain: ADR-011 declined the `P4` label, ADR-012
+restated the decline more accurately after upstream made the label
+load-bearing. This range retires `P4` outright. `github.md` now says a
+fifth priority label MUST NOT exist, which is the state this repository
+reached on its own the day before. The divergence closed without anything
+moving here.
+
+That is a shape worth naming, because the reconciliation habit is built
+around the opposite one. #104 was written expecting decision 4 of ADR-012
+— the route back, recreate `P4` — to need re-deciding. It did, but not by
+being weighed again: it was deleted. A reserved fallback can stop existing
+between the ticket being filed and the ticket being worked, and re-reading
+the ADR is what catches that, exactly as `docs.md` gained a rule saying in
+this same range.
+
+What replaced it does not work here. Deferral now rides on the milestone
+field, and this repository has never created a milestone, so every one of
+its six open issues is unmilestoned and the rule marks none of them. Not
+violated — satisfied vacuously, which is a different thing and reads
+identically to conforming from the outside. ADR-013 records it so a later
+audit reading six unmilestoned issues against that sentence does not have
+to guess which of the two wrong conclusions to draw. `github.md` makes
+milestones optional in the same breath `issues.md` makes the field carry
+deferral, and that is solid-ai-templates#982.
+
+Re-reading ADR-011 against the new text also corrected this repository's
+own count. It named two deferrals, #59 and #9, on the evidence that both
+carried `P4`. Only #59 is one: its body has three concrete triggers and
+ADR-008 has the reasoning. #9 is an open `P3` spike with a cheapest-first
+next step and nothing gating it but severity — its `P4` was recording low
+priority a second time. Writing a deferral note over it would have
+suppressed the one measurement the issue is asking for.
+
+The part that nearly got missed: `config.md` gained a rule in this range,
+and `config.md` governs code. Its second half — an empty environment
+variable and an empty config key fall under the same rule as a trailing
+CLI flag — pointed at `cache.py`, not at a document. `#98` had fixed the
+flag case last session and it was tempting to file the whole rule as
+already satisfied.
+
+```text
+  PAGEFETCH_CACHE_DIR=""     -> <cwd>/.cache/pagefetch   (same as unset)
+  --cache-dir ""             -> <cwd>                     Path("") is "."
+                                     |
+                                     v
+  entries() globs every .txt/.html in the cache dir. It does not filter
+  on the sha256[:16] key scheme, because inside a real cache directory
+  there is nothing else to match. --clean-cache then reads the working
+  directory and unlinks whatever the junk classifier flags.
+```
+
+Both were run rather than reasoned about, which is the only reason the
+second one was characterised correctly — reading `cache.py:52` finds a
+truthiness test and looks like a precedence nit. It is #107 at `P1`, and
+it stayed out of #106 because one concern per PR, not because it was
+small.
+
+Six templates bumps in, the reconciliation has been a prose exercise every
+time. This one was a `docs:` commit and a `bug`/`P1` issue, from the same
+range. A changed template is a claim about the repository, and which half
+of the repository it lands in is not something the file path tells you.
+
+**Not done**
+
+- #107 is filed and unfixed. Its fourth acceptance criterion — whether
+  `entries()` should filter on the key scheme as defence in depth — is a
+  real question and not obviously yes; the key scheme is fixed by
+  CLAUDE.md §2.6, so the filter costs nothing, but it also hides a
+  mis-resolution rather than failing on it.
+- solid-ai-templates#982 offers to raise the PR upstream. Not raised.
+- #9's velocity measurement is still the cheapest open thing in the
+  repository and still untouched, four sessions after it was first named
+  as such.
+
+---
+
 ## 2026-08-03 (eighth session) — The answer was already in the PLAYBOOK
 
 **Tool**: Claude Code (Opus 5)
