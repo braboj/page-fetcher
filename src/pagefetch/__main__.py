@@ -94,7 +94,7 @@ def _parse_wait_ms(argv: list[str]) -> int:
     int() in main's body, so `--wait abc` produced a traceback where an
     unusable --cache-dir produced a clean message.
     """
-    raw = _flag_value(argv, "--wait")
+    raw = _flag_value(argv, "--wait", expects="a whole number of milliseconds")
     if raw is None:
         return DEFAULT_WAIT_MS
     try:
@@ -112,28 +112,37 @@ def _parse_mode(argv: list[str]) -> ContentMode:
     """The output format for --format, defaulting to text.
 
     Raises ValueError so main() reports it like every other bad argument.
-    Absence and emptiness are told apart on purpose: `--format` as the
-    last argument is a mistake, and treating it as "unset" would silently
-    hand back the default the user was trying to override.
+    Absence and emptiness are told apart by _flag_value, so None here
+    means the flag was not given at all.
     """
-    if "--format" not in argv:
-        return ContentMode.TEXT
     accepted = ", ".join(sorted(_FORMATS))
-    raw = _flag_value(argv, "--format")
+    raw = _flag_value(argv, "--format", expects=f"one of: {accepted}")
     if raw is None:
-        raise ValueError(f"--format expects one of: {accepted}")
+        return ContentMode.TEXT
     try:
         return _FORMATS[raw]
     except KeyError:
         raise ValueError(f"--format expects one of: {accepted}, got {raw!r}") from None
 
 
-def _flag_value(argv: list[str], flag: str) -> str | None:
-    if flag in argv:
-        idx = argv.index(flag)
-        if idx + 1 < len(argv):
-            return argv[idx + 1]
-    return None
+def _flag_value(argv: list[str], flag: str, expects: str = "a value") -> str | None:
+    """The value following `flag`, or None when the flag is absent.
+
+    Absence and emptiness are told apart here rather than at each call
+    site. Returning None for both used to mean `pagefetch <url> --wait`
+    ran with DEFAULT_WAIT_MS and exited 0 — silently substituting the
+    default the user was explicitly reaching past. `--cache-dir` and
+    `--output-dir` had the same shape.
+
+    `expects` completes the message, so a caller that knows what it
+    wants says so: "--format expects one of: html, text".
+    """
+    if flag not in argv:
+        return None
+    idx = argv.index(flag)
+    if idx + 1 >= len(argv):
+        raise ValueError(f"{flag} expects {expects}")
+    return argv[idx + 1]
 
 
 def _unknown_flags(argv: list[str]) -> list[str]:
@@ -209,7 +218,7 @@ def _make_cache(argv: list[str]) -> FileCache:
     CLI > env > default); absent the flag, FileCache resolves the env var
     / default itself.
     """
-    cli_dir = _flag_value(argv, "--cache-dir")
+    cli_dir = _flag_value(argv, "--cache-dir", expects="a directory path")
     return FileCache(cache_dir=Path(cli_dir) if cli_dir else None)
 
 
@@ -247,13 +256,18 @@ def main() -> None:
         print("Run `py -m pagefetch --help` for usage.", file=sys.stderr)
         sys.exit(EXIT_ALL_FAILED)
 
-    # The cache directory, --wait and --format are rejected here rather
-    # than deeper in, so a bad argument never reaches a fetch and always
-    # reports the same way.
+    # Every value flag is read here rather than deeper in, so a bad
+    # argument never reaches a fetch and always reports the same way.
+    # --output-dir and --batch are read before the --clean-cache branch
+    # for the reason _unknown_flags runs before everything: a value flag
+    # that is quietly discarded lets a mistyped command run as a
+    # different one.
     try:
         cache = _make_cache(argv)
         wait_ms = _parse_wait_ms(argv)
         mode = _parse_mode(argv)
+        output_dir = _flag_value(argv, "--output-dir", expects="a directory path")
+        batch_file = _flag_value(argv, "--batch", expects="a file path")
     except ValueError as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(EXIT_ALL_FAILED)
@@ -264,8 +278,6 @@ def main() -> None:
 
     transport = _parse_transport(argv)
     use_cache = "--no-cache" not in argv
-    output_dir = _flag_value(argv, "--output-dir")
-    batch_file = _flag_value(argv, "--batch")
 
     urls = _collect_urls(argv, batch_file)
     if not urls:
