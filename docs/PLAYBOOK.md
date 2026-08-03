@@ -194,6 +194,29 @@ Tests must not reach the host. A `conftest` fixture stubs both process
 queries for every test but `test_chrome_reaper.py`; a new test file that
 exercises the reaper has to stub them itself.
 
+### 2.5 Add a CLI flag
+
+Flags are parsed by hand in `__main__.py` — no argparse. Add the name to
+`_VALUE_FLAGS` if it takes a value, `_BARE_FLAGS` if it does not. That one
+line is enough for `_unknown_flags` and `_collect_urls`, which both branch
+on `_VALUE_FLAGS` to skip the value that follows.
+
+A flag carrying a value gets a `_parse_*` function that returns the parsed
+type and raises `ValueError` on bad input. `main` already wraps the
+parsers in one `try/except ValueError`, so adding the call there is what
+makes a bad value report like every other bad argument instead of
+tracebacking. Name the accepted set in the message.
+
+Reject a value flag that arrives with no value. `_flag_value` returns
+`None` both for "absent" and for "present as the last argument", so a
+parser that tests only its return silently hands back the default — the
+one thing the user was reaching past. Check membership in `argv`
+separately, as `_parse_mode` does. `_parse_wait_ms` still has the older
+shape.
+
+No library name reaches a flag (ADR-006). A flag is named for what it
+gives the caller.
+
 ## 3. Quality
 
 Three layers: the editor, `pre-commit`, and CI. CI repeats every hook,
