@@ -11,9 +11,11 @@ import pytest
 
 from pagefetch import ContentMode, FileCache, Transport
 from pagefetch.__main__ import (
+    _VALUE_FLAGS,
     DEFAULT_WAIT_MS,
     EXIT_ALL_FAILED,
     _collect_urls,
+    _flag_value,
     _parse_mode,
     _parse_transport,
     _parse_wait_ms,
@@ -168,6 +170,13 @@ def test_wait_rejects_a_negative_value():
         _parse_wait_ms(["pagefetch", "https://x.test", "--wait", "-1000"])
 
 
+def test_wait_without_a_value_is_rejected():
+    # #98: this returned DEFAULT_WAIT_MS and exited 0, substituting the
+    # default for the value the user was explicitly reaching past.
+    with pytest.raises(ValueError, match="whole number of milliseconds"):
+        _parse_wait_ms(["pagefetch", "https://x.test", "--wait"])
+
+
 def test_bad_wait_exits_cleanly_rather_than_tracebacking(monkeypatch, capsys):
     # #24: the int() was outside the try, so this produced a traceback
     # where every other bad argument produced "Error: ...".
@@ -212,6 +221,60 @@ def test_bad_format_exits_cleanly_rather_than_tracebacking(monkeypatch, capsys):
     err = capsys.readouterr().err
     assert err.startswith("Error: --format expects one of: html, text")
     assert "Traceback" not in err
+
+
+# --- a value flag with no value ---------------------------------------
+
+
+def test_flag_value_returns_none_when_the_flag_is_absent():
+    assert _flag_value(["pagefetch", "https://x.test"], "--cache-dir") is None
+
+
+def test_flag_value_reads_the_following_argument():
+    argv = ["pagefetch", "https://x.test", "--cache-dir", "cache"]
+    assert _flag_value(argv, "--cache-dir") == "cache"
+
+
+@pytest.mark.parametrize("flag", sorted(_VALUE_FLAGS))
+def test_every_value_flag_rejects_a_missing_value(flag):
+    # Parametrized over the set rather than a hand-written list, so a
+    # value flag added later inherits the guard instead of repeating #98.
+    with pytest.raises(ValueError, match=f"{flag} expects "):
+        _flag_value(["pagefetch", "https://x.test", flag], flag)
+
+
+@pytest.mark.parametrize(
+    ("flag", "message"),
+    [
+        ("--wait", "Error: --wait expects a whole number of milliseconds"),
+        ("--format", "Error: --format expects one of: html, text"),
+        ("--cache-dir", "Error: --cache-dir expects a directory path"),
+        ("--output-dir", "Error: --output-dir expects a directory path"),
+        ("--batch", "Error: --batch expects a file path"),
+    ],
+)
+def test_a_value_flag_with_no_value_exits_cleanly(monkeypatch, capsys, flag, message):
+    # #98: --wait, --cache-dir and --output-dir each fell back to their
+    # default and exited 0. --format already guarded; it is here to keep
+    # the five messages in one place.
+    code = _run(monkeypatch, ["https://x.test", flag])
+    assert code == EXIT_ALL_FAILED
+    err = capsys.readouterr().err
+    assert err.startswith(message)
+    assert "Traceback" not in err
+
+
+def test_a_missing_value_is_rejected_before_clean_cache_acts(
+    monkeypatch, capsys, tmp_path
+):
+    # --clean-cache deletes, so it must not run off a command line that
+    # was already rejected — the same reason _unknown_flags runs first.
+    code = _run(
+        monkeypatch,
+        ["--clean-cache", "--cache-dir", str(tmp_path), "--output-dir"],
+    )
+    assert code == EXIT_ALL_FAILED
+    assert "--output-dir expects" in capsys.readouterr().err
 
 
 # --- batch input ------------------------------------------------------
