@@ -6,6 +6,63 @@ git already holds.
 
 ---
 
+## 2026-08-03 (eighth session) — The answer was already in the PLAYBOOK
+
+**Tool**: Claude Code (Opus 5)
+
+Merged the three PRs the previous session left green and unmerged. That
+was the whole scope. The one thing worth recording is that I got a call
+wrong that the repository had already answered in writing.
+
+**Changes**
+
+- Merged #101, #102 and #103 in that order. The last two each needed
+  `gh pr update-branch` and a full Gate rerun first.
+- CLAUDE.md §2.1 states the general case instead of only the stacked one.
+- PLAYBOOK §1.3 gains the sibling commands, §4.4 the `git submodule
+  update` that a merged bump needs.
+- Filed upstream: solid-ai-templates#976 and #977.
+
+**PRs merged**: #101, #102, #103
+
+**Closed**: #98, #99
+
+Asked for status, I reported the three as siblings rather than a stack —
+all based on `main`, touching disjoint files — and concluded that merge
+order did not matter and no conflict was possible. #101 landed and the
+other two flipped to BEHIND. `mergeable` stayed MERGEABLE throughout, so
+nothing about the content was wrong; what blocked them was `strict: true`
+on `main`, which requires the head be up to date with its base and never
+looks at whether the diffs overlap.
+
+PLAYBOOK §1.3 says this already, in as many words: "The same step is
+needed for PRs that were never stacked ... even when the two touch
+disjoint files." The answer was sitting in the repository while I reasoned
+my way past it, because I reasoned from CLAUDE.md §2.1 — the file that
+loads on every turn, and which frames the entire subject as stacking and
+squash-merging. A missing rule is the safer failure: it prompts a look
+somewhere else. A rule that covers most of its subject reads as complete
+and ends the search, which is why §2.1 now carries the general case in one
+line and points at §1.3 for the rest. The always-loaded file does not have
+to hold the procedure, but it does have to stop a wrong conclusion.
+
+The submodule was the tail of the same day. `gh pr merge` fast-forwarded
+the local `main` past #101's pin bump, and a fast-forward does not move a
+submodule working tree: `git status` showed `docs/solid-ai-templates`
+modified, `git submodule status` showed the `+`, and the checkout sat at
+v2.41.0 while the pin said v2.42.0. §4.5 exists to stop exactly this —
+reading the templates at a revision that is not the one under discussion —
+and §4.4 walked through bumping the pin without saying what the merge
+leaves behind. Landing the bump is the moment the clone is most likely to
+be read and least likely to be right.
+
+**Not done**
+
+- #104 (P2, no milestone) is the next bump, past v2.42.0. Nothing has been
+  read from upstream toward it.
+
+---
+
 ## 2026-08-03 (seventh session) — What the pin says and what main says
 
 **Tool**: Claude Code (Opus 5)

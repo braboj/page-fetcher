@@ -58,7 +58,18 @@ being a deviation.
 The same step is needed for PRs that were never stacked. Branch protection
 requires the head to be up to date, so the second of any two PRs merged
 back to back needs `main` merged in first — even when the two touch
-disjoint files.
+disjoint files. There is no retarget in this case, so one command does it:
+
+```bash
+gh pr update-branch <N>          # merges the base in; --rebase force-pushes
+gh pr checks <N> --watch         # the Gate reruns from scratch
+gh pr merge <N> --squash --delete-branch
+```
+
+Budget for it when planning a session's end: N green PRs are N−1 branch
+updates and N−1 full Gate runs, and they serialize, because a PR cannot be
+brought up to date with a merge that has not happened yet. Three PRs
+reported as ready to merge cost three CI cycles.
 
 If the base branch gets deleted while a stacked PR points at it:
 
@@ -338,6 +349,20 @@ been written against those four.
 
 Commit the moved pointer on its own branch, with the upstream range in the
 message.
+
+Once the PR merges, pull `main` and move the working tree onto the pin:
+
+```bash
+git checkout main && git pull
+git submodule update --init --recursive
+```
+
+A fast-forward moves the recorded pointer and leaves the submodule checkout
+where it was, so the clone reads at the version the bump just replaced —
+`git status` shows the submodule modified and `git submodule status` prefixes
+a `+`. §4.5 covers reading at the wrong revision on the way in; this is the
+same error on the way out, and it lands at the moment the templates are most
+likely to be consulted.
 
 Bump before reconciling anything against the templates, and keep the two in
 separate commits. A pointer bump that also edits `CLAUDE.md` hides the

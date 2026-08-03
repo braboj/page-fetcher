@@ -109,12 +109,18 @@ project-specific:
   this repository declines it, recording a deferral where its reasoning
   is instead (ADR-012, superseding ADR-011)
 - One concern per PR
+- Branch protection requires the head to be up to date, so merging any
+  PR leaves every other open one BEHIND — siblings on disjoint files
+  included. Never call two open PRs independent because their diffs do
+  not overlap; each needs `main` merged in and a full Gate rerun, and
+  they serialize. PLAYBOOK §1.3 has the commands. This is an override
+  only until the pin reaches v2.43.0, whose `git.md` adds `Merging a
+  batch of PRs` — drop this bullet then, per #104
+- Stacked PRs additionally need retargeting, because the squash leaves
+  the next branch carrying commits whose content is already on `main`,
+  which GitHub reports as a conflict
 - Never delete a base branch while a stacked PR points at it — that
   closes the stacked PR instead of retargeting it
-- This repository squash-merges, so after merging the base of a stack,
-  retarget the next PR and merge `main` into its branch before merging
-  it. The squash leaves that branch carrying commits whose content is
-  already on `main`, which GitHub reports as a conflict
 - Merge `main` in rather than rebasing — a rebase needs a force-push,
   and the squash discards the extra merge commit anyway
 
