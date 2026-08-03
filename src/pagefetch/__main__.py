@@ -129,10 +129,15 @@ def _flag_value(argv: list[str], flag: str, expects: str = "a value") -> str | N
     """The value following `flag`, or None when the flag is absent.
 
     Absence and emptiness are told apart here rather than at each call
-    site. Returning None for both used to mean `pagefetch <url> --wait`
-    ran with DEFAULT_WAIT_MS and exited 0 — silently substituting the
-    default the user was explicitly reaching past. `--cache-dir` and
-    `--output-dir` had the same shape.
+    site, because every call site tells them apart wrongly. Returning
+    None for both used to mean `pagefetch <url> --wait` ran with
+    DEFAULT_WAIT_MS and exited 0 — silently substituting the default the
+    user was explicitly reaching past. `--cache-dir` and `--output-dir`
+    had the same shape.
+
+    Two ways to arrive empty, one verdict: the flag can trail the
+    argument list with nothing after it, or carry a value that is the
+    empty string. Neither is a flag the user did not pass.
 
     `expects` completes the message, so a caller that knows what it
     wants says so: "--format expects one of: html, text".
@@ -142,7 +147,14 @@ def _flag_value(argv: list[str], flag: str, expects: str = "a value") -> str | N
     idx = argv.index(flag)
     if idx + 1 >= len(argv):
         raise ValueError(f"{flag} expects {expects}")
-    return argv[idx + 1]
+    value = argv[idx + 1]
+    # An explicitly empty value is the same mistake arriving by the other
+    # route: `--cache-dir "$UNSET"` is a value the caller meant to pass,
+    # and every call site below truth-tested it back into the None an
+    # absent flag produces. No flag here accepts an empty value.
+    if value == "":
+        raise ValueError(f"{flag} expects {expects}, got an empty value")
+    return value
 
 
 def _unknown_flags(argv: list[str]) -> list[str]:
@@ -219,7 +231,10 @@ def _make_cache(argv: list[str]) -> FileCache:
     / default itself.
     """
     cli_dir = _flag_value(argv, "--cache-dir", expects="a directory path")
-    return FileCache(cache_dir=Path(cli_dir) if cli_dir else None)
+    # Forward the raw value, including "". _flag_value tells absence from
+    # emptiness; converting or truth-testing here collapses them again and
+    # hands FileCache the same None an absent flag produces.
+    return FileCache(cache_dir=cli_dir)
 
 
 def _clean_cache(cache: FileCache, dry_run: bool) -> None:

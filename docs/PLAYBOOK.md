@@ -216,12 +216,13 @@ parsers in one `try/except ValueError`, so adding the call there is what
 makes a bad value report like every other bad argument instead of
 tracebacking. Name the accepted set in the message.
 
-Reject a value flag that arrives with no value. `_flag_value` returns
-`None` both for "absent" and for "present as the last argument", so a
-parser that tests only its return silently hands back the default — the
-one thing the user was reaching past. Check membership in `argv`
-separately, as `_parse_mode` does. `_parse_wait_ms` still has the older
-shape.
+`_flag_value` rejects a flag that arrives with no usable value, in both
+of its shapes: trailing the argument list with nothing after it, and
+carrying the empty string. It returns `None` only for a flag the user
+did not pass, so a parser may test its return directly. Do not re-test
+the value for truthiness at the call site — `""` and `None` becoming the
+same thing again is the whole defect, and it has now been fixed twice
+(#98 at the parser, #107 at three call sites).
 
 No library name reaches a flag (ADR-006). A flag is named for what it
 gives the caller.

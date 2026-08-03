@@ -69,9 +69,45 @@ def test_explicit_arg_overrides_env(monkeypatch, tmp_path):
     assert FileCache(cache_dir=explicit).cache_dir == explicit
 
 
-def test_empty_env_var_falls_back_to_default(monkeypatch):
+# --- present but empty is an error, not a default --------------------
+
+
+def test_empty_env_var_is_rejected(monkeypatch):
+    # Used to fall back to the default, making the highest-priority source
+    # lose silently to the lowest — the shape a wrapper script produces
+    # when the variable it forwards is unset.
     monkeypatch.setenv(CACHE_DIR_ENV, "")
+    with pytest.raises(ValueError, match="is empty"):
+        FileCache()
+
+
+def test_empty_env_var_error_names_the_source_and_the_way_out(monkeypatch):
+    monkeypatch.setenv(CACHE_DIR_ENV, "")
+    with pytest.raises(ValueError) as exc:
+        FileCache()
+    message = str(exc.value)
+    assert CACHE_DIR_ENV in message
+    assert "directory path" in message
+    assert f"unset {CACHE_DIR_ENV}" in message
+
+
+def test_empty_cache_dir_argument_is_rejected(monkeypatch):
+    monkeypatch.delenv(CACHE_DIR_ENV, raising=False)
+    with pytest.raises(ValueError, match="is empty"):
+        FileCache(cache_dir="")
+
+
+def test_unset_env_var_still_uses_the_default(monkeypatch):
+    # The other half of the distinction: absent must keep working.
+    monkeypatch.delenv(CACHE_DIR_ENV, raising=False)
     assert FileCache().cache_dir.name == "pagefetch"
+
+
+def test_str_cache_dir_is_accepted(monkeypatch, tmp_path):
+    # The signature widened to str so an empty one reaches the check above;
+    # a non-empty str must resolve exactly as the Path would.
+    monkeypatch.delenv(CACHE_DIR_ENV, raising=False)
+    assert FileCache(cache_dir=str(tmp_path / "c")).cache_dir == tmp_path / "c"
 
 
 # --- load-time validation --------------------------------------------
@@ -137,6 +173,37 @@ def test_entries_lists_bodies_excluding_screenshots(cache: FileCache):
 
 def test_entries_empty_when_no_cache_dir(tmp_path):
     assert FileCache(cache_dir=tmp_path / "missing").entries() == []
+
+
+def test_entries_ignores_names_outside_the_key_scheme(cache: FileCache):
+    # What bounds clean() when a cache dir resolved somewhere unintended.
+    # Path("") is ".", so a caller who converts before calling can still
+    # hand the constructor the working directory; these are the files that
+    # would be sitting in it.
+    cache.write("https://a.test", ContentMode.HTML, "a")
+    cache.cache_dir.mkdir(parents=True, exist_ok=True)
+    (cache.cache_dir / "README.html").write_text("<h1>hi</h1>", encoding="utf-8")
+    (cache.cache_dir / "notes.txt").write_text("mine", encoding="utf-8")
+    # Right length, wrong alphabet — the scheme is lowercase hex.
+    (cache.cache_dir / "ZZZZZZZZZZZZZZZZ.txt").write_text("x", encoding="utf-8")
+    # Right alphabet, wrong length.
+    (cache.cache_dir / "abc123.txt").write_text("x", encoding="utf-8")
+
+    names = [p.name for p in cache.entries()]
+    assert names == [FileCache.url_hash("https://a.test") + ".html"]
+
+
+def test_clean_leaves_files_outside_the_key_scheme_alone(cache: FileCache):
+    # The consequence that matters: junk classification never reaches a
+    # file this cache did not write, however junk-shaped its body is.
+    cache.cache_dir.mkdir(parents=True, exist_ok=True)
+    bystander = cache.cache_dir / "index.html"
+    bystander.write_text("<title>404 Not Found</title>", encoding="utf-8")
+
+    report = cache.clean(lambda body: "404/error" if "404" in body else None)
+
+    assert report.removed == []
+    assert bystander.exists()
 
 
 def test_clean_removes_only_junk_and_reports(cache: FileCache):
