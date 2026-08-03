@@ -1,6 +1,6 @@
 # ADR-012: Correct ADR-011's deferral fallback
 
-**Status:** Accepted
+**Status:** Superseded by [ADR-013](013-deferral-after-p4-is-retired-upstream.md)
 **Date:** 2026-08-02
 
 ## Context

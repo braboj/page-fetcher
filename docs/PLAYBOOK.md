@@ -32,13 +32,13 @@ the code to understand the failure.
 ### 1.3 Stacked pull requests
 
 The rules are in `base/core/git.md` — `Squash-merge safety`,
-`De-stacking a dependent branch` and `Merging a stack`. Read them there.
-What follows is only what this repository does differently, plus the
-commands.
+`De-stacking a dependent branch`, `Merging a batch of PRs` and
+`Merging a stack`. Read them there. What follows is only what this
+repository does differently, plus the commands.
 
-**De-stacking deviates from the template.** Upstream requires branching
-fresh off the updated `main` and cherry-picking the dependent branch's own
-commits into a new PR. This repository merges `main` in instead:
+**De-stacking takes one of the template's two routes.** `git.md` leaves
+the choice to a SHOULD; this repository always merges `main` in and never
+cherry-picks fresh:
 
 ```bash
 gh pr edit <next> --base main
@@ -48,17 +48,14 @@ git merge origin/main            # resolve in favour of the branch
 git push
 ```
 
-Both routes avoid the force-push, which is the rule that matters, and
-under squash merge both leave `main` byte-identical. The difference is
-that opening a new PR discards the review history on the old one, and a
-merge commit the squash deletes is not much of a cost against that.
-Proposed upstream as `solid-ai-templates#919`; if that lands, this stops
-being a deviation.
+The standing choice is about review history: opening a new PR discards it,
+and a merge commit the squash deletes is not much of a cost against that.
+This was a deviation until `solid-ai-templates#919` landed in v2.43.0,
+which is why the template now describes both routes rather than one.
 
-The same step is needed for PRs that were never stacked. Branch protection
-requires the head to be up to date, so the second of any two PRs merged
-back to back needs `main` merged in first — even when the two touch
-disjoint files. There is no retarget in this case, so one command does it:
+The same step is needed for PRs that were never stacked — `Merging a batch
+of PRs` carries the reasoning. There is no retarget in that case, so one
+command does it:
 
 ```bash
 gh pr update-branch <N>          # merges the base in; --rebase force-pushes
@@ -66,10 +63,9 @@ gh pr checks <N> --watch         # the Gate reruns from scratch
 gh pr merge <N> --squash --delete-branch
 ```
 
-Budget for it when planning a session's end: N green PRs are N−1 branch
-updates and N−1 full Gate runs, and they serialize, because a PR cannot be
-brought up to date with a merge that has not happened yet. Three PRs
-reported as ready to merge cost three CI cycles.
+Budget for it when planning a session's end. They serialize, because a PR
+cannot be brought up to date with a merge that has not happened yet, so
+three PRs reported as ready to merge cost three CI cycles here.
 
 If the base branch gets deleted while a stacked PR points at it:
 
@@ -100,13 +96,15 @@ gh issue create --title "<imperative sentence-case title>" \
                 --label bug --label P1 --body "..."
 ```
 
-There is no deferral label. The chain names `P4` as the carrier of
-deferral and offers no alternative — no `Backlog` lane, no milestone.
-This repository declines it, because a label records that something is
-deferred and cannot record why. A deferral goes in an ADR when it is a
-decision, or in the README or `ARCHITECTURE.md` when it is a standing
-limitation, and it is found by reading rather than filtering —
-[ADR-012](decisions/012-correct-adr-011s-deferral-fallback.md) has the
+There is no deferral label — the chain forbids a fifth priority band, and
+this repository had already deleted its own before that landed. There is
+no milestone either, so the empty milestone field the chain uses as the
+deferral carrier is the state of every issue here and marks none of them.
+A deferral goes in an ADR when it is a decision, or in the README or
+`ARCHITECTURE.md` when it is a standing limitation, with named trigger
+conditions in the issue body, and it is found by reading rather than
+filtering.
+[ADR-013](decisions/013-deferral-after-p4-is-retired-upstream.md) has the
 reasoning. Titles are sentence case with an imperative verb and no type
 prefix — the label carries the type.
 
@@ -368,13 +366,15 @@ Bump before reconciling anything against the templates, and keep the two in
 separate commits. A pointer bump that also edits `CLAUDE.md` hides the
 reconciliation inside the submodule's diff.
 
-Re-read the ADRs that record a divergence from the chain before deciding
-what a bumped range means. A rule this repository deliberately does not
-follow can move upstream, and the diff then reads as a gap to close rather
-than a divergence already reasoned about. `base-issues-defer` moved twice
-inside one bumped range and refuted
-[ADR-012](decisions/012-correct-adr-011s-deferral-fallback.md)'s
-predecessor hours after it merged.
+`docs.md` requires re-reading a divergence record before deciding what a
+bumped range means, and requires the reconciliation to state whether the
+divergence still holds. The local instance is `base-issues-defer`: three
+movements across four bumps, two of them inside one day. It refuted
+ADR-011's fallback hours after that ADR merged, and the bump after next
+closed ADR-012's divergence outright by forbidding the label this
+repository had already dropped.
+[ADR-013](decisions/013-deferral-after-p4-is-retired-upstream.md) is the
+current reading.
 
 Decide what a changed file governs from the dependency graph, not from the
 chain list in `CLAUDE.md`. That list is a convenience copy, and a platform
