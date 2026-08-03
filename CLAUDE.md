@@ -105,24 +105,14 @@ project-specific:
 - Issue titles: sentence case, imperative verb, no type prefix
 - Every issue gets exactly one type label (`bug`, `task`, `spike`) and
   one severity label (`P0`–`P3`), applied at creation. There is no
-  deferral label — the chain names `P4` as the carrier of deferral and
-  this repository declines it, recording a deferral where its reasoning
-  is instead (ADR-012, superseding ADR-011)
+  deferral label and no milestone — a deferral is recorded where its
+  reasoning is, and the chain's empty-milestone carrier is inert in a
+  repository that has never created one (ADR-013, superseding ADR-012)
 - One concern per PR
-- Branch protection requires the head to be up to date, so merging any
-  PR leaves every other open one BEHIND — siblings on disjoint files
-  included. Never call two open PRs independent because their diffs do
-  not overlap; each needs `main` merged in and a full Gate rerun, and
-  they serialize. PLAYBOOK §1.3 has the commands. This is an override
-  only until the pin reaches v2.43.0, whose `git.md` adds `Merging a
-  batch of PRs` — drop this bullet then, per #104
-- Stacked PRs additionally need retargeting, because the squash leaves
-  the next branch carrying commits whose content is already on `main`,
-  which GitHub reports as a conflict
-- Never delete a base branch while a stacked PR points at it — that
-  closes the stacked PR instead of retargeting it
-- Merge `main` in rather than rebasing — a rebase needs a force-push,
-  and the squash discards the extra merge commit anyway
+- De-stack by merging `main` in, never by cherry-picking fresh. `git.md`
+  leaves the two routes to a SHOULD; this repository takes the one that
+  keeps the PR and its review history every time, and squash merge
+  discards the extra merge commit. PLAYBOOK §1.3 has the commands
 
 ### 2.2 Python
 
@@ -237,8 +227,7 @@ Run the label conformance check from `templates/platform/github.md`. It
 is the required pairing for the label-at-creation rule in §2.1, and an
 unlabeled issue is invisible without it. Output MUST be `[]`. The
 project's type taxonomy is `bug`, `task`, `spike` — the query's `epic`
-and `incident` alternatives are inert here, and its `P4` exclusion is
-moot because this repository has no such label (ADR-012).
+and `incident` alternatives are inert here.
 
 360-degree audits follow `templates/base/workflow/360.md`. This project
 is headless, so apply its `[ID: 360-headless]` rule and re-project
