@@ -85,20 +85,23 @@ py -m pytest --cov=pagefetch    # tests with the coverage floor enforced
 
 ### 2.1 Git
 
+GitHub as the system of record, and where a tracker identifier may and
+may not appear, were an override here until upstream adopted them. They
+now come from `base-issues-record` in
+`templates/base/workflow/issues.md`, reached through
+`templates/platform/github.md` — do not restate the rule or its
+reasoning. ADR-007 remains the local record of the decision. What is
+project-specific:
+
 - `main` is protected — never commit directly
-- GitHub is the system of record. The issue tracker is a view over it and
-  MUST stay replaceable — nothing that outlives a ticket may exist only
-  in the tracker (ADR-007)
 - Branch naming: `<type>/<TICKET>-<scope>` — e.g.
   `feat/BRA-42-cache-key`. Types: feat, fix, docs, chore. The ticket goes
-  in upper case, as the tracker displays it, and a branch name is the
-  only permanent-looking place a tracker identifier belongs (ADR-007).
-  Omit it when there is no ticket
+  in upper case, as the tracker displays it. Omit it when there is no
+  ticket
 - Commits: `<type>(<scope>): <summary>` — feat, fix, chore, docs,
   refactor
 - PR titles: same format with the GitHub issue number(s) at the end,
-  never a tracker identifier — a PR title is permanent, and a tracker
-  identifier in one is a dead reference after a migration
+  never a tracker identifier
 - Issue titles: sentence case, imperative verb, no type prefix
 - Every issue gets exactly one type label (`bug`, `task`, `spike`) and
   one severity label (`P0`–`P3`), applied at creation. There is no
@@ -172,13 +175,10 @@ py -m pytest --cov=pagefetch    # tests with the coverage floor enforced
 
 ### 2.7 README
 
-The title block order, the `## Features` heading and the ban on citing a
-decision record were overrides here until upstream adopted all three. They
-now come from `templates/base/core/readme.md` — do not restate them.
-
-- No figure that moves (coverage, byte counts) — point at the file that
-  holds it. Filed upstream as `solid-ai-templates#907`; drop this bullet
-  when that lands
+The title block order, the `## Features` heading, the ban on citing a
+decision record and the ban on a figure that moves (coverage, byte
+counts) were overrides here until upstream adopted all four. They now
+come from `templates/base/core/readme.md` — do not restate them.
 
 ## 3. Quality
 
@@ -224,8 +224,15 @@ Verify the MUSTs from `templates/base/core/docs.md`,
 before a release milestone.
 
 Confirm every documented command still produces the output the document
-claims — the README gate figures and the ONBOARDING verify steps are
-measured values, not prose.
+claims — the ONBOARDING verify steps are measured values, not prose. The
+README carries no such figure and MUST NOT gain one.
+
+Run the label conformance check from `templates/platform/github.md`. It
+is the required pairing for the label-at-creation rule in §2.1, and an
+unlabeled issue is invisible without it. Output MUST be `[]`. The
+project's type taxonomy is `bug`, `task`, `spike` — the query's `epic`
+and `incident` alternatives are inert here, and its `P4` exclusion is
+moot because this repository has no such label (ADR-012).
 
 360-degree audits follow `templates/base/workflow/360.md`. This project
 is headless, so apply its `[ID: 360-headless]` rule and re-project
