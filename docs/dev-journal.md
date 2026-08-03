@@ -6,6 +6,84 @@ git already holds.
 
 ---
 
+## 2026-08-03 (tenth session) — The report was wrong about its own bug
+
+**Tool**: Claude Code (Opus 5)
+
+A continuation of the ninth, past its close-out. Two things came back:
+the bug it filed, and the upstream issue it filed.
+
+**Changes**
+
+- #109 fixed #107. Empty values now fail at `_flag_value` and at
+  `FileCache`, and `entries()` matches the key scheme.
+- solid-ai-templates#982 withdrawn, closed as not planned.
+- PLAYBOOK §2.5 was describing pre-#98 behaviour; README's configuration
+  table gained a line.
+
+**PRs merged**: #109
+
+**Closed**: #107, solid-ai-templates#982
+
+The issue named the wrong mechanism, and I found out by fixing it. #107
+said `--cache-dir ""` made the working directory the cache. It did not —
+`_make_cache` did `Path(cli_dir) if cli_dir else None`, so an empty value
+became `None` and resolved to the *default*. A precedence violation with
+no data loss in it. The working-directory outcome comes from the library
+constructor, because `Path("")` is `.`.
+
+The ninth session's entry congratulates itself for running both cases
+rather than reasoning about them, and that was true of `FileCache` — the
+probe that produced `<cwd>` was `FileCache(cache_dir=Path(''))`, a direct
+library call. I then wrote up the CLI as if it did the same thing, having
+never run it. One level of the stack verified, the level above it
+assumed, and the assumption is what went in the issue title's blast
+radius.
+
+Two things fell out of correcting it, neither of which the issue would
+have reached:
+
+- `--output-dir ""` and `--batch ""` have the identical shape. Visible
+  only once the fix moved to `_flag_value` instead of the call site #107
+  named. An issue that names one call site produces a fix that repairs
+  one call site.
+- Acceptance criterion 4 — whether `entries()` should filter on the key
+  scheme — was flagged as *not obviously yes* and put to the user.
+  Writing the fix answered it. `Path("")` collapses to `.` before the
+  constructor sees it, and `.` is indistinguishable from a legitimate
+  explicit `Path(".")`, so the constructor cannot reject it. The filter
+  is not defence in depth for that case; it is the only defence.
+
+The upstream issue went the other way. #982 argued that deferral riding
+on the milestone field is a gap for a project that uses no milestones.
+The user's response was that no explicit deferral is needed at all, which
+is correct and is ADR-011's own argument — at six open issues, "which are
+deferred" is answered by reading the list. `github.md` makes milestones
+optional deliberately, so a project carrying no deferral machinery is
+using a supported configuration rather than falling through one. I had
+re-derived, as a template defect, a question this repository settled two
+ADRs ago.
+
+Worth separating from the #107 mistake, because they fail differently.
+That one was a verification gap — a claim I could have checked in one
+command and did not. This one was reasoning from a diff without asking
+whether the thing the diff describes was ever wanted here. The
+reconciliation procedure has a rule for the first kind (`§4.5`, read at
+the right revision) and now, upstream, for the second (`docs.md`,
+re-read the divergence record). Neither catches "the rule is fine and we
+don't need it".
+
+**Not done**
+
+- No ADR for the `entries()` narrowing. Judged a bug fix implementing a
+  chain rule rather than an architectural decision — it changes what
+  `clean()` may touch, which is arguable. Flagged rather than assumed.
+- The coverage floor stayed at 76.0 against a measured 79.84. Two tenths
+  of a point of movement is not a ratchet.
+- #9's velocity measurement, still.
+
+---
+
 ## 2026-08-03 (ninth session) — A documentation bump with a P1 in it
 
 **Tool**: Claude Code (Opus 5)
