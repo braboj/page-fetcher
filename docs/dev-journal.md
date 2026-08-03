@@ -6,6 +6,88 @@ git already holds.
 
 ---
 
+## 2026-08-03 (seventh session) — What the pin says and what main says
+
+**Tool**: Claude Code (Opus 5)
+
+Two issues, one P2 and one P3. Each described its work accurately and got
+a premise wrong, and the two mistakes point opposite ways: one read the
+templates from too far ahead, the other scoped a fix too narrowly.
+
+**Changes**
+
+- Bumped the submodule v2.41.0 → v2.42.0 and reconciled (#99, #101).
+  CLAUDE.md §2.7's filed-upstream bullet is dropped, §2.1's system-of-record
+  restatement is trimmed to a pointer, and the new label conformance check
+  is named in §5.2 and run — `[]` over seven open issues.
+- Rejected a value flag that arrives with no value (#98, #102). The guard
+  went into `_flag_value` rather than to the three call sites the ticket
+  named.
+- PLAYBOOK §4.4 now checks out the latest tag instead of `origin/main`.
+
+**PRs**: #101, #102 — both green, both unmerged (see Not done).
+
+**Closed**: none yet; #98 and #99 auto-close on merge.
+
+The bump contains the rule that explains the mistake in the ticket
+describing the bump. #99 attributed the `P4` retirement to the range,
+citing `8cda540`. That commit is untagged and sits four commits past
+`v2.42.0`, so the ticket was written against `origin/main` — and
+`cdb66dc`, inside the very range being bumped, adds to `agents.md` the
+two-questions-two-revisions split with the explicit bullet "never read
+from `origin/main`, and never from the working tree after a bare fetch".
+
+This repository already knew that; it is PLAYBOOK §4.5, written before
+upstream adopted it. What nobody had noticed is that §4.4 — the bump
+procedure two sections above it — says `git -C docs/solid-ai-templates
+checkout origin/main` in a fenced block. The rule and the procedure that
+breaks it have been sitting on the same page for several sessions. It
+never produced a wrong pin because every previous bump ran while the tag
+*was* HEAD, so following either one gave the same commit. This is the
+first bump where main had moved on, and the contradiction surfaced as a
+wrong ticket rather than as a wrong pin. A procedure and a principle that
+agree by coincidence look identical to ones that agree by construction,
+right up until the coincidence lapses.
+
+Second finding, from deciding what the bump actually governs: what
+governs is reachability, not the list. CLAUDE.md names nine chain files
+and `workflow/issues.md` is not among them — but `platform/github.md`
+`DEPENDS ON` it, so `base-issues-record` and `base-issues-duplicate` do
+govern here, and §2.1 had been restating the first of them by hand.
+`agents.md` and `devsecops.md` are reachable from nothing declared and do
+not govern, however useful they read. The list in CLAUDE.md is a
+convenience copy of a graph, and scoping from the copy gets it wrong in
+both directions at once — pulling in rules that do not apply while
+missing ones that do.
+
+The value-flag fix is the smaller lesson and the more repeatable one.
+Issue #98 said to copy `_parse_mode`'s guard to the three flags that
+predate it. A ticket that says "apply this pattern at N call sites" is
+usually evidence the pattern belongs one level down instead. Moving the
+guard into `_flag_value` cost less than three copies would have, deleted
+`_parse_mode`'s pre-check — the helper now carries the distinction that
+check existed to make — and caught a fourth flag nobody had counted:
+`--batch` with no value fell back to reading URLs from `argv`. The ticket
+named three flags because three was what the reporter checked, which is
+the ordinary way an enumeration goes stale.
+
+**Not done**
+
+- #101 and #102 are green and unmerged. The merge was refused by the
+  local permission classifier, not by GitHub or by a failing check.
+  Merging them, and confirming #98/#99 auto-closed, is the first thing
+  next session.
+- `8cda540` and three commits behind it retire `P4` upstream and sweep
+  every surface that instructs it. ADR-012 is unaffected at this pin —
+  `base-issues-defer` is byte-identical across v2.41.0 and v2.42.0 — and
+  its standing requirement to re-read on every bump discharged here with
+  no edit. The next bump is where it moves for the third time.
+- `devsecops.md`'s redistribution-attribution rule does not reach this
+  repository and did not this session, but it is the substance of #59 if
+  the distribution model ever changes.
+
+---
+
 ## 2026-08-02 (sixth session) — The README front matter and the last boolean
 
 **Tool**: Claude Code (Opus 5)

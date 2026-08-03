@@ -321,10 +321,20 @@ every behavioural finding before writing it up.
 ### 4.4 Update the templates submodule
 
 ```bash
-git -C docs/solid-ai-templates fetch origin
-git -C docs/solid-ai-templates checkout origin/main
+git -C docs/solid-ai-templates fetch --tags origin
+git -C docs/solid-ai-templates tag --sort=-v:refname | head -3
+git -C docs/solid-ai-templates checkout <latest tag>
 git add docs/solid-ai-templates
 ```
+
+Pin a tag, never `origin/main`. Upstream keeps working past a release, so
+`origin/main` is a mid-flight revision carrying rules that are not in any
+cut yet — pinning it imports them and dates the commit message against a
+range nobody else can name. This instruction disagreed with §4.5 below for
+several sessions and never produced a wrong pin, because every bump until
+`v2.42.0` ran while the tag happened to be HEAD. The session that bumped
+to `v2.42.0` found `origin/main` four commits ahead, and #99 had already
+been written against those four.
 
 Commit the moved pointer on its own branch, with the upstream range in the
 message.
@@ -340,6 +350,22 @@ than a divergence already reasoned about. `base-issues-defer` moved twice
 inside one bumped range and refuted
 [ADR-012](decisions/012-correct-adr-011s-deferral-fallback.md)'s
 predecessor hours after it merged.
+
+Decide what a changed file governs from the dependency graph, not from the
+chain list in `CLAUDE.md`. That list is a convenience copy, and a platform
+template pulls in files it does not name — `platform/github.md`
+`DEPENDS ON` `workflow/issues.md`, so everything in `issues.md` governs
+here even though CLAUDE.md lists neither. Resolve it per file:
+
+```bash
+git -C docs/solid-ai-templates show HEAD:templates/<file> | grep "DEPENDS ON"
+```
+
+A file reachable from nothing declared does not govern, however applicable
+it reads — `agents.md` and `security/devsecops.md` both changed in the
+`v2.42.0` range and neither reaches this repository. Scoping from the list
+rather than the graph errs in both directions at once: it imports rules
+that do not apply and misses ones that do.
 
 ### 4.5 Read the templates at the right revision
 
