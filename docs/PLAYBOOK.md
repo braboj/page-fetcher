@@ -165,6 +165,12 @@ Tiers live in `network.py` as `_fetch_<name>` methods. A new tier must:
 - be named for what it requires of the caller, not for its library. The
   `_fetch_<name>` method may name the library it drives; the enum member,
   the flag, the `tier_used` value and the stderr prefix must not (ADR-006)
+- carry its own `# --- tier N: <name> ---` section comment, which is what
+  keeps a single-module `network.py` navigable (ADR-014)
+
+A fifth tier is one of ADR-014's named conditions for reopening the
+question of splitting `network.py` into a package. Read it before
+starting: it also fixes what the submodules would have to be called.
 
 ### 2.2 Add a detection pattern
 
