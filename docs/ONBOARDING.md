@@ -82,6 +82,17 @@ What matters is that nothing failed and coverage *reached* the floor —
 the floor is a ratchet that moves, so the numbers here would go stale if
 they were pinned. `pyproject.toml` holds the current one.
 
+Then run an example. None of them touches the network, so a clean run
+confirms the install resolves the package and nothing else:
+
+```bash
+py examples/fake_fetcher.py
+```
+
+`examples/README.md` pairs each one with the output it produces, so a
+difference is visible rather than something to judge. CI runs every file
+in that directory against an install with no dev extra.
+
 Then fetch a real page to confirm tier 1 works end to end:
 
 ```bash
@@ -107,6 +118,7 @@ rest.
 | File                         | Why it matters                                       |
 | ---------------------------- | ---------------------------------------------------- |
 | `README.md`                  | What the package does and how to run it              |
+| `examples/README.md`         | Runnable patterns paired with their real output      |
 | `CLAUDE.md`                  | The rules this project holds contributors to         |
 | `docs/ARCHITECTURE.md`       | How the ladder, detection and the cache work         |
 | `src/pagefetch/source.py`    | The `PageSource` contract everything else implements |
