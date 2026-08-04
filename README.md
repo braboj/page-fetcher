@@ -188,6 +188,7 @@ fetcher = NetworkFetcher(cache=FileCache(cache_dir=Path("/my/cache")))
 | `src/pagefetch/fake.py`      | `FakeFetcher` test double                          |
 | `src/pagefetch/__main__.py`  | CLI entry point — a thin wrapper over the library  |
 | `tests/`                     | pytest suite, including captured HTML fixtures     |
+| `examples/`                  | Runnable usage patterns, with their own index      |
 | `docs/ARCHITECTURE.md`       | How the ladder, detection, and cache work          |
 | `docs/decisions/`            | Architecture Decision Records                      |
 | `docs/audits/`               | 360-degree audit reports, one per run              |
@@ -263,6 +264,8 @@ into a wrapper script would otherwise do.
 
 ## Links
 
+- [Examples](examples/) — runnable usage patterns, each with the command
+  and the output it produces
 - [Architecture](docs/ARCHITECTURE.md) — the escalation ladder, detection
   rules, cache behaviour, and performance history
 - [Onboarding](docs/ONBOARDING.md) — fresh clone to a passing gate

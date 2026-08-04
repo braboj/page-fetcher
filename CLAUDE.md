@@ -62,6 +62,11 @@ of truth. Agent-specific placement rules:
   contract every other module depends on
 - New tests go in `tests/`, one file per concern, named
   `test_<concern>.py`
+- New examples go in `examples/`, one file per pattern, indexed in
+  `examples/README.md` with the exact command and the output it really
+  produced. An example MUST NOT construct a `NetworkFetcher` — CI runs
+  every file in the directory with no network and no browser installed,
+  so one that fetches fails the gate rather than the reader
 - Technical explanation goes in `docs/ARCHITECTURE.md`, not the README —
   the README covers what the package does and how to run it. Decisions go
   in `docs/decisions/` (ADR-009)
