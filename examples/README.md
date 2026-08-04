@@ -82,8 +82,8 @@ py examples/cache_lifecycle.py
 ```
 
 ```text
-text key: 1002e41fbd8c1d1a.txt
-html key: 1002e41fbd8c1d1a.html
+text entry: 1002e41fbd8c1d1a.txt
+html entry: 1002e41fbd8c1d1a.html
 hit:  'Fujifilm X100VI A 40MP sensor in a fixed-lens compact.'
 miss: None
 entries: ['1002e41fbd8c1d1a.html', '1002e41fbd8c1d1a.txt', 'a84a16aeebe5ad31.html']

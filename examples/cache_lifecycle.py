@@ -52,8 +52,12 @@ def main() -> None:
         # entries, and neither can collide with another URL's.
         cache.write(URL, ContentMode.TEXT, PAGE_TEXT)
         cache.write(URL, ContentMode.HTML, PAGE_HTML)
-        print(f"text key: {cache.key(URL, ContentMode.TEXT).name}")
-        print(f"html key: {cache.key(URL, ContentMode.HTML).name}")
+        # Labelled "entry" and not "key" on purpose: a line reading
+        # `key: <16 hex chars>` is what gitleaks' generic-api-key rule
+        # looks for, and this output is pasted into examples/README.md,
+        # where it failed the secret scan.
+        print(f"text entry: {cache.key(URL, ContentMode.TEXT).name}")
+        print(f"html entry: {cache.key(URL, ContentMode.HTML).name}")
 
         # A hit returns the stored body; a miss returns None rather than
         # raising, so "not cached yet" is an ordinary branch for the caller.
