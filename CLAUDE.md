@@ -51,6 +51,12 @@ of truth. Agent-specific placement rules:
 - New transport tiers go in `network.py`; new pure predicates in
   `detection.py`. A predicate needing I/O does not belong in
   `detection.py`
+- `network.py` stays one module and its seven `# --- section ---`
+  comments stay with it. ADR-014 declined the package split on the
+  grounds that the sections are what keep the file navigable, so
+  removing or blurring them reopens a closed decision. A fifth tier is
+  one of the conditions that reopens it anyway — read ADR-014 before
+  adding one
 - Anything Windows-specific or side-effectful on the host goes in
   `chrome.py` and nowhere else
 - Never widen what `ChromeReaper` is willing to kill without re-reading
