@@ -46,10 +46,10 @@ pagefetch = "pagefetch.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-# Tests ship with the repository, not the wheel — the captured HTML
-# fixtures alone are larger than the package. Under the src/ layout they
-# sit outside the package, so nothing has to exclude them by hand
-# (ADR-010).
+# Tests and examples ship with the repository, not the wheel — the captured
+# HTML fixtures alone are larger than the package, and an example is only
+# useful beside the source it explains. Under the src/ layout both sit
+# outside the package, so neither has to be excluded by hand (ADR-010).
 include = ["pagefetch*"]
 
 [tool.ruff]
@@ -114,12 +114,17 @@ convention = "google"
 # restates the name. The naming convention already carries a test's intent,
 # so the rule would buy 209 lines of restatement and no information.
 "tests/**" = ["S101", "PLR2004", "PLR0913", "PLR0917", "S311", "D"]
+# S101 (assert): the FakeFetcher example is a consumer's test pattern made
+# executable, and the assertions are what it demonstrates. Printing
+# PASS/FAIL instead would show a way nobody writes tests.
+"examples/**" = ["S101"]
 
 [tool.mypy]
 python_version = "3.10"
-# The package and its suite are two roots under the src/ layout. Listing
-# only "src" would silently stop type-checking the tests.
-files = ["src", "tests"]
+# The package, its suite and the examples are three roots under the src/
+# layout. Listing only "src" would silently stop type-checking the other
+# two — and an example that no longer type-checks is a published mistake.
+files = ["src", "tests", "examples"]
 # The browser tiers are lazily imported and optional, so their stubs are
 # absent in a plain `pip install -e .` checkout and in CI.
 ignore_missing_imports = true
