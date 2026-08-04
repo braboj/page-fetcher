@@ -6,6 +6,93 @@ git already holds.
 
 ---
 
+## 2026-08-04 (eleventh session) — The rule that only applies to moves
+
+**Tool**: Claude Code (Opus 5)
+
+One spike, #92: should `network.py` become a package? The answer is no,
+and the reason that decided it is not the reason the issue expected.
+
+**Changes**
+
+- ADR-014 declines the split. #92 closed by #111.
+- CLAUDE.md §1.2 and PLAYBOOK §2.1 gained pointers, because the ADR makes
+  the section comments structural and constrains what a future split's
+  submodules may be called.
+
+**PRs merged**: #111
+
+**Closed**: #92
+
+The issue asked three good questions and the first one was unanswerable
+as posed: does the file meet the rule's threshold? `quality.md`'s rule
+has no threshold. It sits under **High Cohesion** and prescribes a
+"cohesive seam", so the size question is one the rule never asks.
+Answering the question it does ask, `network.py` passes — four tiers are
+four implementations of one operation.
+
+But cohesion is not what settled it. This is:
+
+The rule tells you to leave the test module alone, and explains why — the
+untouched suite is the regression oracle. That property only exists for a
+*mechanical* move. `NetworkFetcher` reads its three injected fields from
+16 sites across all four tiers and both batch starters, and the tiers
+cross-call each other, so any real seam needs dependency injection or a
+strategy protocol. Do that and the suite is still green, but green now
+means something weaker: it passes over rewritten call paths it was never
+written to distinguish. The split would spend its own oracle on the change
+the oracle exists to check. That weighs harder here than it would
+elsewhere, because the tier bodies are hand-validated rather than covered
+— the oracle was already thin.
+
+So the rule is silent on the case this repository actually has. It
+governs moves and does not say so. Filed upstream as
+solid-ai-templates#986, which also proposes the route the rule is missing
+— reshape first under verification that fits a reshape, then split
+mechanically with the oracle intact for the second step.
+
+The reusability verdict belongs on the ADR, per `scope.md` item 11, and
+it is not there. ADR-014 merged without an `Upstream:` line, and it is
+immutable now — `docs.md` allows a format-only migration, and adding a
+paragraph is not one. Nothing is lost, because the verdict is here and
+the issue is filed, but the record that should carry it does not. The
+generic core has to be judged while the ADR is being written, not at
+wrap-up.
+
+Two smaller things the analysis turned up, both inversions of what #92
+assumed:
+
+- The line count is contaminated by the bump that raised the question.
+  #92 measured 897; the file is 915. All 18 lines are docstrings from the
+  `D`-rule adoption in the same v2.41.0 bump that introduced the split
+  rule. The metric moved 2% on a change that added no logic, which is the
+  argument against ever writing a threshold down.
+- #92 listed the four ruff exemptions as a *cost* of splitting —
+  "splitting scatters them across new files". It is a benefit. `PLR0911`
+  is currently granted over all 915 lines to serve one function; a split
+  would narrow each exemption to the file that earns it. It is the only
+  real argument in favour, and the ADR records it as one rather than
+  inheriting the issue's framing. It still does not pay for a new
+  abstraction.
+
+The verdict went to the user rather than being taken here. Three verdicts
+were live — decline, decline-plus-sibling-extractions, full reshape — and
+they are materially different amounts of work, which is the case where
+asking beats assuming.
+
+**Not done**
+
+- `require_supported_scheme` → a sibling `urls.py` is defensible on its
+  own merits: public API, its own ADR, its own test file, never touches
+  the network, and needs no package at all. Left in ADR-014's
+  alternatives table rather than done, because it is ordinary module
+  placement dressed as an answer to a question about a 915-line file. 25
+  lines against 915 is not what #92 was asking about. Available later for
+  its own reason.
+- #9's velocity measurement, still. Three sessions now.
+
+---
+
 ## 2026-08-03 (tenth session) — The report was wrong about its own bug
 
 **Tool**: Claude Code (Opus 5)
