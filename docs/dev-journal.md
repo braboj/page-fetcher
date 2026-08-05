@@ -6,6 +6,94 @@ git already holds.
 
 ---
 
+## 2026-08-05 (seventeenth session) — The format to copy, the rules to follow
+
+**Tool**: Claude Code (Opus 5)
+
+arc42 landed. Two records that had been deferring to documents which did
+not exist — ADR-008 and ADR-009 — are discharged rather than superseded,
+because the destinations they named now exist.
+
+**Changes**
+
+- Thirteen arc42 chapters in `docs/arc42/`, plus an index that is not a
+  chapter and carries no content of its own.
+- `docs/ARCHITECTURE.md` deleted and its ten sections redistributed.
+  ADR-018 carries the map, the three placement decisions, and the note
+  that eight merged records still cite the old path.
+- The AGPL note landed in Architecture Constraints, closing #59 the way
+  ADR-008 decision 3 specified.
+- Live references retargeted in the README, `ONBOARDING.md`, `PLAYBOOK.md`
+  and `CLAUDE.md`. PLAYBOOK §4.2 gained the step that keeps chapter 9
+  current; `CLAUDE.md` §1.2's placement rule now names which chapter owns
+  what.
+- No source file changed.
+
+**PRs merged**: #129
+
+**Closed**: #70, #59
+
+The session started from a sibling repository's arc42 set, named as the
+format to follow. It supplied exactly that: the file naming, the heading
+skeleton, the `Concept | Implementation` tables, the quality tree, the
+`R-`/`TD-` registers. It also breaks two rules the pinned template states
+plainly — its context chapter cites source files by line number, and its
+strategy and concepts chapters refer forward to risk IDs defined three
+chapters later. Copying the format without re-reading the rules would have
+imported both, and both are in the "expensive to retrofit" class the ticket
+warned about. A reference implementation is evidence of a shape. It is not
+evidence of conformance, and the two have to be taken from different
+places.
+
+The genuinely undecided part was placement. `[ID: docs-arc42]` specifies
+chapter boundaries, the ID schemes, black-box diagrams and the
+no-record-citations rule in detail, and says nothing about where the
+chapters live beside four existing guide documents, what chapter 9 holds
+when the records are already a directory, or what becomes of the file the
+chapters replace. Three decisions, one record. Not filed upstream: one
+repository landing arc42 once is not evidence that placement should be a
+rule rather than a project's choice, and filing it would be proposing a
+rule from a single data point.
+
+Making chapter 9 an index rather than a second copy has a cost that had to
+be paid in the same PR. It is now the only thing pointing at a record, so a
+record added without a row is a record nothing points at. That is the kind
+of coupling that is invisible until it has already been violated twice, so
+PLAYBOOK §4.2 gained the step rather than the discovery being left to
+whoever writes ADR-019.
+
+Writing chapter 11 found two things that reading the same code for review
+had not. An automatic batch fetches its first URL twice — the probe
+deciding whether to hold a browser calls the plain transport directly,
+neither reading nor writing the store, and the loop then fetches the same
+URL again, so a fully-stored batch still costs one request. And the user
+agent is a pinned browser version string with no environment variable or
+flag behind it, which ages into a bot signal of its own. Neither is a
+defect a diff would surface, because neither is in any recent diff. A risk
+register asks "what is known to be wrong here", and a review asks "is this
+change right" — the first is an inventory and finds standing problems, the
+second is a filter and cannot.
+
+The last thing worth recording is what was not done. #59 had been decided
+two records earlier and the work was to carry the decision out. Checking
+its three triggers took a minute and none had fired. Re-opening "should
+licensing have its own document" would have been the natural-feeling move
+and would have produced a record superseding a correct one.
+
+**Not done**
+
+- The two findings above are recorded in chapter 11 and are not filed as
+  issues. A register entry is not a ticket, and nothing schedules one.
+- #9 (the PerimeterX spike) is now the only open issue, unchanged since
+  the audit that carried it over.
+- The templates submodule pin is at upstream head, so nothing to bump.
+  `solid-ai-templates#983` — the arc42 requirement and goal content rules
+  — is still open there, meaning its nine rules exist as a proposal and
+  nowhere else. They were applied as craft while writing these chapters
+  and do not govern until that issue lands and the pin moves.
+
+---
+
 ## 2026-08-05 (sixteenth session) — The cost of being wrong, not the odds
 
 **Tool**: Claude Code (Opus 5)
