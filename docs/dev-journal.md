@@ -6,6 +6,82 @@ git already holds.
 
 ---
 
+## 2026-08-05 (sixteenth session) — The cost of being wrong, not the odds
+
+**Tool**: Claude Code (Opus 5)
+
+Answered #124, the spike the previous session opened. The answer is no,
+and the reason it is no is not the reason the issue expected.
+
+**Changes**
+
+- ADR-017 declines under-render detection at tier 1, with the
+  measurements, three named reopening conditions, and one design
+  constraint any future attempt inherits.
+- README "Known limitations" gains a bullet: auto checks whether a
+  response failed, not whether it is complete.
+- `ARCHITECTURE.md` gains "What detection does not ask" under Detection.
+- No code changed. `detection.py`, `network.py` and the pattern counts
+  are untouched.
+
+**PRs merged**: #126 (the fifteenth session's close-out), #127
+
+**Closed**: #124. **Filed upstream**:
+[solid-ai-templates#994](https://github.com/braboj/solid-ai-templates/issues/994)
+
+The session opened by finding last session's journal entry sitting
+uncommitted in the working tree. `scope.md` startup item 4 is explicit
+that this is the first thing to ship, and it was right to be: the entry
+would otherwise have been the *next* session's discovery too. Shipping
+this one in-session rather than leaving it for tomorrow is the whole
+point of the rule, and this is the first session to actually do it.
+
+The spike went the way spikes should. Four candidate signals, six pages
+measured, every signal false-positive on a complete page — but that was
+not what settled it. Precision was the wrong question. In AUTO mode
+`_fetch_urllib` returns the `_BOT_BLOCKED` sentinel *instead of* the
+body, so the tier 1 HTML is destroyed at the moment escalation is
+signalled; every browser tier returns `None` on `ImportError`; and
+`dependencies` is empty by policy, so the default install has no browser
+at all. A false "incomplete" verdict on that install does not cost
+latency. It converts a good page into no page — `ok=False` for a page
+that exists, which §5.1 already names as the worst failure here. The
+change aimed at one silent failure would have manufactured the other.
+
+That argument is structural. It survives any corpus, and no amount of
+tuning the signal reaches it. It was also invisible until someone read
+what `_escalate` does with the body rather than what the detector
+decides, which is a reminder that a detector's failure mode lives in the
+control flow around it and not in the detector.
+
+The first probe was wrong and the correction is worth recording. Two of
+its counterexamples came in under `MIN_REAL_CONTENT_BYTES`, where
+`looks_like_real_content` already returns False — so they demonstrated
+nothing about a gap that is defined by pages *clearing* the floor. Both
+had to be padded above 10 KB and re-run before either meant anything. A
+counterexample that cannot reach the condition it is meant to test reads
+exactly like a passing one.
+
+The surviving candidate is the interesting part of the decline. The
+conjunction "empty mount point AND ratio under 0.02" is clean across all
+six cases. It is still not adoptable, because five of those six were
+written by the same person choosing the rule: the threshold was fitted
+to the corpus rather than measured against it. The honest deliverable
+was the corpus gap itself — what would have to be captured, and why the
+suite's no-network rule means it cannot be captured from inside the
+suite.
+
+Both findings went upstream as #994. The primary one strips its domain
+skin cleanly: a heuristic whose positive verdict discards the cheap
+result must be evaluated against what happens when the expensive
+fallback is unavailable, not only against its false-positive rate.
+Nothing in `quality.md`'s calibration discipline asks that today. The
+filing is recorded here rather than in ADR-017 because PLAYBOOK §4.2
+makes a merged ADR immutable, and the ADR's `Upstream:` line was written
+before the issue existed — the same split #119 used.
+
+---
+
 ## 2026-08-05 (fifteenth session) — The question the ladder never asks
 
 **Tool**: Claude Code (Opus 5)
