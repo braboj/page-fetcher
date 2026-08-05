@@ -233,6 +233,31 @@ same thing again is the whole defect, and it has now been fixed twice
 No library name reaches a flag (ADR-006). A flag is named for what it
 gives the caller.
 
+### 2.6 Add an example
+
+One file per pattern in `examples/`, a section in `examples/README.md`,
+and nothing else — the `Examples` CI job globs the directory, so a new
+file is covered without touching `ci.yml`.
+
+The example may not construct a `NetworkFetcher` (ADR-015). Reach for
+`FakeFetcher`, `FileCache` against a temporary directory, or the pure
+predicates over `tests/fixtures/`. The job installs with `pip install -e .`
+and no extras, so an import the dev toolchain happens to supply is a
+failure there and not here.
+
+Run the file, then paste what it printed into the index. Never type the
+output by hand — that is the one rule the whole directory exists to keep:
+
+```bash
+py examples/<name>.py
+```
+
+Read the output before pasting it. It lands in a Markdown file that
+gitleaks scans, so a line pairing a keyword with a high-entropy token —
+`key: <16 hex chars>` is the one that caught this repository — fails the
+secret scan on a document containing no secret. Rename the label in the
+example; do not reach for an allowlist (§3.4).
+
 ## 3. Quality
 
 Three layers: the editor, `pre-commit`, and CI. CI repeats every hook,
@@ -281,6 +306,17 @@ different branches of `chrome.py`, so they do not report the same figure.
 ### 3.4 Secret scanning (gitleaks)
 
 Runs in pre-commit and in CI with full history (`fetch-depth: 0`).
+
+The two do not scan the same thing. The hook reads the working tree; CI
+reads every commit in the branch. So a finding fixed in a follow-up commit
+still fails CI — the branch has to stop containing it, which means
+squashing or rebranching, not another commit on top. #113 was closed and
+reopened as #114 for exactly this.
+
+The fix belongs in whatever produced the string, not in an allowlist. A
+fingerprint-scoped entry names a commit that disappears at squash-merge
+and leaves dead config; a path-scoped one exempts a file permanently.
+Neither is worth it for output that only looked like a credential (§2.6).
 
 ### 3.5 Static analysis (CodeQL)
 

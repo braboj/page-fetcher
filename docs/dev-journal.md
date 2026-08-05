@@ -6,6 +6,106 @@ git already holds.
 
 ---
 
+## 2026-08-04 (twelfth session) — Examples for a package that fetches
+
+**Tool**: Claude Code (Opus 5)
+
+The chain has asked for `examples/` since the v2.41.0 bump (#78) and this
+repository had none. The interesting part was never the four files.
+
+**Changes**
+
+- `examples/` with four patterns and an index pairing each command with
+  its real output. #78 closed by #114.
+- An `Examples` CI job, in `Gate` via `needs`.
+- ADR-015 records the shape. CLAUDE.md §1.2, PLAYBOOK §2.6 and §3.4, and
+  ONBOARDING §3 and §4 follow it.
+
+**PRs merged**: #112 (the eleventh session's close-out, opened last
+session), #114
+
+**Closed**: #78. **Closed unmerged**: #113
+
+The requirement collides with what the package is. Every other rule in
+`[ID: python-lib-structure]` is satisfiable by a library that computes;
+this one wants runnable examples that are also offline, from a package
+whose entire job is fetching web pages. An example that shows the ladder
+working needs a network, and with one it is neither offline nor
+reproducible — the output in the index stops being a fact and becomes a
+claim about what a server returned that day.
+
+So the rule went further than "avoid the network": no example constructs
+a `NetworkFetcher` at all. The weaker version fails in a way the stronger
+one cannot, by inviting an example that forces `HTTP` transport at a URL
+that obviously resolves, which is offline until it is not. The cost is
+real and is recorded rather than hidden — the escalation ladder is what
+this package is for, and no example demonstrates it.
+
+**The trap that cost the most**
+
+The cache example labelled its output `key:` followed by the cache
+filename. That stem is `sha256(url)` truncated, public and reproducible
+by anyone who runs the file. It is also a keyword followed by a 16-hex
+token, which is gitleaks' `generic-api-key` shape, so the secret scan
+failed on a documentation file containing no secret.
+
+Writing this entry failed the same scan twice more, because the first
+draft of both this paragraph and ADR-015 quoted the string in full. The
+rule generalises further than the examples index: any document that
+explains the finding is a document that reproduces it.
+
+Two rules in the chain produced it together and neither mentions the
+other: `readme.md` requires examples to paste real output, and the
+platform template requires a secret scanner. An examples index is the one
+document in a repository whose content is machine-generated prose —
+every other document is written by someone not trying to print an
+identifier. Filed upstream as solid-ai-templates#987.
+
+Renaming the label fixed it. An allowlist would have been faster and is
+wrong twice: a fingerprint-scoped entry names a commit that disappears at
+squash-merge, and a path-scoped one permanently exempts the single file
+whose contents are pasted program output.
+
+**Then it failed again, for a different reason**
+
+The fix landed and the scan still failed. The pre-commit hook reads the
+working tree; the CI action reads every commit in the branch. A finding
+fixed in a follow-up commit is still in the branch, so the check cannot
+pass — the branch has to stop containing the string. Squashing and
+force-pushing was declined, so #113 was closed and reopened as #114 with
+one commit that never held it. PLAYBOOK §3.4 now says all of this, and it
+is the second half of #987.
+
+**Smaller things**
+
+- #78 scoped "a wheel exclusion alongside the existing
+  `exclude = ["pagefetch.tests*"]`". That exclude has not existed since
+  ADR-010, and under `src/` a root-level `examples/` cannot reach the
+  wheel anyway. Verified by building one and listing it rather than by
+  reasoning about it, which is how the assumption was caught.
+- The smoke job installs with `pip install -e .` and no dev extra. Reusing
+  the `test` job was one line cheaper and proves the wrong claim — that
+  the examples run alongside pytest, which no reader has. Filed upstream
+  as solid-ai-templates#988, since `python-lib.md` says "smoke-tested in
+  CI" without saying how the package gets installed.
+- The job globs `examples/*.py`. A listed job silently stops covering the
+  file someone forgot to register, which is the failure the rule exists
+  to prevent.
+- solid-ai-templates#986, filed last session, had no labels — against that
+  repository's own label-at-creation rule. Labelled this session.
+
+**Not done**
+
+- #9's velocity measurement. Four sessions now. It needs a headed Chrome
+  and live requests, which no headless session can do — this is waiting
+  on a working session at the machine, not on a decision.
+- ADR-002's coverage rationale is still accurate and still describes a
+  floor that has moved several times since.
+- `--js --uc --nodriver` resolving to UC remains pinned by test and
+  undecided.
+
+---
+
 ## 2026-08-04 (eleventh session) — The rule that only applies to moves
 
 **Tool**: Claude Code (Opus 5)
