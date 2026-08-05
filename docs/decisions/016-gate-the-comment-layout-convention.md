@@ -128,13 +128,25 @@ fixed sit on `if` and `assert` lines, which no shape rule would ever admit.
 | A new top-level directory is unchecked until added | Deliberate, per the alternatives above. Two places: the hook's `args` and the CI step. |
 | The checker is subject to its own rule | `tools/` is in the roots it is run against, and the suite checks it like everything else. |
 
-**Upstream:** a candidate, not yet filed. `quality.md` states all three rules
-as MUSTs and names an enforcement mechanism for its neighbouring
-ticket-number rule but none for these. This repository's experience is the
-argument: unenforced, they accumulated 26 violations while every other
-quality gate stayed green. The carve-out table above is the part worth
-proposing, because a project that adopts the rule without it will fight its
-own formatter on the first collection literal it annotates.
+**Upstream:**
+[solid-ai-templates#989](https://github.com/braboj/solid-ai-templates/issues/989)
+for `base/core/quality.md`, which states all three rules as MUSTs and names
+an enforcement mechanism for its neighbouring ticket-number rule but none
+for these. This repository's experience is the argument: unenforced, they
+accumulated 26 violations while every other quality gate stayed green.
+
+The carve-out table above is the part worth proposing rather than the
+enforcement clause. A project that adopts the rule without it fights its
+own formatter on the first collection literal it annotates, and the way
+that argument ends is with the check switched off. #989 also carries the
+two smaller findings — that `E501` already covers the width rule, so a
+third check reports every long comment twice, and that a `repo: local`
+hook needs `language: python` even for a standard-library script, because
+`system` resolves `python` from `PATH` and the `py` launcher leaves none
+there.
+
+Nothing here is project-specific. The convention has no domain skin to
+strip: it would read the same in a library that never fetched anything.
 
 ## Related
 

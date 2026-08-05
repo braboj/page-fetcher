@@ -25,9 +25,9 @@ correct and the cause was not the file.
   PLAYBOOK §3.2 and §3.6 follow it.
 
 **PRs merged**: #116 (the twelfth session's close-out, opened last
-session)
+session), #118
 
-**Opened**: #117, #118
+**Closed**: #117. **Filed upstream**: solid-ai-templates#989
 
 `quality.md` states three comment-layout rules as MUSTs. Next to them
 sits the rule about ticket numbers in comments, which tells projects to
