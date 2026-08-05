@@ -62,7 +62,10 @@ def test_bot_blocked_skips_js_goes_to_headed(fetcher, monkeypatch):
         fetcher, monkeypatch, urllib_result=_BOT_BLOCKED, nd="from nodriver"
     )
     result = fetcher.fetch("https://x.test", FetchOptions(use_cache=False))
-    assert calls == ["http", "headed"]  # playwright NOT called
+
+    # Playwright is skipped rather than tried and failed: a bot wall defeats
+    # it too, so escalation jumps straight to the headed tier.
+    assert calls == ["http", "headed"]
     assert "js" not in calls
     assert result.tier_used == "headed"
 
@@ -176,7 +179,10 @@ def test_poisoned_cache_is_ignored_and_refetched(fetcher, monkeypatch, cache):
     cache.write("https://x.test", ContentMode.TEXT, "Too Many Requests")
     calls = _stub_tiers(fetcher, monkeypatch, urllib_result="real content now")
     result = fetcher.fetch("https://x.test", FetchOptions(use_cache=True))
-    assert calls == ["http"]  # cache was bypassed, real fetch ran
+
+    # use_cache=True and the tier still ran, which is the whole claim: the
+    # poisoned entry was bypassed rather than served.
+    assert calls == ["http"]
     assert result.tier_used == "http"
     assert result.content == "real content now"
 

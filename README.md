@@ -189,6 +189,7 @@ fetcher = NetworkFetcher(cache=FileCache(cache_dir=Path("/my/cache")))
 | `src/pagefetch/__main__.py`  | CLI entry point — a thin wrapper over the library  |
 | `tests/`                     | pytest suite, including captured HTML fixtures     |
 | `examples/`                  | Runnable usage patterns, with their own index      |
+| `tools/`                     | Repository checks the linter cannot express        |
 | `docs/ARCHITECTURE.md`       | How the ladder, detection, and cache work          |
 | `docs/decisions/`            | Architecture Decision Records                      |
 | `docs/audits/`               | 360-degree audit reports, one per run              |

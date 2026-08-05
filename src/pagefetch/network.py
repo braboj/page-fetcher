@@ -57,6 +57,7 @@ DEFAULT_USER_AGENT = (
 # Sentinel: the http tier detected bot protection (skip js, go to the
 # headed/headless bypass tiers).
 _BOT_BLOCKED = "@@BOT_BLOCKED@@"
+
 # Sentinel: response is a 404 / gone error page. Terminal — do not escalate
 # (every tier returns the same error) and do not cache.
 _ERROR_PAGE = "@@ERROR_PAGE@@"
@@ -237,6 +238,7 @@ class NetworkFetcher(PageSource):
         """Wire the cache, the user agent, and the Chrome reaper."""
         self._cache = cache or FileCache()
         self._ua = user_agent
+
         # Shared by default: a reaper per fetcher registered an atexit
         # handler per fetcher, none of which were ever removed.
         self._reaper = reaper or default_reaper()
@@ -329,6 +331,7 @@ class NetworkFetcher(PageSource):
                     "Accept-Encoding": ACCEPT_ENCODING,
                 },
             )
+
             # S310 wants proof the scheme is safe. Every public entry point
             # calls require_supported_scheme before reaching this tier, but
             # ruff cannot see across those calls.
@@ -797,6 +800,7 @@ class NetworkFetcher(PageSource):
                 f"[batch] Nodriver failed to start: {e}, falling back to UC",
                 file=sys.stderr,
             )
+
         # The loop is created before the browser, so a failed launch would
         # otherwise strand it — there is no session object to close yet.
         if loop is not None:

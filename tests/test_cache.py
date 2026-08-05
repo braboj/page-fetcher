@@ -145,6 +145,7 @@ def test_validation_error_names_the_source(tmp_path, monkeypatch):
 def test_validation_does_not_create_the_dir(tmp_path):
     target = tmp_path / "lazy" / "cache"
     FileCache(cache_dir=target)
+
     # Construction must not create the cache dir — that stays lazy (write()).
     assert not target.exists()
 
@@ -157,6 +158,7 @@ def test_delete_removes_entry_and_is_idempotent(cache: FileCache):
     cache.write(url, ContentMode.HTML, "<html>hi</html>")
     assert cache.delete(url, ContentMode.HTML) is True
     assert cache.read(url, ContentMode.HTML) is None
+
     # Second delete is a no-op, not an error.
     assert cache.delete(url, ContentMode.HTML) is False
 
@@ -164,6 +166,7 @@ def test_delete_removes_entry_and_is_idempotent(cache: FileCache):
 def test_entries_lists_bodies_excluding_screenshots(cache: FileCache):
     cache.write("https://a.test", ContentMode.HTML, "a")
     cache.write("https://b.test", ContentMode.TEXT, "b")
+
     # A .png screenshot must not be treated as a page body.
     cache.cache_dir.mkdir(parents=True, exist_ok=True)
     cache.screenshot_path("https://a.test").write_bytes(b"\x89PNG")
@@ -184,8 +187,10 @@ def test_entries_ignores_names_outside_the_key_scheme(cache: FileCache):
     cache.cache_dir.mkdir(parents=True, exist_ok=True)
     (cache.cache_dir / "README.html").write_text("<h1>hi</h1>", encoding="utf-8")
     (cache.cache_dir / "notes.txt").write_text("mine", encoding="utf-8")
+
     # Right length, wrong alphabet — the scheme is lowercase hex.
     (cache.cache_dir / "ZZZZZZZZZZZZZZZZ.txt").write_text("x", encoding="utf-8")
+
     # Right alphabet, wrong length.
     (cache.cache_dir / "abc123.txt").write_text("x", encoding="utf-8")
 
@@ -227,5 +232,6 @@ def test_clean_dry_run_deletes_nothing(cache: FileCache):
     report = cache.clean(lambda body: "junk" if "junk" in body else None, dry_run=True)
     assert report.dry_run is True
     assert len(report.removed) == 1
+
     # File still present — dry run only reports.
     assert cache.read("https://bad.test", ContentMode.HTML) == "junk page"

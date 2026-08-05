@@ -70,6 +70,7 @@ class FileCache:
         else:
             self.cache_dir = Path.cwd() / ".cache" / "pagefetch"
             source = "default"
+
         # Validate at construction, not at first write — a bad value (a path
         # that is a file, or whose parent is missing/read-only) fails here
         # with a clear message instead of cryptically on the first cache op.
@@ -109,12 +110,17 @@ class FileCache:
             raise ValueError(
                 f"pagefetch cache dir (from {source}) is not a directory: {path}"
             )
+
         # Walk up to the nearest existing ancestor and check it is writable.
         ancestor = path
         while not ancestor.exists():
             parent = ancestor.parent
-            if parent == ancestor:  # reached filesystem root
+
+            # A filesystem root is its own parent, so this is the loop's
+            # stop condition rather than a comparison that never holds.
+            if parent == ancestor:
                 break
+
             ancestor = parent
         if not ancestor.is_dir():
             raise ValueError(

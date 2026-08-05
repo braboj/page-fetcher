@@ -65,6 +65,10 @@ of truth. Agent-specific placement rules:
 - New examples go in `examples/`, one file per pattern, indexed in
   `examples/README.md` with the exact command and its real output. An
   example MUST NOT construct a `NetworkFetcher` (ADR-015)
+- A repository check that no linter can express goes in `tools/`, one file
+  per concern, wired into both pre-commit and the `Lint and format` job. A
+  check there is subject to itself — `tools/` is one of the roots it runs
+  against (ADR-016)
 - Technical explanation goes in `docs/ARCHITECTURE.md`, not the README —
   the README covers what the package does and how to run it. Decisions go
   in `docs/decisions/` (ADR-009)
@@ -84,6 +88,9 @@ py -m ruff format --check .     # formatting, incl. Python in the README
 py -m mypy                      # type check
 py -m pytest                    # tests
 py -m pytest --cov=pagefetch    # tests with the coverage floor enforced
+
+# comment layout — silent on success, one line per violation otherwise
+py tools/check_comment_layout.py src tests examples tools
 ```
 
 ## 2. Code conventions
@@ -138,6 +145,11 @@ project-specific:
   YAML and CI workflows
 - Comments explain why, not what — a comment recording the failure that
   motivated the code is the point
+- The two structural rules above are gated, not reviewed:
+  `tools/check_comment_layout.py` runs in pre-commit, in CI and in the
+  suite. Width is left to ruff's `E501`, which already measures comment
+  lines. Five carve-outs are stated and tested in the checker — a sixth
+  needs the reasoning in an ADR first, the way ADR-016 records these
 
 ### 2.4 Optional dependencies
 

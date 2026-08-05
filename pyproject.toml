@@ -121,10 +121,15 @@ convention = "google"
 
 [tool.mypy]
 python_version = "3.10"
-# The package, its suite and the examples are three roots under the src/
-# layout. Listing only "src" would silently stop type-checking the other
-# two — and an example that no longer type-checks is a published mistake.
-files = ["src", "tests", "examples"]
+# The package, its suite, the examples and the dev tools are four roots
+# under the src/ layout. Listing only "src" would silently stop
+# type-checking the rest — and an example that no longer type-checks is a
+# published mistake, while a tool that no longer type-checks gates every
+# commit in the repository.
+files = ["src", "tests", "examples", "tools"]
+# tools/ is a directory of scripts, not an installed package, so its
+# modules are only importable by the suite through this path (ADR-016).
+mypy_path = "tools"
 # The browser tiers are lazily imported and optional, so their stubs are
 # absent in a plain `pip install -e .` checkout and in CI.
 ignore_missing_imports = true
@@ -135,6 +140,10 @@ warn_unused_ignores = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+# tools/ ships with the repository but is not part of the wheel, so the
+# suite cannot reach its modules through the install the way it reaches
+# pagefetch. This puts them on the path for test_comment_layout.py.
+pythonpath = ["tools"]
 
 [tool.coverage.run]
 # Named as an import, so it resolves through the install rather than the

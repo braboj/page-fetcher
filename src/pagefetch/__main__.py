@@ -148,6 +148,7 @@ def _flag_value(argv: list[str], flag: str, expects: str = "a value") -> str | N
     if idx + 1 >= len(argv):
         raise ValueError(f"{flag} expects {expects}")
     value = argv[idx + 1]
+
     # An explicitly empty value is the same mistake arriving by the other
     # route: `--cache-dir "$UNSET"` is a value the caller meant to pass,
     # and every call site below truth-tested it back into the None an
@@ -201,6 +202,7 @@ def _collect_urls(argv: list[str], batch_file: str | None) -> list[str]:
                 print(f"Error: batch file not found: {batch_file}", file=sys.stderr)
                 sys.exit(EXIT_ALL_FAILED)
             lines = batch_path.read_text(encoding="utf-8").splitlines()
+
         # Blank lines and # comments let a URL list be annotated and
         # partially disabled without deleting entries.
         for raw_line in lines:
@@ -231,6 +233,7 @@ def _make_cache(argv: list[str]) -> FileCache:
     / default itself.
     """
     cli_dir = _flag_value(argv, "--cache-dir", expects="a directory path")
+
     # Forward the raw value, including "". _flag_value tells absence from
     # emptiness; converting or truth-testing here collapses them again and
     # hands FileCache the same None an absent flag produces.
