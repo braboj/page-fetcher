@@ -126,7 +126,7 @@ rest.
 | `README.md`                  | What the package does and how to run it              |
 | `examples/README.md`         | Runnable patterns paired with their real output      |
 | `CLAUDE.md`                  | The rules this project holds contributors to         |
-| `docs/ARCHITECTURE.md`       | How the ladder, detection and the cache work         |
+| `docs/arc42/`                | How the ladder, detection and the cache work         |
 | `src/pagefetch/source.py`    | The `PageSource` contract everything else implements |
 | `src/pagefetch/network.py`   | The four tiers and the escalation orchestrator       |
 | `src/pagefetch/detection.py` | The predicates that decide when to escalate          |

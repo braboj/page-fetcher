@@ -190,7 +190,7 @@ fetcher = NetworkFetcher(cache=FileCache(cache_dir=Path("/my/cache")))
 | `tests/`                     | pytest suite, including captured HTML fixtures     |
 | `examples/`                  | Runnable usage patterns, with their own index      |
 | `tools/`                     | Repository checks the linter cannot express        |
-| `docs/ARCHITECTURE.md`       | How the ladder, detection, and cache work          |
+| `docs/arc42/`                | Architecture documentation, one file per chapter   |
 | `docs/decisions/`            | Architecture Decision Records                      |
 | `docs/audits/`               | 360-degree audit reports, one per run              |
 | `docs/solid-ai-templates/`   | Quality conventions — a git submodule              |
@@ -266,8 +266,8 @@ into a wrapper script would otherwise do.
 
 ## Links
 
-- [Architecture](docs/ARCHITECTURE.md) — the escalation ladder, detection
-  rules, cache behaviour, and performance history
+- [Architecture](docs/arc42/) — the escalation ladder, detection rules,
+  cache behaviour, and the risk register, as arc42 chapters
 - [Examples](examples/) — runnable usage patterns, each with the command
   and the output it produces
 - [Onboarding](docs/ONBOARDING.md) — fresh clone to a passing gate
