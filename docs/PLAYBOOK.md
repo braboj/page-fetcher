@@ -286,8 +286,11 @@ and the naming convention already carries the intent.
 py -m mypy
 ```
 
-Scoped to `pagefetch` via `files` in `pyproject.toml`. Browser libraries
-are absent in a plain checkout, so `ignore_missing_imports` is on.
+Scoped by `files` in `pyproject.toml` — four roots: `src`, `tests`,
+`examples` and `tools`. Browser libraries are absent in a plain checkout,
+so `ignore_missing_imports` is on. `tools/` is a directory of scripts
+rather than an installed package, so `mypy_path` puts it where both mypy
+and the suite can import it.
 
 ### 3.3 Tests and coverage (pytest)
 
@@ -325,7 +328,33 @@ reaches the repo without waiting for a PR. Test fixtures are excluded in
 `.github/codeql-config.yml` — they are captured third-party HTML, not
 project code.
 
-### 3.6 Manual verification of the browser tiers
+### 3.6 Comment layout
+
+```bash
+py tools/check_comment_layout.py src tests examples tools
+```
+
+Silent on success; one line per violation otherwise, with the file, line
+and rule. Enforces the two structural rules from CLAUDE.md §2.3 that no
+ruff rule expresses — a comment block jammed against the code above it,
+and an aside to the right of code. Comment width is `E501`'s job and is
+deliberately not re-implemented here.
+
+It runs in three places: the `comment-layout` pre-commit hook, a step in
+the `Lint and format` job, and `test_comment_layout.py`, so a checkout
+that never ran `pre-commit install` still fails locally rather than in CI.
+
+Adding a root means editing two places — the hook's `args` and the CI
+step. They are listed rather than globbed so a new top-level directory is
+a deliberate addition, not silently unchecked.
+
+Before adding a carve-out, check it is not really a conflict with another
+tool. Two of the five exist because the rule contradicts something else:
+`ruff format` deletes blank lines inside collection literals, and `D202`
+forbids one after a docstring. ADR-016 has the full table; a sixth
+carve-out needs its reasoning recorded there first.
+
+### 3.7 Manual verification of the browser tiers
 
 Tier 2–4 method bodies need a headed Chrome and cannot run in CI. Before
 changing one, verify by hand against a site known to need it — the README's

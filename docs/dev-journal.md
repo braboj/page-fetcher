@@ -6,6 +6,71 @@ git already holds.
 
 ---
 
+## 2026-08-05 (thirteenth session) — A convention nobody was enforcing
+
+**Tool**: Claude Code (Opus 5)
+
+Started as a reader's complaint about eleven lines in
+`examples/cache_lifecycle.py` and ended as a gate. The complaint was
+correct and the cause was not the file.
+
+**Changes**
+
+- 26 comment-layout sites fixed — 22 blank lines, 4 asides moved above
+  the code they explain. No behaviour changed.
+- `tools/check_comment_layout.py`, a fourth Python root, wired into
+  pre-commit, the `Lint and format` job and the suite.
+- ADR-016 records the rule, the gate and five carve-outs. CLAUDE.md
+  §1.2, §1.3 and §2.3, README "Project structure", ONBOARDING §3 and
+  PLAYBOOK §3.2 and §3.6 follow it.
+
+**PRs merged**: #116 (the twelfth session's close-out, opened last
+session)
+
+**Opened**: #117, #118
+
+`quality.md` states three comment-layout rules as MUSTs. Next to them
+sits the rule about ticket numbers in comments, which tells projects to
+enforce it with a grep test. These three name no mechanism at all, so
+enforcement here was review — and review had passed 26 violations since
+the first commit while every other gate stayed green. The one that
+surfaced them was caught by a person reading an example.
+
+The useful part was how much of the first sweep was wrong. A naive
+implementation flagged 42 sites, and three rounds of false positives each
+changed the design. The 41 `# --- section ---` banners were dividers, not
+comments on the line below. A commented `elif` in `cache.py` got a blank
+line while the `else` below it kept none, which is worse than the defect.
+And three insertions into `detection.py`'s pattern list were deleted
+again by `ruff format --check` — ruff owns whitespace inside collection
+literals, so a gate demanding a blank line there would have fought the
+formatter on every commit forever.
+
+That last one is why the carve-outs are in the ADR rather than in a
+comment. Four of the five are not exceptions to the rule; they are places
+where obeying it contradicts `ruff format`, `D202`, or the shape of the
+syntax. A style rule another tool undoes is a loop, not a rule.
+
+Two things came out on the way. The width rule was implemented and then
+removed: `E501` already measures comment lines, so it was a second
+implementation that would drift the moment `line-length` moved. And the
+hook was written `language: system`, which resolves `python` from `PATH`
+— it failed on the machine that wrote it, because the documented Windows
+workflow uses the `py` launcher and `PATH` has no `python` on it. Both
+were found by running the thing rather than by reasoning about it.
+
+The ten value tables in `source.py` and `detection.py` keep their
+trailing comments, deferred deliberately: moving five enum members above
+their values costs fourteen lines and turns a legend a reader scans into
+a list they reassemble. They are matched by shape — constant assignment,
+annotated field, literal collection element — not by a path allowlist,
+which would exempt the files rather than the construct and go on
+exempting them after the construct was gone. That is the same objection
+ADR-015 raised against a path-scoped gitleaks allowlist, arriving from a
+different direction.
+
+---
+
 ## 2026-08-04 (twelfth session) — Examples for a package that fetches
 
 **Tool**: Claude Code (Opus 5)
