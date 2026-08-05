@@ -80,6 +80,28 @@ throttle detection: "rate limit" on its own is ordinary technical prose and
 only registers alongside a word that a page actually being throttled would
 use.
 
+### What detection does not ask
+
+Every check above asks whether a response *failed*. None asks whether it is
+*complete*. A body that clears the 10 KB floor and trips no pattern is
+returned as it stands, even when a meaningful part of the page renders in
+JavaScript — a comments thread, a lazy-loaded table, an SPA shell padded out
+with layout markup. Nothing escalates, nothing reaches stderr, and the
+partial body is cached under the key a complete one would have used. Force
+`--js` when completeness matters; auto will not decide it for you.
+
+This is deliberate rather than unnoticed.
+[ADR-017](decisions/017-decline-under-render-detection-at-tier-1.md) measured
+the four candidate signals — a text-to-markup ratio, an empty SPA mount
+point, framework bootstrap markers, a `<noscript>` requirement — and each
+produces a false positive on a complete page. The cost of that false positive
+is what settles it: tier 1 returns a sentinel rather than the body when it
+signals escalation, so the HTML is already discarded by the time a browser
+tier is tried, and the browser tiers are optional extras that a default
+install does not have. On such a host a wrong "incomplete" verdict turns a
+good page into no page — the failure this project treats as its worst. The
+ADR records what evidence would reopen the question.
+
 ## Response decoding
 
 Tier 1 advertises `gzip, deflate` and undoes whichever comes back, falling

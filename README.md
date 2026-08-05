@@ -96,10 +96,10 @@ py -m pagefetch <url> --headless   # bot bypass, no display needed
 Change the output, the wait, or the cache:
 
 ```bash
-py -m pagefetch <url> --format html  # raw HTML instead of stripped text
-py -m pagefetch <url> --format text  # stripped text, the default
-py -m pagefetch <url> --wait 5000  # extra post-load wait (ms)
-py -m pagefetch <url> --no-cache   # refetch, ignoring any cached copy
+py -m pagefetch <url> --format html   # raw HTML instead of stripped text
+py -m pagefetch <url> --format text   # stripped text, the default
+py -m pagefetch <url> --wait 5000     # extra post-load wait (ms)
+py -m pagefetch <url> --no-cache      # refetch, ignoring any cached copy
 py -m pagefetch <url> --cache-dir DIR
 ```
 
@@ -254,6 +254,9 @@ into a wrapper script would otherwise do.
 ## Known limitations
 
 - For research, not bulk scraping — no rate limiting, no backoff, no robots.txt.
+- **auto** checks whether a response failed, not whether it is complete: a page
+  over 10 KB that renders in JavaScript comes back partial. Force `--js` when
+  completeness matters.
 - **headed** opens a Chrome window, so it cannot run in CI or on a host with
   no display.
 - **headless** costs ~18-24s, most of it Chrome launch overhead.
