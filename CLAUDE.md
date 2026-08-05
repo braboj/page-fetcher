@@ -14,6 +14,7 @@ Key references — the resolved `stack-python-lib` chain:
 - `templates/base/core/review.md`
 - `templates/base/core/config.md`
 - `templates/base/workflow/quality-gates.md`
+- `templates/base/core/examples.md`
 - `templates/stack/python-lib.md`
 
 Platform templates are orthogonal to the stack chain and are declared
@@ -62,9 +63,11 @@ of truth. Agent-specific placement rules:
   contract every other module depends on
 - New tests go in `tests/`, one file per concern, named
   `test_<concern>.py`
-- New examples go in `examples/`, one file per pattern, indexed in
-  `examples/README.md` with the exact command and its real output. An
-  example MUST NOT construct a `NetworkFetcher` (ADR-015)
+- New examples go in `examples/`. What an example and its index MUST
+  contain now comes from `base-examples` — do not restate it. What is
+  project-specific: an example MUST NOT construct a `NetworkFetcher`
+  (ADR-015), which is this repository's answer to that template's
+  requirement to name the type an example may not build
 - A repository check that no linter can express goes in `tools/`, one file
   per concern, wired into both pre-commit and the `Lint and format` job. A
   check there is subject to itself — `tools/` is one of the roots it runs
