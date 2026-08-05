@@ -6,6 +6,76 @@ git already holds.
 
 ---
 
+## 2026-08-05 (fourteenth session) — The offline rule, and what it almost cost
+
+**Tool**: Claude Code (Opus 5)
+
+Started as a question about the offline rule — what it is and why it stops
+this package demonstrating its own escalation ladder. Ended four PRs later,
+almost all of them upstream.
+
+**Changes**
+
+- `base/core/examples.md` extracted upstream, with per-section IDs for
+  contents, index, offline and the smoke job. ADR-025 there records it.
+  `base/core/readme.md` §5 keeps a pointer; `stack/python-lib.md` keeps
+  the Python residue.
+- `go-lib` and `nodejs-lib` wired, each with the residue its language
+  needs — Go's `Example` functions with `// Output:` comments are
+  verified by `go test`, which machine-checks the real-output rule.
+- Submodule bumped `cf244d9` → `00fd16b`. CLAUDE.md's chain list gains
+  `examples.md`, and §1.2 drops the two rules that now come from
+  upstream, keeping only the `NetworkFetcher` ban.
+
+**PRs merged**: #121, #119 (the thirteenth session's close-out).
+Upstream: solid-ai-templates#990, #992
+
+**Closed**: #120. Upstream: solid-ai-templates#988, #991
+
+The rules governing `examples/` were split between the stack template
+that prescribed the directory and the README template that prescribed
+its contents, reached through a conditional bullet under Project
+structure. That split is why the two gaps found in the twelfth session
+went unfixed: neither owner was the obvious place for them.
+
+The part worth remembering is what the first draft of the extracted rule
+said. "Examples MUST run offline" — undefined, and absolute. Undefined,
+it bans an example that starts the project's own service on localhost,
+which is reproducible forever. Absolute, it tells a project whose entire
+surface is a vendor's API to build a fake of that API before it may ship
+an example, where the real alternative is no example. Both were caught by
+the reader, not the author, and the fix was to define offline as no host
+outside the project and add a bounded exception — name the service, say
+why no seam, date the output, quarantine it from the gating CI leg.
+
+That mattered more than it looked, because service stacks inherit library
+stacks. `base-examples` resolves in 11 of 17 chains, and 6 of those the
+moment #990 merged, via the `stack-python-service` → `stack-python-lib`
+edge. The absolute version would have handed every FastAPI and Go service
+project a rule it could not satisfy. Declaration is not reach, and the
+check is `py tools/resolve.py`, not the manifest.
+
+The bump broke PLAYBOOK §4.4 twice, found in the close-out rather than
+before the commit. It pins `00fd16b`, which is `v2.44.0-3` — the
+mid-flight revision the section forbids, for reasons this repository
+learned at `v2.42.0`. And #121 moved the pointer and reconciled
+CLAUDE.md in one commit, where §4.4 asks for two so the reconciliation
+is not hidden inside the submodule's diff. The rules that motivated the
+bump are in no released tag, so the honest fix is a `v2.45.0` upstream
+and a re-pin, not a quieter pin. Read the playbook section before the
+operation, not during the audit that catches it.
+
+A pre-defined cache was considered for demonstrating escalation offline
+and rejected on reading the code: `_fetch_single` reads the cache before
+`_escalate` is ever called, so a bundled cache demonstrates the one path
+that skips the ladder, and `tier_used` would read `cache` rather than any
+tier. ADR-015 stands. Extracting the ladder's decision as a pure state
+machine would work, but that is a refactor of the riskiest module in the
+package for a documentation payoff — the exact trade the upstream
+exception exists to refuse.
+
+---
+
 ## 2026-08-05 (thirteenth session) — A convention nobody was enforcing
 
 **Tool**: Claude Code (Opus 5)
