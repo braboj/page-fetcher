@@ -4,7 +4,7 @@
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)
 
-_Fetch a page by the cheapest means that works._
+_Fetch any page by the cheapest means that works._
 
 A plain HTTP request is enough for static HTML. Pages that render in
 JavaScript, or that block anything that looks automated, need a browser.
@@ -253,9 +253,7 @@ into a wrapper script would otherwise do.
 
 ## Known limitations
 
-- Built for research and other low-volume work. Nothing here rate-limits,
-  backs off, or reads robots.txt, and batch mode fetches sequentially. It
-  is not a bulk scraper.
+- For research, not bulk scraping — no rate limiting, no backoff, no robots.txt.
 - **headed** opens a Chrome window, so it cannot run in CI or on a host with
   no display.
 - **headless** costs ~18-24s, most of it Chrome launch overhead.
@@ -265,15 +263,13 @@ into a wrapper script would otherwise do.
 
 ## Links
 
-- [Examples](examples/) — runnable usage patterns, each with the command
-  and the output it produces
 - [Architecture](docs/ARCHITECTURE.md) — the escalation ladder, detection
   rules, cache behaviour, and performance history
+- [Examples](examples/) — runnable usage patterns, each with the command
+  and the output it produces
 - [Onboarding](docs/ONBOARDING.md) — fresh clone to a passing gate
 - [Playbook](docs/PLAYBOOK.md) — git workflow, adding a tier or a detection
   pattern, the quality checks, maintenance
-- [Dev journal](docs/dev-journal.md) — what changed each session and why
-- [Audits](docs/audits/) — 360-degree assessments, one report per run
 
 ## Dependencies
 
