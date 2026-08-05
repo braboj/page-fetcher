@@ -61,14 +61,20 @@ accepts. Completion, hover and rename are unaffected.
 
 ## 3. Verify the setup
 
-Run the gate. All four should pass on a clean checkout:
+Run the gate. All five should pass on a clean checkout:
 
 ```bash
 py -m ruff check .          # -> All checks passed!
 py -m ruff format --check . # -> N files already formatted
 py -m mypy                  # -> Success: no issues found in N source files
+py tools/check_comment_layout.py src tests examples tools  # -> no output
 py -m pytest --cov=pagefetch
 ```
+
+The layout check prints nothing when it passes, which is the whole of its
+output contract — anything on stdout is a violation with its file, line and
+rule. The suite runs it a second time, so a checkout without
+`pre-commit install` still fails locally rather than in CI.
 
 The test run ends with the suite count and the coverage verdict, in this
 shape:

@@ -172,6 +172,7 @@ def test_auto_mode_probes_the_first_url_only(fetcher, urllib_tier, no_browser_ti
     urls = ["https://a.test", "https://b.test", "https://c.test"]
     calls = urllib_tier(fetcher, {u: "body" for u in urls})
     fetcher.fetch_batch(urls, FetchOptions(use_cache=False))
+
     # One probe of the first URL, then one fetch per URL.
     assert calls == ["https://a.test", *urls]
 
@@ -207,6 +208,7 @@ def test_forced_nodriver_skips_the_probe(fetcher, urllib_tier, monkeypatch):
         ["https://a.test"],
         FetchOptions(transport=Transport.HEADED, use_cache=False),
     )
+
     # The transport was chosen explicitly, so tier 1 is never consulted.
     assert calls == []
     assert nodriver.started is True

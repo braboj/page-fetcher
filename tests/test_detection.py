@@ -21,6 +21,7 @@ from pagefetch.detection import (
 FIXTURES = Path(__file__).parent / "fixtures"
 
 REAL_PAGE = "<html><body>" + ("Lorem ipsum lens specs. " * 100) + "</body></html>"
+
 # A real content page comfortably above the size floor.
 BIG_REAL_PAGE = "<html><body>" + ("Lorem ipsum lens specs. " * 1000) + "</body></html>"
 
@@ -114,7 +115,10 @@ def test_dpreview_real_body_is_not_bot_blocked():
     html = (FIXTURES / "dpreview_specifications.html").read_text(
         encoding="utf-8", errors="replace"
     )
-    assert "checking your browser" in html.lower()  # the false-positive bait
+
+    # The bait is genuinely present, so the two assertions below test the
+    # anchoring rather than a fixture that happens to lack the phrase.
+    assert "checking your browser" in html.lower()
     assert is_bot_blocked(html) is False
     assert looks_like_real_content(html) is True
 

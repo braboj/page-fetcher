@@ -52,6 +52,7 @@ def test_clean_cache_dry_run_keeps_everything(tmp_path, monkeypatch, capsys):
     # Nothing deleted.
     assert cache.read("https://gone.test", ContentMode.HTML) is not None
     assert cache.read("https://blocked.test", ContentMode.TEXT) is not None
+
     # Reports what it would do.
     err = capsys.readouterr().err
     assert "would remove 2 junk entries" in err

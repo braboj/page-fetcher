@@ -115,6 +115,7 @@ def test_gzipped_response_is_decoded_not_returned_as_mojibake(fetcher, monkeypat
         )
     assert result.ok is True
     assert result.content == PAGE_HTML
+
     # U+FFFD, what errors="replace" emits for undecodable bytes.
     assert chr(0xFFFD) not in result.content
 
@@ -151,6 +152,7 @@ def test_tier_advertises_only_encodings_it_can_undo(fetcher, monkeypatch):
     with _served(monkeypatch, PAGE_HTML.encode(), {}) as captured:
         fetcher.fetch("https://x.test", FetchOptions(use_cache=False))
     assert captured["request"].get_header("Accept-encoding") == ACCEPT_ENCODING
+
     # Advertising an encoding the standard library cannot decode would
     # make the response unreadable.
     assert "br" not in ACCEPT_ENCODING

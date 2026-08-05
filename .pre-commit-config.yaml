@@ -43,3 +43,25 @@ repos:
     rev: v8.30.0
     hooks:
       - id: gitleaks
+
+  # The one project-local hook. The comment-layout rules in CLAUDE.md 2.3
+  # are not expressible as a ruff rule, and reviewing them by hand let 26
+  # sites accumulate across the package and the suite (ADR-016).
+  #
+  # `language: python` rather than `system`: the script needs nothing but
+  # the standard library, but `system` resolves `python` from PATH, and the
+  # documented Windows workflow uses the `py` launcher — where PATH has no
+  # `python` at all. Letting pre-commit supply the interpreter is what
+  # makes the hook run on both platforms.
+  - repo: local
+    hooks:
+      - id: comment-layout
+        name: comment layout
+        entry: python tools/check_comment_layout.py
+        language: python
+        types: [python]
+        # Roots are listed rather than passed as changed filenames: the
+        # rule is about a comment's neighbours, so checking a file in
+        # isolation is the same work as checking all four roots.
+        pass_filenames: false
+        args: [src, tests, examples, tools]

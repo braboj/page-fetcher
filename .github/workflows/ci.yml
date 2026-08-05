@@ -34,6 +34,11 @@ jobs:
         run: ruff check --output-format=github .
       - name: Format
         run: ruff format --check .
+      - name: Comment layout
+        # Standard library only, so it needs nothing installed above. Roots
+        # are listed rather than globbed, so a new top-level directory is a
+        # deliberate addition here rather than silently unchecked (ADR-016).
+        run: python tools/check_comment_layout.py src tests examples tools
 
   types:
     name: Type check

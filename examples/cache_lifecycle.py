@@ -47,14 +47,15 @@ def main() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         cache = FileCache(cache_dir=Path(tmp))
 
-        # The key is sha256(url) truncated to 16 hex characters, plus a
-        # suffix per content mode. One URL fetched both ways occupies two
-        # entries, and neither can collide with another URL's.
+        # One URL fetched both ways occupies two entries, one per content
+        # mode, and neither can collide with another URL's.
         cache.write(URL, ContentMode.TEXT, PAGE_TEXT)
         cache.write(URL, ContentMode.HTML, PAGE_HTML)
-        # Labelled "entry" and not "key" on purpose: a line reading
-        # `key: <16 hex chars>` is what gitleaks' generic-api-key rule
-        # looks for, and this output is pasted into examples/README.md,
+
+        # Each name is sha256(url) truncated to 16 hex characters plus a
+        # per-mode suffix. Labelled "entry" and not "key" because a line
+        # reading `key: <16 hex chars>` is what gitleaks' generic-api-key
+        # rule looks for, and this output is pasted into examples/README.md,
         # where it failed the secret scan.
         print(f"text entry: {cache.key(URL, ContentMode.TEXT).name}")
         print(f"html entry: {cache.key(URL, ContentMode.HTML).name}")
