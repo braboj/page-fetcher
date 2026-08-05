@@ -100,8 +100,9 @@ There is no deferral label — the chain forbids a fifth priority band, and
 this repository had already deleted its own before that landed. There is
 no milestone either, so the empty milestone field the chain uses as the
 deferral carrier is the state of every issue here and marks none of them.
-A deferral goes in an ADR when it is a decision, or in the README or
-`ARCHITECTURE.md` when it is a standing limitation, with named trigger
+A deferral goes in an ADR when it is a decision, or in the README or the
+arc42 chapter on risks and technical debt when it is a standing
+limitation, with named trigger
 conditions in the issue body, and it is found by reading rather than
 filtering.
 [ADR-013](decisions/013-deferral-after-p4-is-retired-upstream.md) has the
@@ -161,7 +162,7 @@ Tiers live in `network.py` as `_fetch_<name>` methods. A new tier must:
 - run its result through `looks_like_real_content` before returning it
 - be placed in `_escalate` at the point on the ladder its cost justifies
 - be added to the `Transport` enum, the CLI flag set, and the tier table in
-  `docs/ARCHITECTURE.md`
+  `docs/arc42/06_runtime_view.md`
 - be named for what it requires of the caller, not for its library. The
   `_fetch_<name>` method may name the library it drives; the enum member,
   the flag, the `tier_used` value and the stderr prefix must not (ADR-006)
@@ -400,6 +401,10 @@ Significant structural decisions go in `docs/decisions/` as
 `NNN-<kebab-title>.md`, one concern per record, covering context, decision,
 alternatives considered, and consequences. ADRs are immutable once merged —
 supersede rather than edit.
+
+Adding a record also adds a row to `docs/arc42/09_architecture_decisions.md`,
+in the same PR. That chapter is the only index, and no other chapter cites a
+record — so a record missing from it is a record nothing points at.
 
 ### 4.3 360-degree audits
 

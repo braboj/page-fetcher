@@ -72,9 +72,14 @@ of truth. Agent-specific placement rules:
   per concern, wired into both pre-commit and the `Lint and format` job. A
   check there is subject to itself — `tools/` is one of the roots it runs
   against (ADR-016)
-- Technical explanation goes in `docs/ARCHITECTURE.md`, not the README —
-  the README covers what the package does and how to run it. Decisions go
-  in `docs/decisions/` (ADR-009)
+- Technical explanation goes in the arc42 chapters under `docs/arc42/`,
+  not the README — the README covers what the package does and how to run
+  it (ADR-009, ADR-018). Place it by asking which chapter owns it, never
+  by appending to the nearest one: how a body is judged and what the
+  store does are crosscutting concepts, what happens during a fetch is
+  the runtime view, and a known weakness is risks and technical debt.
+  Decisions go in `docs/decisions/`, and no chapter body cites one —
+  chapter 9 is the index and gains a row per record
 - The package is `src/pagefetch/` and the suite is `tests/`, per
   `python-lib.md` (ADR-010). A checkout with nothing installed cannot
   import the package — that is the layout working, not a broken clone.
