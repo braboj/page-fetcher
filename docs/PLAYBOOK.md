@@ -189,6 +189,18 @@ ordinary body copy.
 An error verdict is terminal in AUTO mode — no escalation, no cache — so a
 false positive loses a page silently.
 
+Every pattern here answers "did this response fail?". None answers "is this
+response complete?", and
+[ADR-017](decisions/017-decline-under-render-detection-at-tier-1.md) is why:
+each candidate signal for an under-rendered page false-positives on a
+complete one, and a false positive costs more than a browser launch. Tier 1
+returns a sentinel rather than the body when it signals escalation, so the
+HTML is gone before a browser tier is tried — and the browser tiers are
+optional extras a default install does not have. Read the ADR before
+proposing a completeness signal: it fixes the corpus that would have to
+exist first, and the constraint that any such detector must preserve the
+tier 1 body.
+
 ### 2.3 Change cache behavior
 
 The key scheme (`sha256(url)[:16]` plus a `.txt`/`.html` suffix) is fixed;
