@@ -6,6 +6,68 @@ git already holds.
 
 ---
 
+## 2026-08-05 (fifteenth session) — The question the ladder never asks
+
+**Tool**: Claude Code (Opus 5)
+
+Started with a suspicion that a README warning had gone missing. It had
+not — it moved, deliberately, in #94. Chasing why it moved turned into an
+audit of the two lines that carry this project's scope, and one of them
+was sitting on a gap in the escalation ladder.
+
+**Changes**
+
+- The scope limit under Known limitations goes from three lines to one:
+  "For research, not bulk scraping — no rate limiting, no backoff, no
+  robots.txt." Every neighbouring bullet is one line; length was doing
+  the arguing rather than the facts.
+- Links keeps the four documents a reader outside the project would
+  open, alphabetically. The dev journal and the audit reports stay in
+  the tree and stay reachable from Project structure.
+- The subtitle is unchanged, having been challenged and held.
+
+**PRs merged**: #123 (the fourteenth session's close-out), #125
+
+**Closed**: #122. **Created**: #124
+
+The subtitle challenge is worth recording because the answer was not
+taste. "Fetch a page by the cheapest means that works" — why not
+"fastest"? Because AUTO escalation is strictly slower than forcing the
+right tier: a bot-walled page spends a wasted HTTP round trip before it
+launches Chrome, and `--headed` would have been quicker. "Fastest" would
+be false in exactly the case this package exists for. "Cheapest" is a
+claim about which rung of the ladder gets used, and that one holds on
+every path. The ambiguity people trip on — cheapest in money? — is the
+price of the accuracy, and the next sentence settles it.
+
+The gap came out of checking whether the bullet's own words were true.
+"No backoff" is not quite: `_uc_wait_for_page` polls on an escalating
+interval while a bot interstitial clears. That is backoff inside one page
+load, not backoff between requests to a server — same word, different
+thing, and a reader who greps will think the README is lying. The wording
+stands for now; the ambiguity is noted, not resolved.
+
+Asking what escalation actually tests is what surfaced #124. It asks
+whether a response *failed* — bot wall, error page, or under
+`MIN_REAL_CONTENT_BYTES`. It never asks whether the response is
+*complete*. A page whose raw HTML clears 10 KB and trips no pattern comes
+back as it stands, even when half of it renders in JavaScript. No
+escalation, nothing on stderr, and the partial body caches under the key
+a complete one would have used. This project already names its worst
+failure as `ok=False` for a page that exists. This is the mirror: `ok=True`
+for a page that is only partly there, and quieter, because the caller
+gets content and no reason to doubt it.
+
+One thing deliberately not done. A liability disclaimer was considered
+and dropped: MIT's final paragraph already disclaims warranty and
+liability, and it covers claims arising from the software far better than
+a README section would. What MIT does not cover is the author's own use
+of the tool, which no README text fixes either. The limitations bullet
+carries capability information; making it read like legal text would have
+cost the README its job and bought nothing.
+
+---
+
 ## 2026-08-05 (fourteenth session) — The offline rule, and what it almost cost
 
 **Tool**: Claude Code (Opus 5)
