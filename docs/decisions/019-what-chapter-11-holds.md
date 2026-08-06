@@ -1,4 +1,4 @@
-# ADR-019: What chapter 11 holds, and why it is not shaped like chapter 9
+# ADR-019: What chapter 11 holds and its format
 
 **Status:** Accepted
 **Date:** 2026-08-06

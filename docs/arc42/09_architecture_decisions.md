@@ -29,7 +29,7 @@ Adding a record adds a row here.
 | [ADR-016](../decisions/016-gate-the-comment-layout-convention.md) | Gate the comment-layout convention | Accepted | 2026-08-05 |
 | [ADR-017](../decisions/017-decline-under-render-detection-at-tier-1.md) | Decline under-render detection at tier 1 | Accepted | 2026-08-05 |
 | [ADR-018](../decisions/018-land-the-arc42-documents.md) | Land the arc42 documents and retire the interim architecture file | Accepted | 2026-08-05 |
-| [ADR-019](../decisions/019-what-chapter-11-holds.md) | What chapter 11 holds, and why it is not shaped like chapter 9 | Accepted | 2026-08-06 |
+| [ADR-019](../decisions/019-what-chapter-11-holds.md) | What chapter 11 holds and its format | Accepted | 2026-08-06 |
 
 Two records predate this repository and still govern the package. They sit
 in the repository it was extracted from, and ADR-001 explains why they were
