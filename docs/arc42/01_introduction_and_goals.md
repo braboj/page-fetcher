@@ -61,9 +61,10 @@ is design and belongs elsewhere.
 | FR10 | The package shall neither store nor serve a body it classifies as failed, and shall remove such an entry from the store when it encounters one. |
 | FR11 | The package shall sweep the store of such entries on request, and shall be able to report what it would remove without removing it. |
 | FR12 | The package shall run when no optional browser library is installed, skipping each transport whose library is absent and reporting the skip. |
-| FR13 | The package shall terminate only browser processes it started, and shall terminate none where it cannot establish that it started them. |
-| FR14 | The command-line entry point shall distinguish, in its exit status, every URL returning content from none returning content from some returning content. |
-| FR15 | The package shall expose a substitutable page source so that consuming code can be exercised with neither a network nor a browser. |
+| FR13 | The package shall continue to the next transport when a transport raises, and shall release every browser, event loop and session it acquired, whatever the outcome. |
+| FR14 | The package shall terminate only browser processes it started, and shall terminate none where it cannot establish that it started them. |
+| FR15 | The command-line entry point shall distinguish, in its exit status, every URL returning content from none returning content from some returning content. |
+| FR16 | The package shall expose a substitutable page source so that consuming code can be exercised with neither a network nor a browser. |
 
 ## Quality Goals
 
@@ -73,6 +74,5 @@ Goals are in priority order, highest first.
 | ------ | --------- | ------ | ------------ |
 | QG01 | Functional Suitability | A page that exists and is reachable is never reported as absent, and a body that is not a page is never returned or retained | Both errors reach the caller unnoticed. An incorrect failure is indistinguishable from a genuinely missing page, and a body mistaken for content is served in place of the real one until something removes it |
 | QG02 | Portability | Correctness does not vary with the platform, the Python version, or which optional engines are present | The default installation has no browser engine and no fallback, and the process-cleanup path differs by platform, so a difference in behaviour appears exactly where nothing compensates for it |
-| QG03 | Reliability | A failure inside one transport ends that transport and no more: the next one still runs, and a browser that was launched is still released | Each transport wraps a third-party engine with its own failure modes, and an exception escaping one would end the whole fetch and leave its browser process running |
-| QG04 | Performance Efficiency | A static page costs exactly one request, and a batch starts at most one browser | The transports differ in cost by more than an order of magnitude, so a browser started speculatively, or once per URL, determines the runtime of everything else |
-| QG05 | Maintainability | A detection pattern, a transport, or a configuration value is added in one place, and the definition of a failed body has exactly one home | Classification rules change most often, because the sites they describe change, and a second definition of a failed body would diverge from the first |
+| QG03 | Performance Efficiency | A static page costs exactly one request, and a batch starts at most one browser | The transports differ in cost by more than an order of magnitude, so a browser started speculatively, or once per URL, determines the runtime of everything else |
+| QG04 | Maintainability | A detection pattern, a transport, or a configuration value is added in one place, and the definition of a failed body has exactly one home | Classification rules change most often, because the sites they describe change, and a second definition of a failed body would diverge from the first |
