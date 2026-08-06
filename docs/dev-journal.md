@@ -6,6 +6,121 @@ git already holds.
 
 ---
 
+## 2026-08-06 (eighteenth session) — The register that could not be an index
+
+**Tool**: Claude Code (Opus 5)
+
+The session started as a status check and became chapter work. The question
+that opened it was whether risks and technical debt should follow the shape
+chapter 9 uses — one file per record, the chapter as an index. The answer is
+no, and the reason generalizes further than the question did.
+
+**Changes**
+
+- Chapter 11's registers reshaped: detail moved into subsections keyed by
+  ID, cells cut to a statement and its ratings, IDs normalized to `R01` and
+  `TD01`.
+- Two risks removed as duplicates rather than relocated.
+- The Evidence Base split: the sites table to chapter 10 under Test
+  Coverage, the ladder history to chapter 4 as a dated block. Chapter 11 is
+  now two registers and nothing else.
+- Chapter 4's Architecture Approach cut from 29 lines to 21, seven
+  principles kept.
+- PLAYBOOK 3.7 retargeted — it pointed at a "Sites tested" table in the
+  README, which had stopped being true when ADR-009 split technical depth
+  out. Dangling before this session touched it.
+- Two Linear issues had carried both `P3` and `P4` since the label was
+  retired. GitHub was already correct.
+
+**PRs merged**: #131, #132, #133
+
+**Filed upstream**: `solid-ai-templates#995`, `#996`
+
+Chapter 9 indexes `docs/decisions/` because a decision record is immutable;
+folding one into a chapter that changes would destroy that property. ADR-018
+says so plainly, and the reasoning does not transfer. A register is mutable
+state — a probability is edited in place, a resolved entry is deleted — so
+the same shape applied to it would destroy the other half. What made the
+question worth asking is that the asymmetry looks arbitrary from outside and
+invites being fixed for symmetry, in either direction. That is now written
+down as one of the six rules on #995, which is the only reason it will not
+be re-derived.
+
+The density that prompted the question was real and had a cause the existing
+rules could not catch. `[ID: docs-arc42]` governs chapter content for 2, 3,
+8 and 9, and its "IDs and register" subsection names `FR01`, `QG01` and `Q1`
+and stops — the register in its own heading is the one chapter it never
+reaches. Chapter 11 followed every rule that exists and still produced eight
+rows with three-sentence cells. Section 8 already solves that exact failure
+for a different chapter: describe in prose, then give a table. The principle
+was accepted upstream and stops one chapter short, which is what made this
+worth filing rather than fixing locally and moving on.
+
+ADR-018 declined to file placement upstream on the grounds that one
+repository landing arc42 once proves nothing. That caution was right and
+does not apply here, which is worth separating: placement beside four
+existing guide documents is a project's local choice, and the content shape
+of a chapter is what `docs-arc42` already governs everywhere else. The
+second data point is independent of this repository — the reference set
+these chapters were modelled on invented `R-n`/`TD-n` itself and then
+forward-referenced them from chapters 4 and 8, breaking a rule upstream does
+state because the neighbouring one is missing.
+
+Two things only appeared when the rules met the document. Rule 1 read
+literally deletes the mitigation column and gives every entry a subsection,
+which reads worse than what it replaced; what worked was a one-clause
+mitigation cell with subsections only where there was more, and one risk of
+six needed none. Rule 2 was expected to relocate the two `Certain`-rated
+risks and instead deleted them: under-rendering was already recorded in the
+README, chapter 8 and as `Q3` in chapter 10, and the human-gesture challenge
+was already in chapter 3 under Out of scope. An entry that is not a risk is
+usually a limitation the document set has already stated somewhere it
+belongs. Both are on the issue, because a rule that has never been applied
+is a proposal about writing rather than a rule.
+
+The Evidence Base question resolved against the first answer given. Chapter
+8 was the suggestion, and checking it rather than reasoning about it changed
+the count: four of the nine ladder versions do map to chapter 8 concepts —
+v3 to Waiting for a Browser, v7 to Classification, v8 and v9 to Retained
+Content — against five to chapters 4 and 6. Close enough that no single
+chapter is its home, which is the finding. It stays a block anyway, and the
+reason is tense rather than subject: 16s and 27s are honest as a record of
+which direction a change moved things and misleading inside present-tense
+concept prose. The sites table moved to chapter 10, correcting an earlier
+answer in this same session that it should stay.
+
+The de-stack is worth recording because the documented command did not
+work. `gh pr update-branch` refused #132: the branch carried #131's original
+commit while `main` had its squash, so chapter 11 read as modified on both
+sides. PLAYBOOK 1.3 already prescribes the manual route and resolving in
+favour of the branch. What the procedure does not say is to verify the
+result — the resolved file was checked byte-identical to the pre-merge
+branch tip, and the net diff against `main` checked against the original
+commit's own figures. The merge output reported 156 changed lines in that
+file, which was `main` arriving on the branch and not the squash going
+wrong. Trusting the summary would have read as a defect; trusting it in the
+other direction would have hidden one.
+
+**Not done**
+
+- `solid-ai-templates#995` is open, so none of the six rules governs here.
+  Chapter 11 conforms to a proposal, which is the same footing #983's rules
+  had while these chapters were written.
+- The scheduling question on #995 is genuinely undecided rather than
+  deferred: whether a register row may carry an issue reference, or whether
+  that duplicates the home `base-issues-defer` already defines.
+- `TD01` and `R03` are register entries with no issue behind them, which is
+  that question in concrete form.
+- Chapter 10's `Q1…Q16` is the last unpadded ID scheme. Left alone
+  deliberately — `docs-arc42` writes `Q1…` itself, so it is upstream's to
+  settle, and both options are on #995.
+- `dev-journal.md` line 1551, in the upstream-history entry, points at a
+  README "Performance history" section that no longer exists. Left because
+  no rule says whether a journal entry is editable the way a merged record
+  is not; raised rather than decided.
+
+---
+
 ## 2026-08-05 (seventeenth session) — The format to copy, the rules to follow
 
 **Tool**: Claude Code (Opus 5)

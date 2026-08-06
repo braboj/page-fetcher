@@ -53,6 +53,24 @@ and a merge commit the squash deletes is not much of a cost against that.
 This was a deviation until `solid-ai-templates#919` landed in v2.43.0,
 which is why the template now describes both routes rather than one.
 
+`gh pr update-branch` refuses this case rather than doing it for you: the
+branch carries the base PR's original commit while `main` carries its
+squash, so the shared file reads as modified on both sides. That refusal is
+the expected path into the commands above, not a sign anything is wrong.
+
+Verify the resolution rather than reading the merge output, which counts the
+base arriving on the branch and not what the squash will land:
+
+```bash
+git diff <branch-tip-before-merge> -- <resolved-file>   # must be empty
+git diff origin/main --stat                             # must match the PR
+```
+
+Resolving in favour of the branch is only safe while the branch is a strict
+superset of the base — true when the base PR is the one that just merged,
+false as soon as anything else lands on `main` in between. Check the second
+diff before trusting the first.
+
 The same step is needed for PRs that were never stacked — `Merging a batch
 of PRs` carries the reasoning. There is no retarget in that case, so one
 command does it:

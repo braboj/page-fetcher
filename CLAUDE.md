@@ -77,7 +77,9 @@ of truth. Agent-specific placement rules:
   it (ADR-009, ADR-018). Place it by asking which chapter owns it, never
   by appending to the nearest one: how a body is judged and what the
   store does are crosscutting concepts, what happens during a fetch is
-  the runtime view, and a known weakness is risks and technical debt.
+  the runtime view, and a known weakness is risks and technical debt —
+  where a row states it in one sentence and the detail goes in a
+  subsection keyed by its ID, never in the cell (ADR-019).
   Decisions go in `docs/decisions/`, and no chapter body cites one —
   chapter 9 is the index and gains a row per record
 - The package is `src/pagefetch/` and the suite is `tests/`, per
