@@ -86,3 +86,24 @@ browser and are validated by hand.
 | Process cleanup | The ancestry walk against a constructed process table, on both platforms |
 | Browser transport bodies | Not covered; validated by hand on a desktop with a display |
 | Whole package | A floor enforced on every matrix leg, raised against the measured figure and never lowered to make a change pass |
+
+### Sites Exercised by Hand
+
+The hand validation named in the row above has been carried out against
+these sites:
+
+| Site | Transport | Notes |
+| ------ | ----------- | ------- |
+| allphotolenses.com | `http` | Static markup |
+| ttartisan.com | `js` | Rendered in the browser, query-parameter routing |
+| zyoptics.net | `headed` | Captcha and bot protection |
+| bhphotovideo.com | `headed` | Clears a challenge with a real window |
+| viltrox.com | `http` | Static markup plus a JSON endpoint |
+| mobile01.com | `headless` | Blocks plain headless browsers |
+| adorama.com | none | Press-and-hold challenge; manual only |
+
+The column records which transport *succeeded*, not which ones were tried
+and failed. That makes the table weak evidence for the claim it looks like
+it supports — that the two bypass transports cover different sites — and it
+is the reason the split between them rests on their costs rather than on
+this table.
