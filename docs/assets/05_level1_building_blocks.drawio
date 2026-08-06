@@ -1,6 +1,6 @@
 <mxfile host="Electron">
   <diagram name="Level 1 Building Blocks" id="bb-l1-pagefetch">
-    <mxGraphModel dx="1078" dy="953" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="840" background="#ffffff" math="0" shadow="0">
+    <mxGraphModel dx="1094" dy="969" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="840" background="#ffffff" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -11,22 +11,22 @@
           <mxGeometry height="100" width="280" x="520" y="230" as="geometry" />
         </mxCell>
         <mxCell id="cls" parent="1" style="rounded=0;whiteSpace=wrap;html=1;shadow=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;verticalAlign=middle;" value="&lt;b&gt;Classification&lt;/b&gt;&lt;br&gt;&lt;font style=&#39;font-size: 10px&#39;&gt;pure predicates over a body&lt;br&gt;no I/O, no configuration&lt;/font&gt;" vertex="1">
-          <mxGeometry height="90" width="250" x="140" y="430" as="geometry" />
+          <mxGeometry height="90" width="250" x="55" y="445" as="geometry" />
         </mxCell>
         <mxCell id="st" parent="1" style="rounded=0;whiteSpace=wrap;html=1;shadow=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;verticalAlign=middle;" value="&lt;b&gt;Store&lt;/b&gt;&lt;br&gt;&lt;font style=&#39;font-size: 10px&#39;&gt;retained bodies on disk: key, read, write,&lt;br&gt;delete, enumeration and the sweep&lt;/font&gt;" vertex="1">
           <mxGeometry height="90" width="280" x="520" y="430" as="geometry" />
         </mxCell>
         <mxCell id="hc" parent="1" style="rounded=0;whiteSpace=wrap;html=1;shadow=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;verticalAlign=middle;" value="&lt;b&gt;Host cleanup&lt;/b&gt;&lt;br&gt;&lt;font style=&#39;font-size: 10px&#39;&gt;the only platform-specific,&lt;br&gt;side-effectful part&lt;/font&gt;" vertex="1">
-          <mxGeometry height="90" width="250" x="930" y="430" as="geometry" />
+          <mxGeometry height="90" width="250" x="203" y="161" as="geometry" />
         </mxCell>
         <mxCell id="dbl" parent="1" style="rounded=0;whiteSpace=wrap;html=1;shadow=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;verticalAlign=middle;" value="&lt;b&gt;Test double&lt;/b&gt;&lt;br&gt;&lt;font style=&#39;font-size: 10px&#39;&gt;page source backed by a map&lt;br&gt;published surface, not a fixture&lt;/font&gt;" vertex="1">
-          <mxGeometry height="90" width="250" x="140" y="640" as="geometry" />
+          <mxGeometry height="90" width="250" x="55" y="655" as="geometry" />
         </mxCell>
         <mxCell id="ct" parent="1" style="rounded=0;whiteSpace=wrap;html=1;shadow=1;fillColor=#f5f5f5;strokeColor=#333333;strokeWidth=2;fontSize=13;verticalAlign=middle;" value="&lt;b&gt;Contract&lt;/b&gt;&lt;br&gt;&lt;font style=&#39;font-size: 10px&#39;&gt;abstract page source, fetch options, fetch result,&lt;br&gt;and the two enumerations — imports nothing&lt;/font&gt;" vertex="1">
           <mxGeometry height="110" width="340" x="490" y="640" as="geometry" />
         </mxCell>
         <mxCell id="note" parent="1" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#f9f9f9;strokeColor=#999999;fontSize=11;align=left;verticalAlign=middle;spacingLeft=12;spacingRight=10;fontColor=#444444;" value="Every arrow reads &lt;i&gt;depends on&lt;/i&gt;.&lt;br&gt;&lt;br&gt;No arrow leaves the contract, so nothing it might import can become a dependency of the whole package." vertex="1">
-          <mxGeometry height="110" width="250" x="930" y="640" as="geometry" />
+          <mxGeometry height="110" width="250" x="851" y="640" as="geometry" />
         </mxCell>
         <mxCell id="d1" edge="1" parent="1" source="cli" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;strokeColor=#333333;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="tr">
           <mxGeometry relative="1" as="geometry" />
@@ -34,7 +34,8 @@
         <mxCell id="d2" edge="1" parent="1" source="cli" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;strokeColor=#333333;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="cls">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="265" y="95" />
+              <mxPoint x="181" y="95" />
+              <mxPoint x="181" y="445" />
             </Array>
           </mxGeometry>
         </mxCell>
@@ -49,8 +50,8 @@
         <mxCell id="d4" edge="1" parent="1" source="cli" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;strokeColor=#333333;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=1;exitY=0.2;exitDx=0;exitDy=0;entryX=0.85;entryY=1;entryDx=0;entryDy=0;" target="ct">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="1290" y="68" />
-              <mxPoint x="1290" y="790" />
+              <mxPoint x="1116" y="68" />
+              <mxPoint x="1116" y="790" />
               <mxPoint x="779" y="790" />
             </Array>
           </mxGeometry>
@@ -58,18 +59,20 @@
         <mxCell id="d5" edge="1" parent="1" source="tr" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;strokeColor=#333333;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="cls">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="455" y="280" />
-              <mxPoint x="455" y="475" />
+              <mxPoint x="392" y="280" />
+              <mxPoint x="392" y="490" />
             </Array>
           </mxGeometry>
         </mxCell>
         <mxCell id="d6" edge="1" parent="1" source="tr" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;strokeColor=#333333;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="st">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="d7" edge="1" parent="1" source="tr" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;strokeColor=#333333;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="hc">
+        <mxCell id="d7" edge="1" parent="1" source="tr" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;strokeColor=#333333;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=0;exitY=0.25;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="hc">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
-              <mxPoint x="1055" y="280" />
+              <mxPoint x="520" y="253" />
+              <mxPoint x="497" y="253" />
+              <mxPoint x="497" y="206" />
             </Array>
           </mxGeometry>
         </mxCell>
