@@ -30,7 +30,7 @@ pages and keeping them on disk — not for bulk collection.
 | **Researcher at a terminal** | Fetches a page and gets its text on stdout, or a non-zero exit status and nothing on stdout — never an empty file that looks like a result |
 | **Consuming program** | Depends on a small, stable interface it can substitute in its own tests, and on an install that pulls in nothing |
 | **Maintainer** | Adds a detection pattern or a transport in one place, and can tell from the record why the current shape is what it is |
-| **Operator of a fetched site** | Is read at human pace and from one address; pagefetch offers no concurrency, no retry storm, and no way to schedule a sweep |
+| **Operator of a fetched site** | Sees requests one at a time from a single machine, and no more than the caller asked for: no concurrency, no retry loop, no scheduler. Escalation is the only reason one URL is requested more than once |
 
 ## Functional Requirements
 
