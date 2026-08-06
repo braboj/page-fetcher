@@ -2,20 +2,19 @@
 
 ## Quality Tree
 
-The tree refines the quality goals of Section 1 into branches that can be
-checked. Each branch is worded so that a single observation can falsify it.
+The tree holds the whole set of quality requirements. Section 1 names the
+five that drive the architecture; the rest are checked here and nowhere
+else. Each branch is worded so that a single observation can falsify it.
 
 ```text
 Quality
 |
-+-- Correctness
++-- Functional Suitability
 |     +-- A reachable page is never reported as absent
 |     +-- A phrase that occurs in ordinary body copy cannot produce a final
 |     |   verdict on a full-size page
 |     +-- No classification path returns a wrong verdict more readily on a
-|         host that has no browser to fall back to
-|
-+-- Functional Correctness
+|     |   host that has no browser to fall back to
 |     +-- No wall, throttle stub or not-found body is returned to a caller
 |     +-- No such body survives being read from the store
 |     +-- The read path and the sweep reach the same verdict on every body
@@ -52,12 +51,12 @@ Quality
 
 | ID | Quality | Scenario | Expected Response | Priority |
 | ---- | --------- | ---------- | ------------------- | ---------- |
-| Q1 | Correctness | A 17 KB product page says "the silver finish is no longer available" in its body copy | The page is returned as content. The phrase carries weight only below the size floor | High |
-| Q2 | Correctness | A 6 KB stub says "no longer available" and nothing else of substance | Final verdict: no escalation, nothing stored, no content, non-zero status | High |
-| Q3 | Correctness | A page over the floor renders half its content in JavaScript, fetched in automatic mode | The partial body is returned and stored under the key a complete body would use. This is accepted behaviour, not a defect — a caller needing completeness names the JavaScript transport | Medium |
-| Q4 | Functional Correctness | The plain transport receives a 7 KB throttle page carrying no recognizable wording | Rejected by the size floor, escalated rather than returned or stored | High |
-| Q5 | Functional Correctness | The store holds a wall body written before the guard for it existed | Deleted on read and the fetch proceeds as a miss; a later sweep finds nothing left to remove | High |
-| Q6 | Functional Correctness | A server compresses a response with gzip without declaring it | Decompressed by signature. Mojibake is neither returned nor stored | High |
+| Q1 | Functional Suitability | A 17 KB product page says "the silver finish is no longer available" in its body copy | The page is returned as content. The phrase carries weight only below the size floor | High |
+| Q2 | Functional Suitability | A 6 KB stub says "no longer available" and nothing else of substance | Final verdict: no escalation, nothing stored, no content, non-zero status | High |
+| Q3 | Functional Suitability | A page over the floor renders half its content in JavaScript, fetched in automatic mode | The partial body is returned and stored under the key a complete body would use. This is accepted behaviour, not a defect — a caller needing completeness names the JavaScript transport | Medium |
+| Q4 | Functional Suitability | The plain transport receives a 7 KB throttle page carrying no recognizable wording | Rejected by the size floor, escalated rather than returned or stored | High |
+| Q5 | Functional Suitability | The store holds a wall body written before the guard for it existed | Deleted on read and the fetch proceeds as a miss; a later sweep finds nothing left to remove | High |
+| Q6 | Functional Suitability | A server compresses a response with gzip without declaring it | Decompressed by signature. Mojibake is neither returned nor stored | High |
 | Q7 | Portability | The package is installed with no optional engines, and a URL behind a wall is fetched | The wall is detected, each browser rung reports itself absent, no content is returned and the status is non-zero. No traceback | High |
 | Q8 | Reliability | A browser engine crashes part-way through a batch | The batch continues to the remaining URLs, and the browser, event loop and session are all released | High |
 | Q9 | Reliability | A batch's browser has already died when the batch releases its handles | The remaining release steps still run, and the failure is reported rather than raised | Medium |
