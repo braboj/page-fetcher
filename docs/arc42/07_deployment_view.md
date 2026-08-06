@@ -29,18 +29,7 @@ every contributor's environment.
 
 ## Runtime Environments
 
-```text
-+------------------------------+--------------------------------------+
-| desktop, display available   | headless host: server, container, CI |
-+------------------------------+--------------------------------------+
-| http                         | http                                 |
-| js                           | js                                   |
-| headed      <- needs the     | headed      SKIPPED, no display      |
-| headless       display       | headless                             |
-+------------------------------+--------------------------------------+
-| default install, either host: http only, the rest skipped and named |
-+---------------------------------------------------------------------+
-```
+![Deployment View](../assets/07_deployment_view.png)
 
 | Environment | Notes |
 | ------------- | ------- |

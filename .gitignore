@@ -36,6 +36,10 @@ htmlcov/
 # Crash dumps — Cygwin/Git-Bash tools drop these in the working directory
 *.stackdump
 
+# draw.io autosaves a backup beside the file being edited. The .drawio
+# source and its exported .png are both tracked; the backup is churn.
+.$*.drawio.bkp
+
 # OS
 .DS_Store
 Thumbs.db

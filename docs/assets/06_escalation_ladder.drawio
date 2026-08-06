@@ -1,0 +1,78 @@
+<mxfile host="Electron">
+  <diagram name="Escalation Ladder" id="ladder-pagefetch">
+    <mxGraphModel dx="1078" dy="953" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1300" pageHeight="940" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="http" parent="1" style="rounded=0;whiteSpace=wrap;html=1;shadow=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;verticalAlign=middle;" value="&lt;b&gt;http&lt;/b&gt;&lt;br&gt;&lt;font style=&#39;font-size: 10px&#39;&gt;plain request, about a second&lt;br&gt;always present&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="300" x="500" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="js" parent="1" style="rounded=0;whiteSpace=wrap;html=1;shadow=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;verticalAlign=middle;" value="&lt;b&gt;js&lt;/b&gt;&lt;br&gt;&lt;font style=&#39;font-size: 10px&#39;&gt;browser render, several seconds&lt;br&gt;optional engine, no display needed&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="300" x="500" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="headed" parent="1" style="rounded=0;whiteSpace=wrap;html=1;shadow=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;verticalAlign=middle;" value="&lt;b&gt;headed&lt;/b&gt;&lt;br&gt;&lt;font style=&#39;font-size: 10px&#39;&gt;real browser window, several seconds&lt;br&gt;optional engine, &lt;b&gt;needs a display&lt;/b&gt;&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="300" x="500" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="headless" parent="1" style="rounded=0;whiteSpace=wrap;html=1;shadow=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;verticalAlign=middle;" value="&lt;b&gt;headless&lt;/b&gt;&lt;br&gt;&lt;font style=&#39;font-size: 10px&#39;&gt;patched driver, tens of seconds&lt;br&gt;optional engine, no display needed&lt;/font&gt;" vertex="1">
+          <mxGeometry height="90" width="300" x="500" y="710" as="geometry" />
+        </mxCell>
+        <mxCell id="term" parent="1" style="rounded=0;whiteSpace=wrap;html=1;shadow=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;verticalAlign=middle;" value="&lt;b&gt;Terminal&lt;/b&gt;&lt;br&gt;&lt;font style=&#39;font-size: 10px&#39;&gt;no content, transport reported as none.&lt;br&gt;Nothing stored, no browser launched —&lt;br&gt;no rung would answer differently&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="300" x="60" y="95" as="geometry" />
+        </mxCell>
+        <mxCell id="dead" parent="1" style="rounded=0;whiteSpace=wrap;html=1;shadow=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=13;verticalAlign=middle;" value="&lt;b&gt;Nothing came back&lt;/b&gt;&lt;br&gt;&lt;font style=&#39;font-size: 10px&#39;&gt;every rung available was tried&lt;br&gt;and none produced a page&lt;/font&gt;" vertex="1">
+          <mxGeometry height="100" width="300" x="60" y="705" as="geometry" />
+        </mxCell>
+        <mxCell id="ok1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;shadow=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;verticalAlign=middle;" value="&lt;b&gt;done&lt;/b&gt; — reported as &lt;b&gt;http&lt;/b&gt;" vertex="1">
+          <mxGeometry height="60" width="240" x="880" y="105" as="geometry" />
+        </mxCell>
+        <mxCell id="ok2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;shadow=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;verticalAlign=middle;" value="&lt;b&gt;done&lt;/b&gt; — reported as &lt;b&gt;js&lt;/b&gt;" vertex="1">
+          <mxGeometry height="60" width="240" x="880" y="345" as="geometry" />
+        </mxCell>
+        <mxCell id="ok3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;shadow=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;verticalAlign=middle;" value="&lt;b&gt;done&lt;/b&gt; — reported as &lt;b&gt;headed&lt;/b&gt;" vertex="1">
+          <mxGeometry height="60" width="240" x="880" y="535" as="geometry" />
+        </mxCell>
+        <mxCell id="ok4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;shadow=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;verticalAlign=middle;" value="&lt;b&gt;done&lt;/b&gt; — reported as &lt;b&gt;headless&lt;/b&gt;" vertex="1">
+          <mxGeometry height="60" width="240" x="880" y="725" as="geometry" />
+        </mxCell>
+        <mxCell id="foot" parent="1" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#f9f9f9;strokeColor=#999999;fontSize=11;align=left;verticalAlign=middle;spacingLeft=12;spacingRight=10;fontColor=#444444;" value="Automatic mode only. Naming a transport turns the ladder off: a wall or a not-found body is then a failure, not a reason to escalate. A rung whose engine is not installed is skipped and named on standard error." vertex="1">
+          <mxGeometry height="90" width="360" x="880" y="825" as="geometry" />
+        </mxCell>
+        <mxCell id="l1" edge="1" parent="1" source="http" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;strokeColor=#b85450;endArrow=block;endFill=1;verticalAlign=bottom;labelBackgroundColor=#ffffff;exitX=0;exitY=0.3;exitDx=0;exitDy=0;entryX=1;entryY=0.3;entryDx=0;entryDy=0;" target="term" value="not-found or gone">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l2" edge="1" parent="1" source="http" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;strokeColor=#333333;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=0;exitY=0.85;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="headed" value="bot wall — js is skipped,&lt;br&gt;it would meet the same wall">
+          <mxGeometry relative="1" x="-0.5" as="geometry">
+            <Array as="points">
+              <mxPoint x="455" y="167" />
+              <mxPoint x="455" y="565" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="l3" edge="1" parent="1" source="http" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;strokeColor=#333333;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="js" value="any other failure">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l4" edge="1" parent="1" source="js" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;strokeColor=#333333;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="headed" value="failure">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l5" edge="1" parent="1" source="headed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;strokeColor=#333333;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" target="headless" value="failure">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l6" edge="1" parent="1" source="headless" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;strokeColor=#b85450;endArrow=block;endFill=1;verticalAlign=bottom;labelBackgroundColor=#ffffff;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" target="dead" value="failure">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a1" edge="1" parent="1" source="http" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;strokeColor=#82b366;endArrow=block;endFill=1;verticalAlign=bottom;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="ok1" value="accepted">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a2" edge="1" parent="1" source="js" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;strokeColor=#82b366;endArrow=block;endFill=1;verticalAlign=bottom;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="ok2" value="accepted">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a3" edge="1" parent="1" source="headed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;strokeColor=#82b366;endArrow=block;endFill=1;verticalAlign=bottom;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="ok3" value="accepted">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a4" edge="1" parent="1" source="headless" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;strokeColor=#82b366;endArrow=block;endFill=1;verticalAlign=bottom;labelBackgroundColor=#ffffff;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="ok4" value="accepted">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -23,3 +23,8 @@ question at hand.
 Two rules hold across every chapter. No chapter body cites a decision
 record — chapter 9 is the single index. No chapter refers forward to a
 higher-numbered one.
+
+Diagrams live in [`../assets/`](../assets/), named for the chapter that
+embeds them. Each is a `.drawio` source with its exported `.png` beside it,
+and the chapter embeds the PNG. Sequence diagrams stay inline as Mermaid —
+PLAYBOOK §4.7 has the split and the export command.
