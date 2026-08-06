@@ -1,0 +1,61 @@
+<mxfile host="Electron">
+  <diagram name="Deployment View" id="deploy-pagefetch">
+    <mxGraphModel dx="1078" dy="953" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1440" pageHeight="680" background="#ffffff" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="cap" parent="1" style="text;html=1;align=left;verticalAlign=middle;fontSize=13;fontColor=#333333;" value="There is nothing to deploy. What varies between installations is which transports exist — decided by which optional engines are installed, and whether a display is present." vertex="1">
+          <mxGeometry height="30" width="1320" x="60" y="45" as="geometry" />
+        </mxCell>
+        <mxCell id="col1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#f9f9f9;strokeColor=#999999;verticalAlign=top;align=center;fontSize=13;fontColor=#333333;spacingTop=12;" value="&lt;b&gt;Developer desktop&lt;/b&gt;&lt;br&gt;&lt;font style=&#39;font-size: 10px&#39;&gt;browsers extra installed&lt;br&gt;display available&lt;/font&gt;" vertex="1">
+          <mxGeometry height="430" width="400" x="60" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="col2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#f9f9f9;strokeColor=#999999;verticalAlign=top;align=center;fontSize=13;fontColor=#333333;spacingTop=12;" value="&lt;b&gt;Headless host&lt;/b&gt;&lt;br&gt;&lt;font style=&#39;font-size: 10px&#39;&gt;server, container, CI runner&lt;br&gt;browsers extra installed&lt;/font&gt;" vertex="1">
+          <mxGeometry height="430" width="400" x="510" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="col3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#f9f9f9;strokeColor=#999999;verticalAlign=top;align=center;fontSize=13;fontColor=#333333;spacingTop=12;" value="&lt;b&gt;Either host, base install&lt;/b&gt;&lt;br&gt;&lt;font style=&#39;font-size: 10px&#39;&gt;no third-party package pulled in&lt;br&gt;the default, and what CI runs&lt;/font&gt;" vertex="1">
+          <mxGeometry height="430" width="400" x="960" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="a1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;shadow=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;verticalAlign=middle;" value="&lt;b&gt;http&lt;/b&gt; — available" vertex="1">
+          <mxGeometry height="60" width="340" x="90" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="a2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;shadow=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;verticalAlign=middle;" value="&lt;b&gt;js&lt;/b&gt; — available" vertex="1">
+          <mxGeometry height="60" width="340" x="90" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="a3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;shadow=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;verticalAlign=middle;" value="&lt;b&gt;headed&lt;/b&gt; — available&lt;br&gt;&lt;font style=&#39;font-size: 10px&#39;&gt;the only place this rung can run&lt;/font&gt;" vertex="1">
+          <mxGeometry height="60" width="340" x="90" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="a4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;shadow=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;verticalAlign=middle;" value="&lt;b&gt;headless&lt;/b&gt; — available" vertex="1">
+          <mxGeometry height="60" width="340" x="90" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="b1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;shadow=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;verticalAlign=middle;" value="&lt;b&gt;http&lt;/b&gt; — available" vertex="1">
+          <mxGeometry height="60" width="340" x="540" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="b2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;shadow=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;verticalAlign=middle;" value="&lt;b&gt;js&lt;/b&gt; — available" vertex="1">
+          <mxGeometry height="60" width="340" x="540" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="b3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;shadow=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=12;verticalAlign=middle;" value="&lt;b&gt;headed&lt;/b&gt; — skipped&lt;br&gt;&lt;font style=&#39;font-size: 10px&#39;&gt;no display; a URL only this rung clears does not come back&lt;/font&gt;" vertex="1">
+          <mxGeometry height="60" width="340" x="540" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="b4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;shadow=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;verticalAlign=middle;" value="&lt;b&gt;headless&lt;/b&gt; — available" vertex="1">
+          <mxGeometry height="60" width="340" x="540" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="c1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;shadow=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=12;verticalAlign=middle;" value="&lt;b&gt;http&lt;/b&gt; — available&lt;br&gt;&lt;font style=&#39;font-size: 10px&#39;&gt;standard library only&lt;/font&gt;" vertex="1">
+          <mxGeometry height="60" width="340" x="990" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="c2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#777777;fontSize=12;verticalAlign=middle;" value="&lt;b&gt;js&lt;/b&gt; — engine not installed" vertex="1">
+          <mxGeometry height="60" width="340" x="990" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#777777;fontSize=12;verticalAlign=middle;" value="&lt;b&gt;headed&lt;/b&gt; — engine not installed" vertex="1">
+          <mxGeometry height="60" width="340" x="990" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#999999;fontColor=#777777;fontSize=12;verticalAlign=middle;" value="&lt;b&gt;headless&lt;/b&gt; — engine not installed" vertex="1">
+          <mxGeometry height="60" width="340" x="990" y="440" as="geometry" />
+        </mxCell>
+        <mxCell id="foot" parent="1" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;fillColor=#f9f9f9;strokeColor=#999999;fontSize=11;align=left;verticalAlign=middle;spacingLeft=12;spacingRight=12;fontColor=#444444;" value="A rung that cannot run is named on standard error, never dropped silently. The base install is not a broken one — it is one rung, and a page needing a browser simply does not come back. The development profile adds the toolchain and no engine, because the suite runs with no network and no browser." vertex="1">
+          <mxGeometry height="70" width="1300" x="60" y="575" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

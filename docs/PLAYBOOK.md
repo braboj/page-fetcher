@@ -599,6 +599,39 @@ A suite that still collects has not adopted the layout, it has only moved
 files. Nothing else detects this — lint, types and coverage all pass either
 way.
 
+### 4.7 Regenerate an arc42 diagram
+
+Sources and exports both live in `docs/assets/`, named for the chapter that
+embeds them. Edit the `.drawio`, re-export, and commit both files — a PNG
+regenerated from an uncommitted source is a diagram nobody else can change.
+
+```bash
+"/c/Program Files/draw.io/draw.io.exe" --export --format png \
+  --scale 2 --border 10 --output docs/assets/<name>.png \
+  docs/assets/<name>.drawio
+```
+
+Which format to reach for follows `base/core/docs.md`: Mermaid for sequence
+diagrams, which is why chapter 6's five scenarios stay inline; draw.io for
+the structural ones, where the layout carries meaning a generated graph
+will not hold still.
+
+Hand-authoring the XML has one trap that costs an afternoon. An `mxCell`
+with `edge="1"` and no `<mxGeometry>` child is dropped from the render
+silently — no warning, no error, exit status zero, and the export simply
+comes back missing that arrow. Give every edge a geometry element even when
+it has no waypoints:
+
+```xml
+<mxCell id="e1" edge="1" parent="1" source="a" target="b" style="...">
+  <mxGeometry relative="1" as="geometry" />
+</mxCell>
+```
+
+Read the exported PNG before committing. Labels are placed at the midpoint
+of the path, so two edges sharing a channel put their labels on top of each
+other, and the XML gives no sign of it.
+
 ## 5. Releases
 
 Not published to PyPI. Consumers clone the repository or add it as a

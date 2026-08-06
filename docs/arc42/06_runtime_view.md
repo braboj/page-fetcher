@@ -6,26 +6,7 @@ Every scenario below is a path through one structure. A transport either
 returns a body that classification accepts, or it hands control to the next
 rung.
 
-```text
-http (plain request, ~1s)
-  +- accepted -> done
-  +- not-found / gone -> terminal, no further rung
-  +- bot wall -> skip js -> headed
-  |                           |
-  +- other failure -> js      |
-                       |      |
-js (~5-9s)             |      |
-  +- accepted -> done  |      |
-  +- failure -> headed <------+
-                |
-headed (~6-8s, needs a display)
-  +- accepted -> done
-  +- failure -> headless
-                |
-headless (~18-24s)
-  +- accepted -> done
-  +- failure -> nothing came back
-```
+![Escalation Ladder](../assets/06_escalation_ladder.png)
 
 | Transport | Engine | Cost | Display | Serves |
 | ----------- | -------- | ------ | --------- | -------- |

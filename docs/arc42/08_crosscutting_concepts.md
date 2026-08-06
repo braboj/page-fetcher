@@ -17,6 +17,11 @@ script-heavy and style-heavy wrappers. The raw form catches markers bound
 to markup, a title or a script source; the de-tagged form catches prose
 broken across tags.
 
+The order the questions are asked in is what decides the verdict — the
+first one answered yes wins, and only one of the four outcomes is a page.
+
+![Classification Decision](../assets/08_classification_decision.png)
+
 | Concept | Implementation |
 | --------- | ---------------- |
 | Wall, challenge or throttle stub | `BOT_DETECTION_PATTERNS`, plus a short body carrying a meta-refresh |

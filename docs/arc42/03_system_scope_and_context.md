@@ -8,20 +8,7 @@ URLs and returns page content, and it keeps what it retrieved so the same
 request need not be made twice. Everything below is in domain terms;
 protocols and directions follow in the Technical Context.
 
-```mermaid
-graph LR
-    R([Researcher]):::human -->|URLs, desired form| PF[pagefetch]
-    C[Consuming program]:::system -->|URLs, desired form| PF
-    PF -->|page content, transport used| R
-    PF -->|page content, transport used| C
-    PF -->|page request| S[Target web site]:::system
-    S -->|page, or a wall in its place| PF
-    PF -->|render this page| B[Local browser]:::system
-    B -->|rendered page| PF
-    PF <-->|retained page bodies| F[(Local file store)]:::system
-    classDef human fill:#fff,stroke:#333,stroke-width:2px
-    classDef system fill:#f6f6f6,stroke:#666
-```
+![Business Context Diagram](../assets/03_business_context_diagram.png)
 
 | Partner | Input to pagefetch | Output from pagefetch |
 | --------- | -------------------- | ----------------------- |
@@ -37,6 +24,8 @@ pagefetch is a library and a command-line entry point running inside the
 caller's own process. It has no server, no port, and no background
 activity: everything happens within a call. Four channels cross the
 process boundary.
+
+![Technical Context Diagram](../assets/03_technical_context_diagram.png)
 
 ### External Technical Interfaces
 

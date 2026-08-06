@@ -82,6 +82,11 @@ of truth. Agent-specific placement rules:
   subsection keyed by its ID, never in the cell (ADR-019).
   Decisions go in `docs/decisions/`, and no chapter body cites one —
   chapter 9 is the index and gains a row per record
+- A chapter diagram goes in `docs/assets/` as a `.drawio` source with its
+  exported `.png` beside it, named for the chapter that embeds it; both
+  are committed. Sequence diagrams stay inline as Mermaid. Never commit
+  an export without reading it — a hand-authored edge missing its
+  `<mxGeometry>` is dropped from the render silently (PLAYBOOK §4.7)
 - The package is `src/pagefetch/` and the suite is `tests/`, per
   `python-lib.md` (ADR-010). A checkout with nothing installed cannot
   import the package — that is the layout working, not a broken clone.

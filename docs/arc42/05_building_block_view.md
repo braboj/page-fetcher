@@ -15,22 +15,7 @@ the host is reachable only from the transport that needs it.
 
 ## Level 1: Module Decomposition
 
-```mermaid
-graph TD
-    CLI[Entry point<br/>command line] --> T[Transport<br/>escalation ladder]
-    CLI --> ST[Store]
-    CLI --> CL[Classification]
-    T --> CL
-    T --> ST
-    T --> H[Host cleanup]
-    ST --> K[Contract]
-    T --> K
-    D[Test double] --> K
-    D --> CL
-    CLI --> K
-    classDef contract fill:#f6f6f6,stroke:#333,stroke-width:2px
-    class K contract
-```
+![Level 1 Building Blocks](../assets/05_level1_building_blocks.png)
 
 | Building block | Responsibility |
 | ---------------- | ---------------- |

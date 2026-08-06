@@ -191,6 +191,7 @@ fetcher = NetworkFetcher(cache=FileCache(cache_dir=Path("/my/cache")))
 | `examples/`                  | Runnable usage patterns, with their own index      |
 | `tools/`                     | Repository checks the linter cannot express        |
 | `docs/arc42/`                | Architecture documentation, one file per chapter   |
+| `docs/assets/`               | Chapter diagrams — draw.io source and PNG export   |
 | `docs/decisions/`            | Architecture Decision Records                      |
 | `docs/audits/`               | 360-degree audit reports, one per run              |
 | `docs/solid-ai-templates/`   | Quality conventions — a git submodule              |
