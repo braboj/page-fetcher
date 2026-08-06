@@ -15,35 +15,27 @@
 
 ## Architecture Approach
 
-- **Escalate on evidence, do not predict.** Which transport a URL needs is
-  decided by what the previous transport returned, never by a per-site
-  table or a guess made before the request. Nothing has to be known about
-  a site in advance, and a site that changes its protection is followed
-  without a code change.
-- **Ordered by cost, named by requirement.** Transports run cheapest
-  first. They are named for what they ask of the caller — a display, or
-  nothing — rather than for the engine behind them, so replacing an engine
-  changes no name a caller has written down. The headed transport running
-  before the headless one reads backwards until the costs are compared:
-  attaching to a real browser is cheaper than patching one for stealth and
-  launching it cold.
+- **Escalate on evidence, do not predict.** What a URL needs is decided by
+  what the previous transport returned, never by a per-site table, so a
+  site that changes its protection is followed without a code change.
+- **Ordered by cost, named by requirement.** Transports run cheapest first
+  and are named for what they ask of the caller — a display, or nothing —
+  not for the engine behind them. Headed before headless reads backwards
+  until the costs are compared: attaching to a real browser is cheaper
+  than patching one for stealth and launching it cold.
 - **Skip a rung that would fail identically.** A bot wall on the plain
   transport skips the JavaScript one, which presents the same client
-  signature and meets the same wall. The ladder is an ordering, not an
-  obligation to try everything.
+  signature and meets the same wall.
 - **End where escalation cannot help.** A not-found or gone body ends the
-  fetch immediately. Every remaining transport would retrieve the same
-  page, and retrying would spend a browser launch to confirm it.
-- **Degrade rather than fail.** A transport whose library is not installed
-  removes itself from the ladder and says so. The package is useful with
-  no engines at all, which is also the shape of the default install.
-- **One browser for a batch, not one per URL.** A batch decides once
-  whether it needs a browser, keeps it for the whole run, and releases it
-  in a path that runs whatever else happens.
-- **Pure classification, isolated side effects.** The rules deciding what
-  a body is are pure functions of that body, with no I/O and no
-  configuration. Everything that touches the host — process enumeration,
-  signalling — is confined to one module that does nothing else.
+  fetch; every remaining transport would retrieve the same page.
+- **Degrade rather than fail.** A transport whose library is absent removes
+  itself from the ladder and says so — which is also the shape of the
+  default install.
+- **One browser for a batch, not one per URL.** A batch decides once, keeps
+  the browser for the whole run, and releases it on every exit path.
+- **Pure classification, isolated side effects.** The rules deciding what a
+  body is are pure functions of that body. Everything touching the host is
+  confined to one module that does nothing else.
 
 ## Quality Approach
 
