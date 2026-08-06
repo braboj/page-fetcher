@@ -2,28 +2,108 @@
 
 ## Risks
 
+A risk is a way the system can fail that has not happened yet. A weakness
+that is already present is debt; one that is permanent and accepted is a
+scope limitation, recorded in System Scope and Context rather than here.
+Numbers are not reused — a resolved entry is removed and its number retires
+with it.
+
 | ID | Risk | Probability | Impact | Mitigation |
 | ---- | ------ | ------------- | -------- | ------------ |
-| R-1 | A wrong "not a page" verdict is silent and final: the caller gets no content and a non-zero status for a page that exists, indistinguishable from a page that does not. Nothing detects it afterwards, and no cheaper correction exists than fetching the URL by hand | Low | High | Ambiguous phrasing counts only below the size floor; every pattern carries a negative case on real content; a report of a lost page is triaged as a correctness defect rather than a usability one |
-| R-2 | Classification is pattern-based against sites that change their protection without notice. A wall in a shape no pattern matches is returned as content, stored, and served from the store from then on | Medium | Medium | The size floor catches short stubs whatever they say; new shapes arrive as defects and are added with a positive and a negative case |
-| R-3 | Completeness is never assessed. A page over the floor whose content renders in JavaScript comes back partial and is stored under the key a complete body would have used | Certain | Medium | Stated as a limitation in the README and in the crosscutting concepts; a caller who needs completeness names the JavaScript transport. Reopening it needs a corpus of pages captured by someone other than whoever proposes the rule, which the no-network suite cannot produce from inside itself |
-| R-4 | The user agent is a pinned browser version string. It ages, and a version far enough behind real browsers becomes a signal in itself; it is a constructor argument with no environment variable or flag behind it, so a consumer cannot change it from the command line | Medium | Medium | Bump it alongside the engines; promote it to configuration if a second value ever needs one |
-| R-5 | Challenges requiring a human gesture block every transport. No rung clears one, and none can | Certain | Low | Recorded as a standing limitation. Whether challenge frequency tracks request velocity is an open question and the cheapest one to answer |
-| R-6 | Orphaned-browser cleanup does not run outside Windows: on other platforms a browser that outlives its fetch keeps running | Medium | Low | Accepted. Each fetch releases its own browser first, and leaving one behind is the safe direction to fail in |
-| R-7 | The engine behind the headed transport is AGPL-3.0. A consumer who installs it and then distributes a network service built on that transport takes on section 13 | Low | Medium | The engine is optional, un-vendored and imported inside the transport, so it reaches nobody who does not install it; the obligation is stated in the constraints and in the README |
-| R-8 | There is no rate limiting, backoff or robots.txt handling. A consumer looping over a long list is indistinguishable from a scraper, and the package offers nothing to moderate that | Medium | Medium | Scope is stated as a limitation; batch mode is sequential and single-session by construction, so the package cannot be made fast by configuration alone |
+| R01 | A wrong "not a page" verdict is silent and terminal | Low | High | Ambiguous wording counts only below the size floor |
+| R02 | A wall in a shape no pattern matches is returned as content and stored | Medium | Medium | The size floor catches short stubs whatever they say |
+| R03 | The pinned user agent ages into a bot signal of its own | Medium | Medium | Bumped alongside the engines |
+| R04 | Orphaned-browser cleanup does not run outside Windows | Medium | Low | Accepted; each fetch releases its own browser first |
+| R05 | Distributing a service built on the headed transport takes on AGPL section 13 | Low | Medium | The engine is optional, un-vendored, and imported inside the transport |
+| R06 | A consumer looping over a long list is indistinguishable from a scraper | Medium | Medium | Batch mode is sequential and single-session by construction |
+
+### R01
+
+The caller gets no content and a non-zero status for a page that exists,
+indistinguishable from the same answer for a page that does not. Nothing
+detects the mistake afterwards, and no correction is cheaper than fetching
+the URL by hand.
+
+Beyond the size floor, every pattern carries a negative case proving it does
+not fire on real content, and a report of a lost page is triaged as a
+correctness defect rather than a usability one.
+
+### R02
+
+Classification is pattern-based against sites that change their protection
+without notice. A body that is a wall but matches nothing is returned to the
+caller, stored, and served from the store from then on.
+
+New shapes arrive as defect reports and are added with a positive and a
+negative case. The floor is what holds while a shape is still unknown.
+
+### R03
+
+The user agent is a constructor argument with no environment variable or
+flag behind it, so a consumer cannot change it from the command line. A
+version string far enough behind real browsers is a signal in itself.
+
+Promoting it to configuration is deferred until a second value needs one.
+
+### R05
+
+The engine reaches nobody who does not install it, and the obligation is
+stated in Architecture Constraints and in the README. What section 13 covers
+is distribution of a network service built on that transport, not use of it.
+
+### R06
+
+The package offers no rate limiting, backoff or robots.txt handling, and
+none is planned — that scope limit is stated in System Scope and Context.
+The risk is what a consumer does with the package regardless: a long loop
+looks like collection to the site serving it.
+
+Nothing in the package makes that faster. Batch mode holds one browser for
+one sequential pass, so the ceiling is set by construction rather than by
+configuration.
 
 ## Technical Debt
 
 | ID | Debt | Impact | Effort |
 | ---- | ------ | -------- | -------- |
-| TD-1 | An automatic batch fetches its first URL twice. The probe deciding whether to hold a browser calls the plain transport directly, neither reading nor writing the store, and the loop then fetches the same URL again. A batch whose URLs are all stored still costs one request | Low | Low |
-| TD-2 | Naming several transports at once resolves to the most escalated one rather than being rejected. Pinned by test as the current behaviour, but never decided — whether it should be an error is open | Low | Trivial |
-| TD-3 | The JavaScript transport writes a screenshot into the store directory as a side effect of an ordinary text fetch, whether or not a screenshot was asked for | Low | Trivial |
-| TD-4 | The abstract page source declares byte download and screenshot capture; the command line exposes neither, so both are library-only surface | Low | Low |
-| TD-5 | The store key scheme carries no version marker. A change to the digest, its length or the suffixes orphans every existing entry silently rather than failing, which is why the scheme is treated as frozen | Low | Medium |
-| TD-6 | The coverage floor deliberately sits a few points below the measured figure, as headroom for the platforms covering different branches. The ratchet therefore always lags what the suite reaches | Low | Trivial |
-| TD-7 | Browser transport bodies are the bulk of what is uncovered and are validated by hand, so a regression inside one is found by a person running it rather than by the gate | Medium | High |
+| TD01 | An automatic batch fetches its first URL twice | Low | Low |
+| TD02 | Naming several transports at once resolves to the most escalated rather than being rejected | Low | Trivial |
+| TD03 | The JavaScript transport writes a screenshot as a side effect of an ordinary text fetch | Low | Trivial |
+| TD04 | Byte download and screenshot capture are declared on the interface but reach no command line | Low | Low |
+| TD05 | The store key scheme carries no version marker | Low | Medium |
+| TD06 | The coverage ratchet always lags what the suite reaches | Low | Trivial |
+| TD07 | Browser transport bodies are validated by hand, not by the gate | Medium | High |
+
+### TD01
+
+The probe deciding whether to hold a browser calls the plain transport
+directly, neither reading nor writing the store, and the loop then fetches
+the same URL again. A batch whose URLs are all stored still costs one
+request.
+
+### TD02
+
+Pinned by test as the current behaviour, but never decided. Whether naming
+several transports should instead be an error is open.
+
+### TD05
+
+A change to the digest, its length or the suffixes orphans every existing
+entry silently rather than failing. That is why the scheme is treated as
+frozen.
+
+### TD06
+
+The floor deliberately sits a few points below the measured figure, as
+headroom for the platforms covering different branches of the process
+cleanup. The lag is the cost of enforcing one number on every matrix leg.
+
+### TD07
+
+They are the bulk of what is uncovered, so a regression inside one is found
+by a person running it rather than by the gate. Raising this needs a headed
+browser in the environment that runs the suite, which is the reason it has
+not been.
 
 ## Evidence Base
 
