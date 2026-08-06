@@ -45,9 +45,7 @@ decide about it, or live with what it does to them.
 
 Functional requirements state observable behaviour: what the package does,
 not how it does it. A library, a file layout, or the rule behind a verdict
-is design and belongs elsewhere. Transports and retained content still
-appear here, because a caller observes both: which transport answered, and
-whether a page came back without a request being made.
+is design and belongs elsewhere.
 
 | ID | Description |
 | ---- | ------------- |
@@ -73,10 +71,10 @@ Goals are in priority order, highest first.
 
 | ID | Quality | Goal | Motivation |
 | ------ | --------- | ------ | ------------ |
-| QG01 | Correctness | A page that exists and is reachable is never reported as absent | A wrong verdict here is silent and terminal: it is indistinguishable from a page that genuinely is not there |
-| QG02 | Functional Correctness | A body that is a bot wall, a throttle stub or a not-found page is never returned to the caller and never survives in the store | These bodies pass for content on inspection, and a stored one poisons every later fetch of that URL until something deletes it |
-| QG03 | Portability | The package installs and runs with the standard library alone, on Linux and on Windows, from Python 3.10 upwards | The default install is what every consumer gets, and the one with no browser to fall back to |
-| QG04 | Reliability | A failure inside one transport ends that transport and no more: the next one still runs, and a browser that was launched is still released | Each transport is a third-party engine with its own failure modes; one that raises through the ladder costs the whole fetch and leaves a browser behind |
-| QG05 | Security | A URL can only ever cause an HTTP or HTTPS request, and a running process is only ever signalled when it descends from this one | Both guard against a caller's input rather than the caller: URLs arrive unexamined, and a sampling-based cleanup would kill somebody's open browser |
-| QG06 | Performance Efficiency | A static page costs one request, a browser is launched only when a response demands one, and a retained page costs none | The transports differ by more than an order of magnitude in cost, so a speculative browser launch dominates everything else the package does |
-| QG07 | Maintainability | A detection pattern, a transport, or a configuration value is added in one place, and the definition of a failed body has exactly one home | Sites change, so the classification rules change most; two copies of the junk rule would drift into a store that keeps what a sweep deletes |
+| QG01 | Correctness | A page that exists and is reachable is never reported as absent | An incorrect failure verdict produces the same result as a genuinely missing page, so the caller has no means of detecting it |
+| QG02 | Functional Correctness | A body that is a bot wall, a throttle stub or a not-found page is never returned to the caller and never survives in the store | A wall or error body can be mistaken for content, and once retained it is served in place of the real page until something removes it |
+| QG03 | Portability | The package installs and runs with the standard library alone, on Linux and on Windows, from Python 3.10 upwards | The default installation is the most common one, and it is the one with no browser transport available as a fallback |
+| QG04 | Reliability | A failure inside one transport ends that transport and no more: the next one still runs, and a browser that was launched is still released | Each transport wraps a third-party engine with its own failure modes, and an exception escaping one would end the whole fetch and leave its browser process running |
+| QG05 | Security | A URL can only ever cause an HTTP or HTTPS request, and a running process is only ever signalled when it descends from this one | Both boundaries constrain what a caller's input can cause, since URLs reach the fetcher unexamined and cleanup based on sampling alone would terminate a browser the user had opened |
+| QG06 | Performance Efficiency | A static page costs one request, a browser is launched only when a response demands one, and a retained page costs none | The transports differ in cost by more than an order of magnitude, so launching a browser the response did not require determines the runtime of a fetch |
+| QG07 | Maintainability | A detection pattern, a transport, or a configuration value is added in one place, and the definition of a failed body has exactly one home | Classification rules change most often, because the sites they describe change, and a second definition of a failed body would diverge from the first |
