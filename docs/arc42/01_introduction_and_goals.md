@@ -25,10 +25,13 @@ pages and keeping them on disk — not for bulk collection.
 
 ## Stakeholders
 
+Roles and people, not systems: everyone who has to work with the package,
+decide about it, or live with what it does to them.
+
 | Role | Expectation |
 | ------ | ------------- |
 | **Researcher at a terminal** | Gets page content on standard output and nothing else there, so the output can be redirected into a file: a failed fetch writes nothing and exits non-zero, rather than leaving an empty file that reads like a result |
-| **Consuming program** | Depends on a small, stable interface it can substitute in its own tests, and on an install that pulls in nothing |
+| **Developer integrating the library** | Writes against a small, stable interface, substitutes it in their own tests, and takes on no dependency by installing it |
 | **Maintainer** | Adds a detection pattern or a transport in one place, and can tell from the record why the current shape is what it is |
 | **Operator of a fetched site** | Sees requests one at a time from a single machine, and no more than the caller asked for: no concurrency, no retry loop, no scheduler. Escalation is the only reason one URL is requested more than once |
 
