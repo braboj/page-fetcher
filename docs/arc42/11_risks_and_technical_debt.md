@@ -15,7 +15,7 @@ with it.
 | R03 | The pinned user agent ages into a bot signal of its own | Medium | Medium | Bumped alongside the engines |
 | R04 | Orphaned-browser cleanup does not run outside Windows | Medium | Low | Accepted; each fetch releases its own browser first |
 | R05 | Distributing a service built on the headed transport takes on AGPL section 13 | Low | Medium | The engine is optional, un-vendored, and imported inside the transport |
-| R06 | A consumer looping over a long list is indistinguishable from a scraper | Medium | Medium | Batch mode is sequential and single-session by construction |
+| R06 | A consumer loops over a long list without adding the pacing the package leaves to it | Medium | Medium | Batch mode is sequential and single-session by construction |
 
 ### R01
 
@@ -55,8 +55,9 @@ is distribution of a network service built on that transport, not use of it.
 
 The package offers no rate limiting, backoff or robots.txt handling, and
 none is planned — that scope limit is stated in System Scope and Context.
-The risk is what a consumer does with the package regardless: a long loop
-looks like collection to the site serving it.
+Supplying them is the caller's half of the arrangement, so the risk is a
+caller that does not: an unpaced loop looks like collection to the site
+serving it, whatever it was written for.
 
 Nothing in the package makes that faster. Batch mode holds one browser for
 one sequential pass, so the ceiling is set by construction rather than by

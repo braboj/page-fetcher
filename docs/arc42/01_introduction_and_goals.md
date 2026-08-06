@@ -6,10 +6,15 @@ came back before accepting it: a bot wall, a throttle stub and a "page not
 found" body all arrive looking like a page, often with a success status.
 pagefetch recognizes those from the body alone and escalates through
 progressively more capable and more expensive transports until one returns
-something that is actually a page.
+something that is actually a page. Escalation answers a response that
+failed; a caller who needs a page assembled in the browser names that
+transport instead.
 
-It is built for research use — reading a handful of product or reference
-pages and keeping them on disk — not for bulk collection.
+It is built for reading a handful of pages at a time: research data, or a
+site owner checking how far an automated client gets against their own
+protection. It paces nothing itself — no rate limiting, no backoff, no
+scheduling — so a caller needing those supplies them and drives pagefetch
+one URL at a time.
 
 ## Goals
 
@@ -33,7 +38,8 @@ decide about it, or live with what it does to them.
 | **Researcher at a terminal** | Gets page content on standard output and nothing else there, so the output can be redirected into a file: a failed fetch writes nothing and exits non-zero, rather than leaving an empty file that reads like a result |
 | **Developer integrating the library** | Writes against a small, stable interface, substitutes it in their own tests, and takes on no dependency by installing it |
 | **Maintainer** | Changes the package itself — a detection pattern, a transport, a configuration value — each in one place, and finds the reasoning behind the current shape written down rather than having to reconstruct it |
-| **Operator of a fetched site** | Sees requests one at a time from a single machine, and no more than the caller asked for: no concurrency, no retry loop, no scheduler. Escalation is the only reason one URL is requested more than once |
+| **Site owner testing their protection** | Learns which transport got through, or that none did — a site no rung passes is a result, not a failure. A challenge needing a human gesture is the ceiling: nothing here attempts one |
+| **Operator of a site someone else fetches** | Sees requests one at a time from a single machine, and no more than the caller asked for: no concurrency, no retry loop, no scheduler. Escalation is the only reason one URL is requested more than once |
 
 ## Functional Requirements
 
