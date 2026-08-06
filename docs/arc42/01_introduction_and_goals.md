@@ -32,7 +32,7 @@ decide about it, or live with what it does to them.
 | ------ | ------------- |
 | **Researcher at a terminal** | Gets page content on standard output and nothing else there, so the output can be redirected into a file: a failed fetch writes nothing and exits non-zero, rather than leaving an empty file that reads like a result |
 | **Developer integrating the library** | Writes against a small, stable interface, substitutes it in their own tests, and takes on no dependency by installing it |
-| **Maintainer** | Adds a detection pattern or a transport in one place, and can tell from the record why the current shape is what it is |
+| **Maintainer** | Changes the package itself — a detection pattern, a transport, a configuration value — each in one place, and finds the reasoning behind the current shape written down rather than having to reconstruct it |
 | **Operator of a fetched site** | Sees requests one at a time from a single machine, and no more than the caller asked for: no concurrency, no retry loop, no scheduler. Escalation is the only reason one URL is requested more than once |
 
 ## Functional Requirements
