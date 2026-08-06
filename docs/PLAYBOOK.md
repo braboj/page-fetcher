@@ -370,8 +370,9 @@ carve-out needs its reasoning recorded there first.
 ### 3.7 Manual verification of the browser tiers
 
 Tier 2–4 method bodies need a headed Chrome and cannot run in CI. Before
-changing one, verify by hand against a site known to need it — the README's
-"Sites tested" table lists which site exercises which tier.
+changing one, verify by hand against a site known to need it — "Sites
+Exercised by Hand", under Test Coverage in `docs/arc42/`
+`10_quality_requirements.md`, lists which site exercises which tier.
 
 ## 4. Maintenance
 

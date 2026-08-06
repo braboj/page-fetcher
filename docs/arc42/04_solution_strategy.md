@@ -48,3 +48,32 @@
 | Security | The scheme check runs at every public entry point, before a request is made or a browser is started, so no code path reaches a transport without it. Cleanup requires both that a process is new since the launch and that it descends from this one; where ancestry cannot be established, nothing is tracked and nothing is killed |
 | Performance Efficiency | The plain transport answers the common case in one request. A browser is launched only after a response says one is needed, and a batch launches at most one. A stored body is served without any request |
 | Maintainability | Patterns live in one module of pure predicates, transports in one module with the escalation order beside them, and the junk definition in a single function that the read path and the sweep both call. Configuration is one environment variable and one flag, validated with the standard library, because a typed settings object would be a dependency for one value |
+
+## How the Ladder Was Tuned
+
+The ordering above was arrived at by measurement, one version at a time,
+rather than designed in advance. The figures below are what was measured
+when each change landed. They are a record of the direction each change
+moved things, not a current benchmark — the engines and the sites have both
+moved since.
+
+- **v1** — one browser engine, waiting for network idle. Around 5-9s
+  everywhere, and failure on anything bot-protected.
+- **v2** — three transports. Static pages around 1s; protected pages
+  around 27s.
+- **v3** — skip the JavaScript rung on a wall, wait for the document
+  rather than the network, and poll instead of sleeping. Protected pages
+  fell to 18-24s.
+- **v4** — one browser per batch instead of one per URL. Three protected
+  pages went from about 60s to about 27s.
+- **v5** — a debug-protocol engine added and preferred over the stealth
+  one. The same three pages went from 27s to 16s.
+- **v6** — refactored from a single script into this package. Behaviour
+  preserved.
+- **v7** — throttle pages stopped reaching the store: broader wall
+  patterns and the size floor, so short stubs escalate rather than being
+  kept.
+- **v8** — not-found handling and validity by content. A not-found body is
+  final, and a stored one heals itself on read. No expiry.
+- **v9** — stored junk is deleted rather than merely ignored when it is
+  scrubbed, and a sweep does the same in bulk.
