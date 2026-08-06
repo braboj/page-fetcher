@@ -68,13 +68,9 @@ is design and belongs elsewhere.
 
 ## Quality Goals
 
-Quality goals name the properties the architecture is answerable for, where
-the requirements above name what it does. Each states a degree rather than
-a behaviour — a universal no single case can settle, a measure of what a
-fetch costs, or a property of the source rather than the running system.
-Anything a single observation can confirm is a requirement and belongs
-above. What remains here is what design decisions are traded off against,
-in priority order, highest first.
+Requirements say what the package does; quality goals say how well. Only
+the few that shape the design belong here. If a single test can settle it,
+it is a requirement and belongs in the table above. Highest priority first.
 
 | ID | Quality | Goal | Motivation |
 | ------ | --------- | ------ | ------------ |
