@@ -43,25 +43,27 @@ decide about it, or live with what it does to them.
 
 ## Functional Requirements
 
-Requirements state observable behaviour only: what the package does, not
-which library does it, where anything is kept, or how a body is judged to
-be one thing rather than another.
+Functional requirements state observable behaviour: what the package does,
+not how it does it. A library, a file layout, or the rule behind a verdict
+is design and belongs elsewhere. Transports and retained content still
+appear here, because a caller observes both: which transport answered, and
+whether a page came back without a request being made.
 
 | ID | Description |
 | ---- | ------------- |
 | FR01 | The package shall fetch the content of an HTTP or HTTPS URL and return it either as raw markup or as markup stripped to text. |
 | FR02 | The package shall reject a URL whose scheme is neither HTTP nor HTTPS, at every entry point, before any request is issued or any browser is launched. |
-| FR03 | The package shall classify a response body as a bot wall, as a not-found or gone page, or as too short to be a real page, without reference to the transport that produced it. |
+| FR03 | The package shall classify a response body as a bot wall, as a not-found or gone page, or as too short to be a real page. |
 | FR04 | The package shall retry a classified-failed response through a more capable transport, and shall stop at the first transport that returns a body it does not classify as failed. |
 | FR05 | The package shall treat a not-found or gone verdict as final and shall not retry it through another transport. |
 | FR06 | The package shall let a caller name one transport, in which case a classified-failed response is a failure rather than a reason to escalate. |
 | FR07 | The package shall report which transport produced the returned content, including when it came from the store rather than the network. |
-| FR08 | The package shall fetch a list of URLs through one browser session and return one result per URL in the order requested. |
-| FR09 | The package shall store a returned body on disk under the URL and the requested form, and shall serve a later request for the same pair from that store. |
+| FR08 | The package shall fetch a list of URLs and return one result per URL in the order requested. |
+| FR09 | The package shall retain a returned body under the URL and the requested form, and shall serve a later request for the same pair from what it retained, without issuing a new request. |
 | FR10 | The package shall neither store nor serve a body it classifies as failed, and shall remove such an entry from the store when it encounters one. |
 | FR11 | The package shall sweep the store of such entries on request, and shall be able to report what it would remove without removing it. |
 | FR12 | The package shall run when no optional browser library is installed, skipping each transport whose library is absent and reporting the skip. |
-| FR13 | The package shall terminate only browser processes it started, and only those whose descent from the running process can be established. |
+| FR13 | The package shall terminate only browser processes it started, and shall terminate none where it cannot establish that it started them. |
 | FR14 | The command-line entry point shall distinguish, in its exit status, every URL returning content from none returning content from some returning content. |
 | FR15 | The package shall expose a substitutable page source so that consuming code can be exercised with neither a network nor a browser. |
 
