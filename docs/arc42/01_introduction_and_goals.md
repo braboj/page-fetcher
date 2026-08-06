@@ -2,14 +2,11 @@
 
 pagefetch retrieves the content of a web page and hands it back as text or
 HTML. What distinguishes it from a plain HTTP request is that it reads what
-came back before accepting it. Most pages are static and arrive in about a
-second over a plain request; some render in JavaScript, and some answer an
-automated request with a bot wall, a throttle stub, or a "page not found"
-body served with a success status. pagefetch recognizes those answers from
-the body alone and retries through progressively more capable and more
-expensive transports until one of them returns something that looks like a
-real page. A caller who knows better can name the transport and skip the
-ladder entirely.
+came back before accepting it: a bot wall, a throttle stub and a "page not
+found" body all arrive looking like a page, often with a success status.
+pagefetch recognizes those from the body alone and escalates through
+progressively more capable and more expensive transports until one returns
+something that is actually a page.
 
 It is built for research use — reading a handful of product or reference
 pages and keeping them on disk — not for bulk collection.
