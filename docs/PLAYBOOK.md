@@ -632,6 +632,13 @@ Read the exported PNG before committing. Labels are placed at the midpoint
 of the path, so two edges sharing a channel put their labels on top of each
 other, and the XML gives no sign of it.
 
+A diagram whose layout is arithmetic rather than judgement — the quality
+tree centres each parent on the span of its children across 38 nodes — can
+be laid out by a throwaway script. Do not commit that script. The `.drawio`
+is the editable source, and a generator that rewrites it takes that role
+away from anyone who opens the file in draw.io. ADR-020 records the
+reasoning.
+
 ## 5. Releases
 
 Not published to PyPI. Consumers clone the repository or add it as a
