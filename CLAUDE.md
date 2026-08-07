@@ -87,7 +87,14 @@ of truth. Agent-specific placement rules:
   are committed. Sequence diagrams stay inline as Mermaid. Never commit
   an export without reading it — a hand-authored edge missing its
   `<mxGeometry>` is dropped from the render silently (ADR-020,
-  PLAYBOOK §4.7)
+  PLAYBOOK §4.7). Reading is not sufficient on its own: confirm the
+  PNG's dimensions match a scale-2 export, because resolution is not
+  visible in the render and a scale-1 export reads as a smaller file
+  and so as an improvement (#151)
+- A chapter 5 building block is named for the role it plays and states
+  the module implementing it, in both the level 1 table and the level 2
+  heading. Where the role and the module use different words, the
+  chapter says why (ADR-025)
 - A quality goal earns its row only if no single observation can confirm
   it; anything one test settles is a functional requirement. Each names an
   ISO/IEC 25010:2023 characteristic and sub-characteristic, and leads with
