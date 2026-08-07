@@ -64,7 +64,7 @@ sub-characteristics are ISO/IEC 25010. Highest priority first.
 | ---- | ---------------- | -------------------- | ------ |
 | QG01 | Functional Suitability | Functional correctness | No page that exists is lost to a wrong verdict |
 | QG02 | Functional Suitability | Functional completeness | Every wall and error page is recognised, not just the known ones |
-| QG03 | Flexibility | Adaptability | Behaviour is correct on either platform and with any set of engines installed |
+| QG03 | Flexibility | Adaptability | Behaviour is correct on every supported operating system, Python version and set of installed engines |
 | QG04 | Performance Efficiency | Resource utilization | No request or browser is spent that the response did not require |
 | QG05 | Maintainability | Modifiability | Every rule has exactly one place to change |
 
