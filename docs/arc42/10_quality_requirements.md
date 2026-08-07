@@ -4,57 +4,10 @@
 
 The tree groups every quality requirement by ISO/IEC 25010 characteristic
 and sub-characteristic. A goal identifier marks the ones Section 1 names as
-driving the architecture; the rest are checked here and nowhere else. E```text
-Quality
-|
-+-- Functional Suitability
-|     +-- Functional correctness (QG01)
-|     |     +-- A reachable page is never reported as absent
-|     |     +-- A phrase in ordinary body copy cannot produce a final verdict
-|     |     |   on a full-size page
-|     |     +-- No classification path returns a wrong verdict more readily on
-|     |         a host that has no browser to fall back to
-|     +-- Functional completeness (QG02)
-|           +-- No wall, throttle stub or not-found body reaches a caller
-|           +-- No such body survives being read from the store
-|           +-- The read path and the sweep reach the same verdict on every body
-|
-+-- Flexibility
-|     +-- Adaptability (QG03)
-|           +-- The package imports and fetches with no third-party package
-|           |   present
-|           +-- Both supported Python versions and both operating systems build
-|           +-- An absent engine is reported, never raised
-|
-+-- Reliability
-|     +-- Fault tolerance
-|           +-- A failure inside a transport costs that rung, not the fetch
-|           +-- A batch releases every handle it took, on every exit path
-|           +-- A release step that fails does not prevent the steps after it
-|
-+-- Security
-|     +-- Resistance
-|     |     +-- No URL can cause a request on a scheme other than HTTP or HTTPS
-|     +-- Integrity
-|           +-- No process is signalled unless it descends from this one
-|           +-- Nothing is signalled where ancestry cannot be established
-|
-+-- Performance Efficiency
-|     +-- Resource utilization (QG04)
-|           +-- A static page costs exactly one request
-|           +-- A browser starts only after a response has asked for one
-|           +-- A batch starts at most one browser
-|           +-- A page already stored costs no request
-|
-+-- Maintainability
-      +-- Modifiability (QG05)
-            +-- A detection pattern is added in one list, with a positive and
-            |   a negative case
-            +-- The definition of junk exists exactly once
-            +-- Replacing an engine changes no caller-visible name
-```
-      +-- Replacing an engine changes no caller-visible name
-```
+driving the architecture; the rest are checked here and nowhere else. Each
+leaf is worded so that a single observation can falsify it.
+
+![Quality Tree](../assets/10_quality_tree.png)
 
 ## Quality Scenarios
 
