@@ -4,10 +4,7 @@
 
 pagefetch is one importable package with a command-line entry point over
 it. There is no server, no daemon and no build step: the whole system is
-six modules that run inside the caller's process. Section 3 describes what
-surrounds it; this chapter decomposes what is inside. The README's project
-structure section is the source of truth for where the files sit — what
-follows is what each part is responsible for and what depends on what.
+six modules that run inside the caller's process.
 
 The shape worth carrying into the detail: dependencies point inward at a
 contract module that imports nothing, and the one module allowed to touch
@@ -17,15 +14,21 @@ the host is reachable only from the transport that needs it.
 
 ![Level 1 Building Blocks](../assets/05_level1_building_blocks.png)
 
-| Building block | Responsibility |
-| ---------------- | ---------------- |
-| **Contract** | The interface every other part is written against: the abstract page source, the options a fetch takes, the result it returns, and the two enumerations naming content forms and transports. Imports nothing from the package |
-| **Classification** | Pure predicates deciding what a response body is, and the pattern lists behind them. No I/O, no configuration, no imports from the package |
-| **Transport** | The four transports and the escalation order over them, plus the batch session, scheme validation and response decoding |
-| **Store** | Retained page bodies on disk: key derivation, read, write, delete, enumeration and the sweep |
-| **Host cleanup** | Process enumeration and termination for browsers that outlive their fetch. The only platform-specific, side-effectful part of the package |
-| **Test double** | A page source backed by a map of URLs to bodies, recording what it was asked for. Part of the published surface, not a test fixture |
-| **Entry point** | Argument parsing, output routing and exit status over the transport module. Holds no fetching logic |
+| Building block | Module | Responsibility |
+| ---------------- | -------- | ---------------- |
+| **Contract** | `source.py` | The interface every other part is written against: the abstract page source, the options a fetch takes, the result it returns, and the two enumerations naming content forms and transports. Imports nothing from the package |
+| **Classification** | `detection.py` | Pure predicates deciding what a response body is, and the pattern lists behind them. No I/O, no configuration, no imports from the package |
+| **Transport** | `network.py` | The four transports and the escalation order over them, plus the batch session, scheme validation and response decoding |
+| **Store** | `cache.py` | Retained page bodies on disk: key derivation, read, write, delete, enumeration and the sweep |
+| **Host cleanup** | `chrome.py` | Process enumeration and termination for browsers that outlive their fetch. The only platform-specific, side-effectful part of the package |
+| **Test double** | `fake.py` | A page source backed by a map of URLs to bodies, recording what it was asked for. Part of the published surface, not a test fixture |
+| **Entry point** | `__main__.py` | Argument parsing, output routing and exit status over the transport module. Holds no fetching logic |
+
+A building block is named for the role it plays, and the module column is
+where that name meets the file. The two vocabularies stay separate on
+purpose: **Store** is the glossary term for a directory of bodies that never
+expires, and `cache.py` is the file implementing it, named for the word the
+command line and the README use.
 
 **Why the contract imports nothing.** Every other module depends on it, so
 anything it imported would become a dependency of the whole package,
@@ -35,7 +38,7 @@ classification, storage or process handling.
 
 ## Level 2: Inside the Building Blocks
 
-### Contract
+### Contract (`source.py`)
 
 The stable surface. An abstract page source declares four operations —
 fetch one URL, fetch a list, download raw bytes, capture a screenshot —
@@ -55,7 +58,7 @@ caller rather than for the engine behind it. The same names appear as
 command-line flags and as the reported transport, so a swapped engine
 changes nothing a caller has written down.
 
-### Classification
+### Classification (`detection.py`)
 
 Three pattern lists and four predicates over them. Every predicate takes a
 body and returns a verdict; none of them knows which transport produced it,
@@ -74,12 +77,16 @@ repeated at its two call sites. The read path and the sweep have to agree
 on what junk is, and the failure mode of disagreeing is a store that keeps
 what a sweep deletes.
 
-### Transport
+### Transport (`network.py`)
 
 The largest module, and one module on purpose: the four transports and the
 order over them change together, and the order is the thing hardest to read
 when it is split across files. Section boundaries inside it are marked by
 comment banners rather than by files.
+
+This building block and the `Transport` enumeration in the contract share a
+word without being the same thing. The enumeration names the rungs and lives
+in `source.py`; this module is what climbs them.
 
 | Part | Role |
 | ------ | ------ |
@@ -95,7 +102,7 @@ field in it leaks if a batch exits without releasing it. Releases are
 independent: a browser that has already died must not prevent the event
 loop from being closed after it.
 
-### Store
+### Store (`cache.py`)
 
 Bodies on disk, one file per URL and content form, named by a truncated
 digest of the URL plus a suffix for the form. The scheme is fixed — the
@@ -120,7 +127,7 @@ first write, so a path that is a file, or whose nearest existing ancestor
 is missing or read-only, fails immediately and names the source that
 supplied it.
 
-### Host cleanup
+### Host cleanup (`chrome.py`)
 
 The one Windows-specific part. It samples running browser processes before
 a launch, and afterwards records those that are both new since the sample
@@ -135,7 +142,7 @@ recorded and nothing is killed.
 One instance serves the process. An instance per fetcher registered an exit
 handler per fetcher, none of which were ever removed.
 
-### Test double
+### Test double (`fake.py`)
 
 A page source backed by two maps, one of bodies and one of raw bytes. It
 records every URL it was asked for so a consumer can assert on call
@@ -148,7 +155,7 @@ is not HTTP or HTTPS. The keys never reach a socket, so a test is free to
 use short labels — at the cost that an unsupported scheme passes against
 the double and raises against the real implementation.
 
-### Entry point
+### Entry point (`__main__.py`)
 
 Parsing, routing and exit status, and no fetching. Its notable property is
 the order it works in: unknown flags are rejected first, then every value
