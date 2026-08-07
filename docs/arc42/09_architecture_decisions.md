@@ -34,6 +34,7 @@ Adding a record adds a row here.
 | [ADR-021](../decisions/021-what-a-quality-goal-is.md) | What a quality goal is, and how the register is keyed | Accepted | 2026-08-07 |
 | [ADR-022](../decisions/022-what-in-a-journal-entry-may-be-edited.md) | What in a dev journal entry may be edited | Accepted | 2026-08-07 |
 | [ADR-023](../decisions/023-bound-a-destructive-sweep-by-proof-of-ownership.md) | Bound a destructive sweep by proof of ownership | Accepted | 2026-08-07 |
+| [ADR-024](../decisions/024-conflicting-transport-flags-resolve-to-the-most-escalated-tier.md) | Conflicting transport flags resolve to the most escalated tier | Accepted | 2026-08-07 |
 
 Two records predate this repository and still govern the package. They sit
 in the repository it was extracted from, and ADR-001 explains why they were
