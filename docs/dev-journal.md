@@ -1721,8 +1721,8 @@ the batch case.
 ## 2026-05-20 to 2026-05-30 — Upstream history
 
 The package grew inside `Imbra-Ltd/wuseria` before this repository existed.
-Summarized here because the commits are not in this history; the README's
-"Performance history" section carries the per-version detail.
+Summarized here because the commits are not in this history; the per-version
+detail is in [chapter 4](arc42/04_solution_strategy.md).
 
 - Three-tier engine (urllib, Playwright, UC), then Nodriver added as tier 3
   via CDP, which cut a three-page bot-protected batch from 27s to 16s.
