@@ -1,10 +1,13 @@
-"""Transport abstraction for page fetching.
+"""Page source contract for page fetching.
 
 Defines the PageSource interface that concrete fetchers (NetworkFetcher)
 and test doubles (FakeFetcher) implement, plus the typed options and
 result shapes that flow through it. This module has no third-party or
 project dependencies — it is the stable contract the rest of the package
 and any consumer depend on.
+
+Transport here is the enumeration naming the four rungs, not the module
+that climbs them; that is network.py.
 """
 
 from abc import ABC, abstractmethod
