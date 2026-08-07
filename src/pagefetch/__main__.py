@@ -25,6 +25,9 @@ Usage:
     py -m pagefetch <url> --cache-dir DIR          # use a specific cache dir
                                                    # (overrides $PAGEFETCH_CACHE_DIR)
 
+Transport flags may be combined, in any order. The most escalated one wins:
+--headless over --headed over --js over --http.
+
 Exit codes:
     0   every requested URL returned content
     1   nothing came back, or the arguments were rejected
