@@ -1883,3 +1883,64 @@ candidate against.
   journal would be unchecked until someone adds it, which is the same
   deliberate-listing tradeoff the comment-layout roots make and is
   recorded here rather than solved.
+
+---
+
+## 2026-08-07 (twenty-second session) — A pointer can break without moving
+
+**Tool**: Claude Code (Opus 5)
+
+The end-of-session audit, which found one thing worth recording and
+produced the upstream contributions it asks for.
+
+**Changes**
+
+- ONBOARDING 3 runs six checks rather than five, and the PLAYBOOK gains
+  3.8 for the journal-order check.
+- Three issues filed against the chain: `solid-ai-templates#999`, journal
+  ordering mandated but unenforced; `#1000`, a destructive operation
+  bounded by proof of ownership; `#1001`, whether a journal entry may be
+  amended.
+
+**PRs merged**: #147
+
+The journal-order section belongs at 3.6, beside comment layout, because
+they are the same kind of check. It is at 3.8 instead, after a section on
+an unrelated subject, because ADR-019 cites "PLAYBOOK 3.7" for the
+browser tiers and a merged record cannot be edited to follow a renumber.
+
+That is the same defect this session opened with, arriving by the
+opposite route. The journal's dead pointer broke because its target moved
+and the pointer stayed. This one would have broken with the pointer
+untouched and the target changing underneath it — ADR-019 would still say
+"PLAYBOOK 3.7", still resolve, and land on the wrong section. The first
+kind is findable by following every pointer; the second is invisible from
+either end, because nothing about either document records that the number
+is load-bearing. A stable citation into a numbered document is a
+constraint on that document's numbering, held nowhere.
+
+The upstream verdicts are worth stating as verdicts. #1000 is the one
+worth the most: ADR-005 and ADR-023 are the same decision about processes
+and about files, found eight days apart, and the second was written off
+as an ordinary bug fix precisely because the first had been recorded as
+being about processes rather than about destruction. A rule that had been
+generic in `quality.md` would have made the second obvious before it was
+written. ADR-024 is the opposite verdict — a total order over transport
+flags presupposes a cost ladder, and outside a package that has one there
+is nothing to reuse. Not every convention is a candidate.
+
+**Not done**
+
+- #9's velocity measurement, unchanged. Seven sessions.
+- Five issues now stand open against the chain — `#983`, `#995`, `#999`,
+  `#1000`, `#1001` — and none of them govern here until they land and the
+  pin moves.
+- ADR-022, ADR-023 and ADR-024 carry no `Upstream:` line naming the
+  issues filed for them, because they merged before the issues existed
+  and a merged record is not edited. The verdicts are here instead, which
+  is the second time this session that a record's immutability moved
+  information into the journal rather than losing it.
+- `docs/assets/03_business_context_diagram` is modified in the working
+  tree and uncommitted — two edge waypoints moved and the PNG re-exported
+  at half the byte size. Not this session's work and not reviewed as
+  such; the render was checked and is complete.
