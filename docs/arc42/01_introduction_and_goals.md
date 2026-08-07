@@ -74,8 +74,8 @@ it is a requirement and belongs in the table above. Highest priority first.
 
 | ID | Quality | Goal | Motivation |
 | ------ | --------- | ------ | ------------ |
-| QG01 | Functional Suitability | A reachable page is never reported as absent | A wrong failure looks exactly like a page that does not exist, so the caller cannot tell them apart |
-| QG02 | Functional Suitability | A bot wall or error page is never returned and never stored | These pages look like real content, and a stored one is served again on every later fetch |
-| QG03 | Portability | The package gives correct results on Linux and Windows, with or without the browser engines | The default install has no browser engine and nothing to fall back on |
-| QG04 | Performance Efficiency | A static page costs one request, and a batch starts at most one browser | A browser takes seconds where a plain request takes about one |
-| QG05 | Maintainability | A detection pattern, a transport or a setting is added in one place | Detection rules change often, and two copies of a rule would disagree |
+| QG01 | Functional Suitability | No page that exists is lost to a wrong verdict | A wrong failure looks exactly like a page that does not exist, so the caller cannot tell them apart |
+| QG02 | Functional Suitability | Every wall and error page is recognised, not just the known ones | These pages look like real content, and a stored one is served again on every later fetch |
+| QG03 | Portability | Behaviour is correct on either platform and with any set of engines installed | The default install has no browser engine and nothing to fall back on |
+| QG04 | Performance Efficiency | No request or browser is spent that the response did not require | A browser takes seconds where a plain request takes about one |
+| QG05 | Maintainability | Every rule has exactly one place to change | Detection rules change often, and two copies of a rule would disagree |
