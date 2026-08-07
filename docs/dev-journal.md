@@ -1829,3 +1829,57 @@ back three times.
 - `wuseria#556`, #59's redistribution-attribution rule, and the
   `require_supported_scheme` move to a sibling `urls.py` are all unchanged
   and all still correctly deferred.
+
+---
+
+## 2026-08-07 (twenty-first session) — The gate the last entry asked for
+
+**Tool**: Claude Code (Opus 5)
+
+The twentieth entry closed with the observation that entry order was
+fixed but ungated. This builds the gate, which makes that the shortest a
+**Not done** item has ever survived here.
+
+**Changes**
+
+- `tools/check_journal_order.py`, reporting `ORDER` for an entry dated
+  before the one above it and `UNDATED` for a level-two heading it cannot
+  read. Wired into the pre-commit hook list, the `Lint and format` job and
+  the suite, per CLAUDE.md 1.2.
+
+**PRs merged**: #145
+
+`UNDATED` is the half worth explaining. Ordering needs a date, so a
+heading without one has to go somewhere, and the choice is between
+skipping it and reporting it. Skipping is how a check acquires a silent
+branch — the entry disappears from consideration and the file still
+passes, which is the failure mode the checker exists to prevent, rebuilt
+inside the checker. So an undated heading fails, and a legitimate
+non-session heading added later is expected to fail with it and be
+answered by a carve-out with its reasoning, the way ADR-016 records the
+five in the comment-layout checker.
+
+The evidence a gate works is that it fails on the defect it was built
+for, which is available here in a way it usually is not: run against the
+journal at `5031e84`, the commit before the reorder, it reports nine
+violations. A gate whose failing case is hypothetical is a gate nobody
+has run.
+
+Both project-local checks now exist because review was given the job and
+missed it — twenty-six comment sites over the life of the repository, and
+twenty sessions of the wrong entry order. The pattern is not that review
+is careless. It is that both conventions are invisible in a diff: a
+reviewer sees the entry being added, not the twenty-four above it, and
+sees the comment being written, not the blank line that should precede
+it. A convention only legible in the whole file is one no reviewer reads,
+which is the argument for `tools/` and the thing to test a future
+candidate against.
+
+**Not done**
+
+- #9's velocity measurement, unchanged. Still needs a headed Chrome.
+- `solid-ai-templates#995` and `#983`, unchanged and still open.
+- The checker reads one journal named on the command line. A second
+  journal would be unchecked until someone adds it, which is the same
+  deliberate-listing tradeoff the comment-layout roots make and is
+  recorded here rather than solved.
