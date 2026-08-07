@@ -16,7 +16,7 @@ protection. It paces nothing itself — no rate limiting, no backoff, no
 scheduling — so a caller needing those supplies them and drives pagefetch
 one URL at a time.
 
-## Goals
+## Requirements Overview
 
 - Return the content of a page by the cheapest transport that works, so
   the common case costs a single HTTP request
@@ -28,20 +28,7 @@ one URL at a time.
 - Stay substitutable in a consumer's tests, so code that fetches pages can
   be tested without a network or a browser
 
-## Stakeholders
-
-Roles and people, not systems: everyone who has to work with the package,
-decide about it, or live with what it does to them.
-
-| Role | Expectation |
-| ------ | ------------- |
-| **Researcher at a terminal** | Gets page content on standard output and nothing else there, so the output can be redirected into a file: a failed fetch writes nothing and exits non-zero, rather than leaving an empty file that reads like a result |
-| **Developer integrating the library** | Writes against a small, stable interface, substitutes it in their own tests, and takes on no dependency by installing it |
-| **Maintainer** | Changes the package itself — a detection pattern, a transport, a configuration value — each in one place, and finds the reasoning behind the current shape written down rather than having to reconstruct it |
-| **Site owner testing their protection** | Learns which transport got through, or that none did — a site no rung passes is a result, not a failure. A challenge needing a human gesture is the ceiling: nothing here attempts one |
-| **Operator of a site someone else fetches** | Sees requests one at a time from a single machine, and no more than the caller asked for: no concurrency, no retry loop, no scheduler. Escalation is the only reason one URL is requested more than once |
-
-## Functional Requirements
+### Functional Requirements
 
 Functional requirements state observable behaviour: what the package does,
 not how it does it. A library, a file layout, or the rule behind a verdict
@@ -76,6 +63,19 @@ it is a requirement and belongs in the table above. Highest priority first.
 | ------ | --------- | ------ | ------------ |
 | QG01 | Functional Suitability | No page that exists is lost to a wrong verdict | A wrong failure looks exactly like a page that does not exist, so the caller cannot tell them apart |
 | QG02 | Functional Suitability | Every wall and error page is recognised, not just the known ones | These pages look like real content, and a stored one is served again on every later fetch |
-| QG03 | Portability | Behaviour is correct on either platform and with any set of engines installed | The default install has no browser engine and nothing to fall back on |
+| QG03 | Flexibility | Behaviour is correct on either platform and with any set of engines installed | The default install has no browser engine and nothing to fall back on |
 | QG04 | Performance Efficiency | No request or browser is spent that the response did not require | A browser takes seconds where a plain request takes about one |
 | QG05 | Maintainability | Every rule has exactly one place to change | Detection rules change often, and two copies of a rule would disagree |
+
+## Stakeholders
+
+Roles and people, not systems: everyone who has to work with the package,
+decide about it, or live with what it does to them.
+
+| Role | Expectation |
+| ------ | ------------- |
+| **Researcher at a terminal** | Gets page content on standard output and nothing else there, so the output can be redirected into a file: a failed fetch writes nothing and exits non-zero, rather than leaving an empty file that reads like a result |
+| **Developer integrating the library** | Writes against a small, stable interface, substitutes it in their own tests, and takes on no dependency by installing it |
+| **Maintainer** | Changes the package itself — a detection pattern, a transport, a configuration value — each in one place, and finds the reasoning behind the current shape written down rather than having to reconstruct it |
+| **Site owner testing their protection** | Learns which transport got through, or that none did — a site no rung passes is a result, not a failure. A challenge needing a human gesture is the ceiling: nothing here attempts one |
+| **Operator of a site someone else fetches** | Sees requests one at a time from a single machine, and no more than the caller asked for: no concurrency, no retry loop, no scheduler. Escalation is the only reason one URL is requested more than once |

@@ -19,7 +19,7 @@ Quality
 |     +-- No such body survives being read from the store
 |     +-- The read path and the sweep reach the same verdict on every body
 |
-+-- Portability
++-- Flexibility
 |     +-- The package imports and fetches with no third-party package present
 |     +-- Both supported Python versions and both platforms build
 |     +-- An absent engine is reported, never raised
@@ -57,7 +57,7 @@ Quality
 | Q4 | Functional Suitability | The plain transport receives a 7 KB throttle page carrying no recognizable wording | Rejected by the size floor, escalated rather than returned or stored | High |
 | Q5 | Functional Suitability | The store holds a wall body written before the guard for it existed | Deleted on read and the fetch proceeds as a miss; a later sweep finds nothing left to remove | High |
 | Q6 | Functional Suitability | A server compresses a response with gzip without declaring it | Decompressed by signature. Mojibake is neither returned nor stored | High |
-| Q7 | Portability | The package is installed with no optional engines, and a URL behind a wall is fetched | The wall is detected, each browser rung reports itself absent, no content is returned and the status is non-zero. No traceback | High |
+| Q7 | Flexibility | The package is installed with no optional engines, and a URL behind a wall is fetched | The wall is detected, each browser rung reports itself absent, no content is returned and the status is non-zero. No traceback | High |
 | Q8 | Reliability | A browser engine crashes part-way through a batch | The batch continues to the remaining URLs, and the browser, event loop and session are all released | High |
 | Q9 | Reliability | A batch's browser has already died when the batch releases its handles | The remaining release steps still run, and the failure is reported rather than raised | Medium |
 | Q10 | Security | A caller passes a URL with a `file` scheme, singly and inside a batch | `ValueError` before any request is issued or any browser is launched, on both paths | High |
