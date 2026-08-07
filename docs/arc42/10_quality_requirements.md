@@ -3,7 +3,7 @@
 ## Quality Tree
 
 The tree holds the whole set of quality requirements. Section 1 names the
-five that drive the architecture; the rest are checked here and nowhere
+goals that drive the architecture; the rest are checked here and nowhere
 else. Each branch is worded so that a single observation can falsify it.
 
 ```text

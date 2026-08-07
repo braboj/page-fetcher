@@ -74,7 +74,8 @@ it is a requirement and belongs in the table above. Highest priority first.
 
 | ID | Quality | Goal | Motivation |
 | ------ | --------- | ------ | ------------ |
-| QG01 | Functional Suitability | A page that exists and is reachable is never reported as absent, and a body that is not a page is never returned or retained | Both errors reach the caller unnoticed. An incorrect failure is indistinguishable from a genuinely missing page, and a body mistaken for content is served in place of the real one until something removes it |
-| QG02 | Portability | Correctness does not vary with the platform, the Python version, or which optional engines are present | The default installation has no browser engine and no fallback, and the process-cleanup path differs by platform, so a difference in behaviour appears exactly where nothing compensates for it |
-| QG03 | Performance Efficiency | A static page costs exactly one request, and a batch starts at most one browser | The transports differ in cost by more than an order of magnitude, so a browser started speculatively, or once per URL, determines the runtime of everything else |
-| QG04 | Maintainability | A detection pattern, a transport, or a configuration value is added in one place, and the definition of a failed body has exactly one home | Classification rules change most often, because the sites they describe change, and a second definition of a failed body would diverge from the first |
+| QG01 | Functional Suitability | A reachable page is never reported as absent | A wrong failure looks exactly like a page that does not exist, so the caller cannot tell them apart |
+| QG02 | Functional Suitability | A bot wall or error page is never returned and never stored | These pages look like real content, and a stored one is served again on every later fetch |
+| QG03 | Portability | The package gives correct results on Linux and Windows, with or without the browser engines | The default install has no browser engine and nothing to fall back on |
+| QG04 | Performance Efficiency | A static page costs one request, and a batch starts at most one browser | A browser takes seconds where a plain request takes about one |
+| QG05 | Maintainability | A detection pattern, a transport or a setting is added in one place | Detection rules change often, and two copies of a rule would disagree |
