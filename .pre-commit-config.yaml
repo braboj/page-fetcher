@@ -44,15 +44,17 @@ repos:
     hooks:
       - id: gitleaks
 
-  # The one project-local hook. The comment-layout rules in CLAUDE.md 2.3
-  # are not expressible as a ruff rule, and reviewing them by hand let 26
-  # sites accumulate across the package and the suite (ADR-016).
+  # The project-local hooks, for conventions no linter in the list above
+  # expresses. Both were adopted after review had been given the job and
+  # had missed it: 26 comment-layout sites accumulated across the package
+  # and the suite (ADR-016), and the journal was newest-first for twenty
+  # sessions against a rule the pinned template already carried.
   #
-  # `language: python` rather than `system`: the script needs nothing but
-  # the standard library, but `system` resolves `python` from PATH, and the
-  # documented Windows workflow uses the `py` launcher — where PATH has no
-  # `python` at all. Letting pre-commit supply the interpreter is what
-  # makes the hook run on both platforms.
+  # `language: python` rather than `system` for both: the scripts need
+  # nothing but the standard library, but `system` resolves `python` from
+  # PATH, and the documented Windows workflow uses the `py` launcher —
+  # where PATH has no `python` at all. Letting pre-commit supply the
+  # interpreter is what makes the hooks run on both platforms.
   - repo: local
     hooks:
       - id: comment-layout
@@ -65,3 +67,14 @@ repos:
         # isolation is the same work as checking all four roots.
         pass_filenames: false
         args: [src, tests, examples, tools]
+
+      - id: journal-order
+        name: journal order
+        entry: python tools/check_journal_order.py
+        language: python
+        # Named rather than passed as a changed filename, for the same
+        # reason as above: the rule is about an entry's neighbours. The
+        # `files` pattern is what keeps the hook off every other commit.
+        files: ^docs/dev-journal\.md$
+        pass_filenames: false
+        args: [docs/dev-journal.md]

@@ -111,6 +111,9 @@ py -m pytest --cov=pagefetch    # tests with the coverage floor enforced
 
 # comment layout — silent on success, one line per violation otherwise
 py tools/check_comment_layout.py src tests examples tools
+
+# journal entry order — same output contract
+py tools/check_journal_order.py docs/dev-journal.md
 ```
 
 ## 2. Code conventions
