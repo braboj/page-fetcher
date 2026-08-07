@@ -392,6 +392,31 @@ changing one, verify by hand against a site known to need it — "Sites
 Exercised by Hand", under Test Coverage in `docs/arc42/`
 `10_quality_requirements.md`, lists which site exercises which tier.
 
+### 3.8 Journal order
+
+```bash
+py tools/check_journal_order.py docs/dev-journal.md
+```
+
+Same output contract as §3.6, and the same three places: the
+`journal-order` pre-commit hook, a step in `Lint and format`, and
+`test_journal_order.py`. Two codes — `ORDER` for an entry dated before the
+one above it, `UNDATED` for a level-two heading with no date.
+
+`base/core/docs.md` requires session entries oldest first, newest at the
+bottom. It also tells each session to copy the prior entry's skeleton
+exactly, which is why the wrong order survived twenty sessions here and
+why the right one needs a gate rather than care.
+
+An undated heading fails rather than being skipped, so the checker has no
+silent branch. A legitimate non-session heading is therefore a carve-out
+with its reasoning recorded, the way ADR-016 handles the comment-layout
+five — not a case to quietly admit.
+
+This section is numbered after the browser-tier one rather than beside
+§3.6 where it belongs by subject. ADR-019 cites "PLAYBOOK 3.7" for the
+browser tiers, and a merged record cannot be edited to follow a renumber.
+
 ## 4. Maintenance
 
 ### 4.1 Dependencies
