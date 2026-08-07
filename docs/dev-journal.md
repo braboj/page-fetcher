@@ -1747,3 +1747,85 @@ sentence and leaving a stray fence behind. The verification passed because
 it parsed the block that was meant to change and never looked at the
 boundary. Checking the region you edited is not checking the file you
 edited it in.
+
+---
+
+## 2026-08-07 (twentieth session) — A rationale is not a decision
+
+**Tool**: Claude Code (Opus 5)
+
+A pass over every **Not done** list this journal carries. Eleven sessions
+have one. Most of what they hold was closed by events or is blocked
+somewhere this repository cannot reach; four items were live, and two of
+those wanted a record rather than work.
+
+**Changes**
+
+- ADR-022 settles what in an entry may be edited. The account of what
+  happened is immutable and a later entry corrects an earlier one, but a
+  cross-reference makes no claim about the session, so it is corrected in
+  place. The upstream-history pointer — which named a README section that
+  ADR-009 and then ADR-018 had moved out from under it — now names
+  chapter 4.
+- ADR-023 records what bounds a destructive sweep: an operation acts only
+  on what it can prove it created, and finds nothing where proof is
+  unavailable.
+- ADR-024 keeps the most escalated transport flag winning when several are
+  passed, and states why. The usage text gains the rule, so it is
+  discoverable at `--help`.
+- Entries are oldest-first, newest at the bottom, as `base/core/docs.md`
+  requires.
+- ADR-002 examined and deliberately left alone.
+
+**PRs merged**: #140, #141, #142, #143
+
+Two of the four live items had already been decided in code and never
+recorded. `_parse_transport` has carried its reasoning in a docstring
+since #57, `entries()` in its own since #109, and each session read that
+reasoning, found it sound, and logged the item as undecided anyway. The
+instinct was right. A docstring describes what the code does, and
+describing is not deciding — what is missing is not knowledge but
+standing, because nothing stops the next reader changing a behaviour
+nothing says was chosen.
+
+The flag item shows what carrying costs. It entered as `--js --uc
+--nodriver` and survived six sessions in that spelling, three of them
+after ADR-006 renamed the flags to `--headed` and `--headless`. An item
+nobody can act on still has to be read every session, and it rots while it
+waits.
+
+The ordering defect propagated through a rule working exactly as designed.
+`docs.md` tells a session to read the prior entries and copy their
+skeleton exactly, the prior entry being the authoritative structural
+template. That is good advice, and it is precisely why the defect survived
+twenty sessions: every session complied. This journal was created on
+2026-07-30 against a pin that had carried the oldest-first rule for five
+weeks, and was newest-first from its first commit. A convention inherited
+by imitation is only ever as good as its first instance, and nothing
+checks the first instance against the rule it came from.
+
+ADR-002 resolved by turning out not to be an item. Three sessions recorded
+that its coverage rationale was accurate but its floor had moved. Chapter
+9 makes records immutable, so the figures cannot be edited — and should
+not be, because 45 and 46.6% are the measurement that justified the
+ratchet, not a claim about today. The live floor and all four of its moves
+sit in `pyproject.toml` with a pointer back to the record, CLAUDE.md §3
+carries the ratchet rule, and the two suppressions ADR-002 flagged for #3
+and #4 are gone exactly as its own consequence required. There was nothing
+to fix. What was missing was the sentence saying so, which is why it came
+back three times.
+
+**Not done**
+
+- #9's velocity measurement. Seven sessions. Unchanged and unchangeable
+  from here: it needs a headed Chrome and live requests.
+- `solid-ai-templates#995` and `#983` are still open, so chapter 11 and
+  the arc42 requirement rules stay on the footing of a proposal.
+  `Q1…Q16`, `TD01` and `R03` hang off #995 and move when it does.
+- Ordering is fixed but ungated. A twenty-first session copying the last
+  entry now inherits the right shape through the same mechanism that
+  propagated the wrong one, and nothing would catch it drifting back.
+  `tools/` is where a check like that would go.
+- `wuseria#556`, #59's redistribution-attribution rule, and the
+  `require_supported_scheme` move to a sibling `urls.py` are all unchanged
+  and all still correctly deferred.
