@@ -57,15 +57,16 @@ is design and belongs elsewhere.
 
 Requirements say what the package does; quality goals say how well. Only
 the few that shape the design belong here. If a single test can settle it,
-it is a requirement and belongs in the table above. Highest priority first.
+it is a requirement and belongs in the table above. Characteristics and
+sub-characteristics are ISO/IEC 25010. Highest priority first.
 
-| ID | Quality | Goal | Motivation |
-| ------ | --------- | ------ | ------------ |
-| QG01 | Functional Suitability | No page that exists is lost to a wrong verdict | A wrong failure looks exactly like a page that does not exist, so the caller cannot tell them apart |
-| QG02 | Functional Suitability | Every wall and error page is recognised, not just the known ones | These pages look like real content, and a stored one is served again on every later fetch |
-| QG03 | Flexibility | Behaviour is correct on either platform and with any set of engines installed | The default install has no browser engine and nothing to fall back on |
-| QG04 | Performance Efficiency | No request or browser is spent that the response did not require | A browser takes seconds where a plain request takes about one |
-| QG05 | Maintainability | Every rule has exactly one place to change | Detection rules change often, and two copies of a rule would disagree |
+| ID | Characteristic | Sub-characteristic | Goal |
+| ---- | ---------------- | -------------------- | ------ |
+| QG01 | Functional Suitability | Functional correctness | No page that exists is lost to a wrong verdict |
+| QG02 | Functional Suitability | Functional completeness | Every wall and error page is recognised, not just the known ones |
+| QG03 | Flexibility | Adaptability | Behaviour is correct on either platform and with any set of engines installed |
+| QG04 | Performance Efficiency | Resource utilization | No request or browser is spent that the response did not require |
+| QG05 | Maintainability | Modifiability | Every rule has exactly one place to change |
 
 ## Stakeholders
 
