@@ -30,6 +30,8 @@ Adding a record adds a row here.
 | [ADR-017](../decisions/017-decline-under-render-detection-at-tier-1.md) | Decline under-render detection at tier 1 | Accepted | 2026-08-05 |
 | [ADR-018](../decisions/018-land-the-arc42-documents.md) | Land the arc42 documents and retire the interim architecture file | Accepted | 2026-08-05 |
 | [ADR-019](../decisions/019-what-chapter-11-holds.md) | What chapter 11 holds and its format | Accepted | 2026-08-06 |
+| [ADR-020](../decisions/020-where-chapter-diagrams-live.md) | Where chapter diagrams live, and in which format | Accepted | 2026-08-07 |
+| [ADR-021](../decisions/021-what-a-quality-goal-is.md) | What a quality goal is, and how the register is keyed | Accepted | 2026-08-07 |
 
 Two records predate this repository and still govern the package. They sit
 in the repository it was extracted from, and ADR-001 explains why they were

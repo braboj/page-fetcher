@@ -86,7 +86,12 @@ of truth. Agent-specific placement rules:
   exported `.png` beside it, named for the chapter that embeds it; both
   are committed. Sequence diagrams stay inline as Mermaid. Never commit
   an export without reading it — a hand-authored edge missing its
-  `<mxGeometry>` is dropped from the render silently (PLAYBOOK §4.7)
+  `<mxGeometry>` is dropped from the render silently (ADR-020,
+  PLAYBOOK §4.7)
+- A quality goal earns its row only if no single observation can confirm
+  it; anything one test settles is a functional requirement. Each names an
+  ISO/IEC 25010:2023 characteristic and sub-characteristic, and leads with
+  the quantifier that makes it a goal rather than a capability (ADR-021)
 - The package is `src/pagefetch/` and the suite is `tests/`, per
   `python-lib.md` (ADR-010). A checkout with nothing installed cannot
   import the package — that is the layout working, not a broken clone.

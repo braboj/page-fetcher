@@ -6,6 +6,65 @@ git already holds.
 
 ---
 
+## 2026-08-07 (nineteenth session) — The quantifier was the quality
+
+**Tool**: Claude Code (Opus 5)
+
+Diagrams first, then a read-aloud pass over chapter 1 that turned into a
+rebuild of the quality goals. The lesson that took longest to find: a
+quality goal is indistinguishable from a functional requirement except for
+the word that quantifies it, so that word has to be visible.
+
+**Changes**
+
+- Six draw.io diagrams under `docs/assets/`, source and PNG committed
+  together, replacing two Mermaid graphs and two ASCII blocks and adding
+  figures to chapters 3 and 8. A seventh replaced chapter 10's quality
+  tree, which three levels of ASCII could not hold once leaves wrapped.
+- Chapter 1 rebuilt against `docs.arc42.org/section-1`: arc42's three
+  subsections in arc42's order, requirements holding observable behaviour
+  only, stakeholders reduced to roles, and the founding use case restored
+  to the lede after a trim removed it.
+- Quality goals rebuilt twice. Three were not goals — Security was FR02 and
+  FR13 conjoined, Portability restated three constraints from chapter 2,
+  Reliability described what happens when an engine raises and became FR13.
+- The table now carries the ISO/IEC 25010 characteristic and
+  sub-characteristic. The 2023 edition retired Portability for Flexibility,
+  renamed in four places.
+- Motivation dropped. Every entry restated a chapter that already owned the
+  reasoning, and three rewrites never settled it.
+- PLAYBOOK 4.7 added: how to export a diagram, and the trap that an
+  `mxCell` with `edge="1"` and no `<mxGeometry>` is dropped from the render
+  silently.
+
+**PRs merged**: #135, #136, #137
+
+A quality goal is the accuracy or completeness constraint on a capability
+some requirement already states, so it shares subject matter with that
+requirement by construction. Strip the qualifying prose and what remains is
+the capability restated — which is exactly what happened, and what the user
+caught. arc42's own example has the same fragility: "every broken internal
+link is found" is a requirement without the word every. There is no
+phrasing that separates them; only the quantifier does, so it leads.
+
+The sub-characteristic level settled an argument prose kept losing. QG01
+and QG02 were merged for sharing a category, split again for reading badly
+as a compound, and merged again in between. They are Functional correctness
+and Functional completeness — two sub-characteristics, so two rows, decided
+by the standard rather than by taste. The same level restored a distinction
+a merge had destroyed in chapter 10's tree.
+
+Three things went wrong and are worth recording. Trimming the lede removed
+the JavaScript origin and the sentence about naming a transport, which
+together were the only account of what the package was first built for.
+Shortening QG03 dropped the Python version, leaving the goal narrower than
+the tree branch refining it. And a script computed offsets into a file,
+replaced a paragraph, then sliced with the stale offsets — eating a
+sentence and leaving a stray fence behind. The verification passed because
+it parsed the block that was meant to change and never looked at the
+boundary. Checking the region you edited is not checking the file you
+edited it in.
+
 ## 2026-08-06 (eighteenth session) — The register that could not be an index
 
 **Tool**: Claude Code (Opus 5)

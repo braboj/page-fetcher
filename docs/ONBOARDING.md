@@ -12,10 +12,12 @@ first hour only.
 | git            | any     | with submodule support                           |
 | GitHub CLI     | any     | `gh` — the PR and issue commands in the playbook |
 | Chrome         | current | only for the browser tiers; not needed for tests |
+| draw.io        | desktop | only to change a diagram; see PLAYBOOK 4.7       |
 
 No database, broker, or other service is required. Tier 1 runs on the
 standard library alone, and the test suite needs neither network nor
-browser.
+browser. Nothing in the gate needs draw.io — it is here because a chapter
+diagram cannot be re-exported without it.
 
 On Windows, `py` is the launcher used throughout the docs. On Linux and
 macOS substitute `python3`.
