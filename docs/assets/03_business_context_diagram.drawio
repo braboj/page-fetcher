@@ -1,6 +1,6 @@
 <mxfile host="Electron">
   <diagram name="Business Context" id="biz-ctx-pagefetch">
-    <mxGraphModel dx="1078" dy="953" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1440" pageHeight="680" background="#ffffff" math="0" shadow="0">
+    <mxGraphModel dx="1152" dy="1020" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1440" pageHeight="680" background="#ffffff" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -25,8 +25,8 @@
         <mxCell id="e1" edge="1" parent="1" source="res" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;strokeColor=#333333;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=1;exitY=0.4;exitDx=0;exitDy=0;entryX=0;entryY=0.15;entryDx=0;entryDy=0;" target="sys" value="URLs, desired form">
           <mxGeometry relative="1" x="-0.55" as="geometry">
             <Array as="points">
-              <mxPoint x="420" y="160" />
-              <mxPoint x="420" y="297" />
+              <mxPoint x="565" y="160" />
+              <mxPoint x="565" y="297" />
             </Array>
           </mxGeometry>
         </mxCell>
@@ -41,8 +41,8 @@
         <mxCell id="e3" edge="1" parent="1" source="prog" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;fontSize=10;strokeColor=#333333;endArrow=block;endFill=1;labelBackgroundColor=#ffffff;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.85;entryDx=0;entryDy=0;" target="sys" value="URLs, desired form">
           <mxGeometry relative="1" x="-0.55" as="geometry">
             <Array as="points">
-              <mxPoint x="420" y="497" />
-              <mxPoint x="420" y="423" />
+              <mxPoint x="561" y="497" />
+              <mxPoint x="561" y="423" />
             </Array>
           </mxGeometry>
         </mxCell>
