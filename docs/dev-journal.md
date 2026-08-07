@@ -1944,3 +1944,72 @@ is nothing to reuse. Not every convention is a candidate.
   tree and uncommitted — two edge waypoints moved and the PNG re-exported
   at half the byte size. Not this session's work and not reviewed as
   such; the render was checked and is complete.
+
+## 2026-08-07 (twenty-third session) — A render cannot show its own resolution
+
+**Tool**: Claude Code (Opus 5)
+
+Two diagrams, and the second found what the first had walked past.
+
+**Changes**
+
+- The business context diagram's inbound edge channel moves clear of the
+  reply labels it was running against, and its PNG is re-exported at the
+  scale the PLAYBOOK specifies (#149).
+- Chapter 5's Level 1 table gains a `Module` column, every Level 2 heading
+  and every diagram box names its file, and the `Transport` collision is
+  stated in the chapter and in `source.py` (#150).
+- ADR-025 records why the documents moved and the modules did not.
+- `#151` filed: gate the export scale, because nothing does.
+
+The session opened on a diagram the last entry had already flagged —
+modified in the working tree, not that session's work, and closed out with
+"the render was checked and is complete". It was. All nine arrows were
+present. It was also 1332x523 against a committed 2695x1077.
+
+ADR-020 requires reading the exported PNG before committing, and that rule
+was satisfied. Reading a render proves the arrows are there, and the arrows
+are there at any scale. The property that was wrong is not one the image
+displays. The diffstat then argues for the defect rather than against it: a
+scale-1 export is a smaller file, so the change read as 102 KB to 56 KB, a
+compression win. Every signal available to a reviewer pointed the wrong
+way.
+
+Chapter 5's PNG turned out to be scale 1 as well, found only because a byte
+count moved the wrong way during unrelated work. Two of seven diagrams,
+both by accident, neither by looking. That is what makes it a gate rather
+than a review note — a verification step that inspects the artifact still
+misses what the artifact does not show, and no amount of care at review
+time fixes a signal that is absent.
+
+The naming finding is separate and arrived by being asked. Chapter 5 named
+seven building blocks and matched zero module names; across thirteen
+chapters a filename appeared exactly once. The question that settled the
+direction was not which set of names was better but which was load-bearing.
+Module names are cited 103 times across the records, the chapters, the
+guides and `CLAUDE.md`, `network.py` alone accounting for 38, and ADR-014
+is titled "Keep network as one module" — renaming would have stranded an
+immutable record's own title.
+That is the third route to the defect the last two entries have been
+circling, and the first where the pointer at risk was a title.
+
+The correction worth recording is mine. I recommended renaming **Store** to
+**Cache** on the reasoning that the diagram was the outlier, and offered
+that as a choice before checking. It was wrong: arc42 uses "store" 38 times
+across 9 chapters against 2 uses of "cache", the glossary defines it as a
+directory that never expires — the word was chosen to avoid promising
+expiry — and it carries FR07, FR10 and FR11. The evidence reversed the
+recommendation after the choice had been made on it. The repair in the
+chapter is not the word but the sentence saying the split is deliberate: an
+undocumented deliberate split is indistinguishable from an oversight, which
+is exactly how this one read.
+
+**Not done**
+
+- `#151` is specified, not implemented. The open design question is that
+  the export crops to the content bounding box rather than the page box,
+  so the check cannot simply assert twice `pageWidth`.
+- `#9`'s velocity measurement, unchanged. Eight sessions.
+- Five issues still stand open against the chain — `#983`, `#995`, `#999`,
+  `#1000`, `#1001` — and none govern here until they land and the pin
+  moves.

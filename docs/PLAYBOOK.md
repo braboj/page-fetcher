@@ -657,6 +657,22 @@ Read the exported PNG before committing. Labels are placed at the midpoint
 of the path, so two edges sharing a channel put their labels on top of each
 other, and the XML gives no sign of it.
 
+Then check its dimensions, because reading it does not cover them. An
+export taken at the default scale rather than `--scale 2` renders every
+arrow and every label correctly at half the resolution, so nothing about
+the image says it is wrong — and being a smaller file, it reads in the
+diffstat as a compression win. Two of the seven diagrams were committed
+this way and both were found by accident:
+
+```bash
+py -c "import struct,pathlib,sys; b=pathlib.Path(sys.argv[1]).read_bytes(); \
+print(*struct.unpack('>II', b[16:24]))" docs/assets/<name>.png
+```
+
+Compare against the previous committed export — a re-export of an edit
+that moved nothing structural should differ by a few hundred bytes, not by
+half. Issue #151 tracks gating this so it is not a manual step.
+
 A diagram whose layout is arithmetic rather than judgement — the quality
 tree centres each parent on the span of its children across 38 nodes — can
 be laid out by a throwaway script. Do not commit that script. The `.drawio`
