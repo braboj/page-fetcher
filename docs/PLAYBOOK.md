@@ -417,6 +417,30 @@ This section is numbered after the browser-tier one rather than beside
 §3.6 where it belongs by subject. ADR-019 cites "PLAYBOOK 3.7" for the
 browser tiers, and a merged record cannot be edited to follow a renumber.
 
+### 3.9 Diagram exports
+
+```bash
+py tools/check_diagram_exports.py docs/assets
+```
+
+Same output contract as §3.6, and the same three places: the
+`diagram-exports` pre-commit hook, a step in `Lint and format`, and
+`test_diagram_exports.py`. Four codes — `SCALE` for an export not taken at
+`--scale 2`, `EDGE` for an edge with no `<mxGeometry>`, `UNPAIRED` for a
+source or an export missing its counterpart, and `UNREADABLE` for a source
+whose geometry cannot be recovered.
+
+It reads the PNG's IHDR header rather than the image, so it needs neither
+draw.io nor a display and runs anywhere the other two do. The scale is
+recovered by dividing the PNG by the box enclosing the source's vertices
+and waypoints; §4.7 covers why that is a band rather than an equality, and
+the checker's docstring carries the measurements.
+
+The scale rule exists because reading the render cannot catch what it
+gates. Two of seven diagrams shipped at the default scale, both found by
+accident during unrelated work — the failure is invisible in the image and
+reads in the diffstat as a compression win (#151).
+
 ## 4. Maintenance
 
 ### 4.1 Dependencies
@@ -657,21 +681,25 @@ Read the exported PNG before committing. Labels are placed at the midpoint
 of the path, so two edges sharing a channel put their labels on top of each
 other, and the XML gives no sign of it.
 
-Then check its dimensions, because reading it does not cover them. An
-export taken at the default scale rather than `--scale 2` renders every
-arrow and every label correctly at half the resolution, so nothing about
-the image says it is wrong — and being a smaller file, it reads in the
-diffstat as a compression win. Two of the seven diagrams were committed
-this way and both were found by accident:
+Reading it does not cover its dimensions, and those are gated rather than
+inspected (§3.9). An export taken at the default scale renders every arrow
+and every label correctly at half the resolution, so nothing about the
+image says it is wrong — and being a smaller file, it reads in the diffstat
+as a compression win. Two of the seven were committed this way and both
+were found by accident, which is why the check exists:
 
 ```bash
-py -c "import struct,pathlib,sys; b=pathlib.Path(sys.argv[1]).read_bytes(); \
-print(*struct.unpack('>II', b[16:24]))" docs/assets/<name>.png
+py tools/check_diagram_exports.py docs/assets
 ```
 
-Compare against the previous committed export — a re-export of an edit
-that moved nothing structural should differ by a few hundred bytes, not by
-half. Issue #151 tracks gating this so it is not a manual step.
+It recovers the scale by dividing the PNG by the box enclosing the
+source's vertices and edge waypoints. That box is close to what draw.io
+renders rather than equal to it — labels and shadows push the rendered
+bounds outward, while a shape's painted extent can sit just inside its
+geometry — so the rule accepts a band around the nominal scale rather than
+one figure. The checker's docstring carries the measurements behind both
+of its edges; a scale-1 export misses the floor by a factor of two, so the
+tolerance costs nothing against the defect it exists for.
 
 A diagram whose layout is arithmetic rather than judgement — the quality
 tree centres each parent on the span of its children across 38 nodes — can

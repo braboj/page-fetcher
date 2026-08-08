@@ -85,11 +85,13 @@ of truth. Agent-specific placement rules:
 - A chapter diagram goes in `docs/assets/` as a `.drawio` source with its
   exported `.png` beside it, named for the chapter that embeds it; both
   are committed. Sequence diagrams stay inline as Mermaid. Never commit
-  an export without reading it — a hand-authored edge missing its
-  `<mxGeometry>` is dropped from the render silently (ADR-020,
-  PLAYBOOK §4.7). Reading is not sufficient on its own: confirm the
-  PNG's dimensions match a scale-2 export, because resolution is not
-  visible in the render and a scale-1 export reads as a smaller file
+  an export without reading it — two edges sharing a channel put their
+  labels on top of each other, and only the render shows it (ADR-020,
+  PLAYBOOK §4.7). What reading cannot cover is gated instead:
+  `tools/check_diagram_exports.py` rejects an export not taken at
+  `--scale 2`, an edge with no `<mxGeometry>`, and a source or export
+  missing its counterpart. Resolution is the case that made it a gate —
+  invisible in the render, and a scale-1 export reads as a smaller file
   and so as an improvement (#151)
 - A chapter 5 building block is named for the role it plays and states
   the module implementing it, in both the level 1 table and the level 2
@@ -121,6 +123,9 @@ py tools/check_comment_layout.py src tests examples tools
 
 # journal entry order — same output contract
 py tools/check_journal_order.py docs/dev-journal.md
+
+# diagram export scale and pairing — same output contract
+py tools/check_diagram_exports.py docs/assets
 ```
 
 ## 2. Code conventions

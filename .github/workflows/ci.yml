@@ -45,6 +45,13 @@ jobs:
         # deliberate addition here rather than silently unchecked.
         run: python tools/check_journal_order.py docs/dev-journal.md
 
+      - name: Diagram exports
+        # Standard library only, like the two above. Reads the committed
+        # PNG's header rather than the image, so it needs no draw.io and
+        # no display — which is what lets the export scale be gated at
+        # all, since the render does not show it (#151).
+        run: python tools/check_diagram_exports.py docs/assets
+
   types:
     name: Type check
     runs-on: ubuntu-latest

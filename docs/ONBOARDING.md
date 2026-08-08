@@ -63,7 +63,7 @@ accepts. Completion, hover and rename are unaffected.
 
 ## 3. Verify the setup
 
-Run the gate. All six should pass on a clean checkout:
+Run the gate. All seven should pass on a clean checkout:
 
 ```bash
 py -m ruff check .          # -> All checks passed!
@@ -71,12 +71,13 @@ py -m ruff format --check . # -> N files already formatted
 py -m mypy                  # -> Success: no issues found in N source files
 py tools/check_comment_layout.py src tests examples tools  # -> no output
 py tools/check_journal_order.py docs/dev-journal.md        # -> no output
+py tools/check_diagram_exports.py docs/assets              # -> no output
 py -m pytest --cov=pagefetch
 ```
 
-Both `tools/` checks print nothing when they pass, which is the whole of
-their output contract — anything on stdout is a violation with its file,
-line and rule. The suite runs each of them a second time, so a checkout
+All three `tools/` checks print nothing when they pass, which is the whole
+of their output contract — anything on stdout is a violation naming what
+failed and why. The suite runs each of them a second time, so a checkout
 without `pre-commit install` still fails locally rather than in CI.
 
 The test run ends with the suite count and the coverage verdict, in this
