@@ -78,3 +78,14 @@ repos:
         files: ^docs/dev-journal\.md$
         pass_filenames: false
         args: [docs/dev-journal.md]
+
+      - id: diagram-exports
+        name: diagram exports
+        entry: python tools/check_diagram_exports.py
+        language: python
+        # Named for the same reason again: the rule pairs a source with
+        # its export, so a commit touching only one of the two is exactly
+        # the case that has to be checked against the other.
+        files: ^docs/assets/
+        pass_filenames: false
+        args: [docs/assets]
