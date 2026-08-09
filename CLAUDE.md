@@ -164,12 +164,10 @@ project-specific:
 ### 2.2 Python
 
 - Line length 88, enforced on code and on Python inside the README
-- Every public symbol has a docstring
-- A docstring states the contract and stays short. It never carries an
-  issue number or an ADR reference — those date the code and answer a
-  question the caller is not asking. Reasoning goes in a comment beside
-  the rule it explains; history and measurements go in the PLAYBOOK, and
-  a docstring may point at the section holding them
+- Every public symbol has a docstring, stating the contract and staying
+  short — reasoning goes in a comment beside the rule it explains, and
+  history or measurements go in the PLAYBOOK, which the docstring may
+  point at by section
 - Public functions and class members are annotated
 - Fix the code rather than widening a ruff rule; per-file exemptions
   live in `pyproject.toml` with the reason
@@ -185,6 +183,11 @@ project-specific:
   YAML and CI workflows
 - Comments explain why, not what — a comment recording the failure that
   motivated the code is the point
+- The ban on citing an issue, PR or ADR by number in a code comment or
+  docstring comes from `base-quality` — do not restate it or its
+  reasoning. It binds code only: the README, the decision records and the
+  journal cite numbers as their job. It is not gated yet, and the code
+  does not satisfy it
 - The two structural rules above are gated, not reviewed:
   `tools/check_comment_layout.py` runs in pre-commit, in CI and in the
   suite. Width is left to ruff's `E501`, which already measures comment

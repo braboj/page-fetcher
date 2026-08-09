@@ -92,8 +92,9 @@ def test_only_scale_two_passes_the_band(tmp_path, scale, expected):
     assert codes(tmp_path, size=scaled(scale)) == expected
 
 
-# The two the repository actually shipped, from #151. Both rendered every
-# arrow correctly, which is why reading the render passed them twice.
+# The two sizes the repository actually shipped at the default scale, kept
+# as the regression cases they are. Both rendered every arrow correctly,
+# which is why reading the render passed them twice.
 REGRESSIONS = [
     pytest.param((1320, 510), (1332, 523), id="business-context-at-scale-1"),
     pytest.param((1061, 740), (1074, 753), id="level1-building-blocks-at-scale-1"),
@@ -200,5 +201,5 @@ def test_the_committed_diagrams_conform():
 def test_every_committed_diagram_is_measured():
     # The rules above only reach a diagram that is present, so dropping a
     # source from docs/assets/ would make the assertion above pass by
-    # leaving less to measure. Seven at the time of #151.
+    # leaving less to measure. Seven when the check was written.
     assert len(sorted(ASSETS.glob("*.drawio"))) >= 7
