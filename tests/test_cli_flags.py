@@ -113,9 +113,10 @@ def test_unknown_flag_is_rejected_before_the_cache_is_built(tmp_path, monkeypatc
     ],
 )
 def test_empty_flag_value_is_rejected(monkeypatch, capsys, flag, expects):
-    # #98 rejected a value flag with nothing after it. An explicitly empty
-    # value took the other route: _flag_value returned "", and every call
-    # site truth-tested it back into the None an absent flag produces.
+    # The guard for a value flag with nothing after it missed the
+    # explicitly empty value, which took the other route: _flag_value
+    # returned "", and every call site truth-tested it back into the None
+    # an absent flag produces.
     monkeypatch.delenv("PAGEFETCH_CACHE_DIR", raising=False)
 
     code = _run(monkeypatch, ["https://x.test", flag, ""])
@@ -216,15 +217,15 @@ def test_wait_rejects_a_negative_value():
 
 
 def test_wait_without_a_value_is_rejected():
-    # #98: this returned DEFAULT_WAIT_MS and exited 0, substituting the
-    # default for the value the user was explicitly reaching past.
+    # Regression: this returned DEFAULT_WAIT_MS and exited 0, substituting
+    # the default for the value the user was explicitly reaching past.
     with pytest.raises(ValueError, match="whole number of milliseconds"):
         _parse_wait_ms(["pagefetch", "https://x.test", "--wait"])
 
 
 def test_bad_wait_exits_cleanly_rather_than_tracebacking(monkeypatch, capsys):
-    # #24: the int() was outside the try, so this produced a traceback
-    # where every other bad argument produced "Error: ...".
+    # Regression: the int() was outside the try, so this produced a
+    # traceback where every other bad argument produced "Error: ...".
     code = _run(monkeypatch, ["https://x.test", "--wait", "abc"])
     assert code == EXIT_ALL_FAILED
     err = capsys.readouterr().err
@@ -283,7 +284,8 @@ def test_flag_value_reads_the_following_argument():
 @pytest.mark.parametrize("flag", sorted(_VALUE_FLAGS))
 def test_every_value_flag_rejects_a_missing_value(flag):
     # Parametrized over the set rather than a hand-written list, so a
-    # value flag added later inherits the guard instead of repeating #98.
+    # value flag added later inherits the guard instead of repeating the
+    # missing-value bug.
     with pytest.raises(ValueError, match=f"{flag} expects "):
         _flag_value(["pagefetch", "https://x.test", flag], flag)
 
@@ -299,9 +301,9 @@ def test_every_value_flag_rejects_a_missing_value(flag):
     ],
 )
 def test_a_value_flag_with_no_value_exits_cleanly(monkeypatch, capsys, flag, message):
-    # #98: --wait, --cache-dir and --output-dir each fell back to their
-    # default and exited 0. --format already guarded; it is here to keep
-    # the five messages in one place.
+    # Regression: --wait, --cache-dir and --output-dir each fell back to
+    # their default and exited 0. --format already guarded; it is here to
+    # keep the five messages in one place.
     code = _run(monkeypatch, ["https://x.test", flag])
     assert code == EXIT_ALL_FAILED
     err = capsys.readouterr().err

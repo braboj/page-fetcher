@@ -25,8 +25,8 @@ And it does not skip a level-two heading it cannot read: an undated one is
 reported rather than passed over, since a check whose whole purpose is
 that nothing slips through unnoticed should not have a silent branch. A
 non-session heading added later is expected to fail here and to be
-answered with a carve-out and its reasoning, the way ADR-016 records
-those.
+answered with a carve-out whose reasoning is recorded first, the way the
+comment-layout carve-outs were.
 
 A heading may open with a date range, which the upstream-history entry
 uses; its start date is the ordering key. Headings and fences are both

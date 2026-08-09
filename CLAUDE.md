@@ -186,8 +186,9 @@ project-specific:
 - The ban on citing an issue, PR or ADR by number in a code comment or
   docstring comes from `base-quality` — do not restate it or its
   reasoning. It binds code only: the README, the decision records and the
-  journal cite numbers as their job. It is not gated yet, and the code
-  does not satisfy it
+  journal cite numbers as their job. `tools/check_code_citations.py` gates
+  it over the Python roots; comments in `ci.yml`, `.pre-commit-config.yaml`
+  and `pyproject.toml` are outside what it scans and are still on review
 - The two structural rules above are gated, not reviewed:
   `tools/check_comment_layout.py` runs in pre-commit, in CI and in the
   suite. Width is left to ruff's `E501`, which already measures comment

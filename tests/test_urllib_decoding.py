@@ -161,9 +161,9 @@ def test_tier_advertises_only_encodings_it_can_undo(fetcher, monkeypatch):
 
 @pytest.mark.parametrize("header", ["br", "zstd", "BR", " compress "])
 def test_decompress_rejects_an_encoding_it_cannot_undo(header):
-    # #16: these used to fall through and be returned unchanged, so the
-    # compressed bytes became mojibake that cleared the size floor and was
-    # cached as if it were a page.
+    # Regression: these used to fall through and be returned unchanged, so
+    # the compressed bytes became mojibake that cleared the size floor and
+    # was cached as if it were a page.
     with pytest.raises(ValueError, match="unsupported Content-Encoding"):
         _decompress(b"\x1b\x2a\x00\x84not-html-at-all", header)
 

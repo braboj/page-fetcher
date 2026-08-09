@@ -465,6 +465,37 @@ A vertex nested in a group is reported rather than measured. Its geometry
 is relative to the group, and a wrong box would fail a good export as
 readily as pass a bad one.
 
+### 3.10 Code citations
+
+```bash
+py tools/check_code_citations.py src tests examples tools
+```
+
+Same output contract as §3.6, and the same three places: the
+`code-citations` pre-commit hook, a step in `Lint and format`, and
+`test_code_citations.py`. Two codes — `ISSUE` for a `#` followed by
+digits, `RECORD` for an `ADR` followed by digits.
+
+`base/core/quality.md` bans citing an issue, PR or decision record by
+number in a code comment or docstring, and asks for exactly this check.
+Code outlives the tracker: a reader who follows a stale number lands on a
+dead thread instead of on whatever superseded it. State the substance —
+name the descriptor, the source or the derivation. A durable source
+(author, year, method) is explicitly allowed and matches neither pattern.
+
+Markdown is the opposite and is never scanned. The README, the decision
+records, the journal and this file cite numbers because that is their job.
+
+Comments come from `tokenize` and docstrings from `ast`, so a citation
+inside an ordinary string literal is left alone — test data describing a
+violation is not one. There are no carve-outs; a case needing one should
+be recorded before it is added.
+
+Two limits worth knowing. It scans Python only, so a number in a comment
+in `ci.yml`, `.pre-commit-config.yaml` or `pyproject.toml` is not caught —
+ten of those stand today. And it matches the two shapes above, so a bare
+"issue 151" in prose passes; the rule is wider than what a regex can hold.
+
 ## 4. Maintenance
 
 ### 4.1 Dependencies

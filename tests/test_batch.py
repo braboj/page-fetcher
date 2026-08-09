@@ -217,9 +217,9 @@ def test_forced_nodriver_skips_the_probe(fetcher, urllib_tier, monkeypatch):
 def test_persistent_nodriver_serves_a_cache_hit_without_fetching(
     fetcher, urllib_tier, cache, monkeypatch
 ):
-    # #15: this path drives the browser directly instead of going through
-    # _escalate, and it never consulted the cache — so a batch holding a
-    # headed browser re-fetched every URL it already had.
+    # Regression: this path drives the browser directly instead of going
+    # through _escalate, and it never consulted the cache — so a batch
+    # holding a headed browser re-fetched every URL it already had.
     nodriver = _FakeNodriverModule()
     monkeypatch.setitem(sys.modules, "nodriver", nodriver)
     urllib_tier(fetcher, _BOT_BLOCKED)
@@ -432,9 +432,9 @@ class _ExplodingLoop:
 
 
 def test_close_closes_the_loop_even_when_the_browser_stop_fails(capsys):
-    # #20: teardown was three unguarded statements, so the first failure
-    # skipped the rest. A dead browser is the normal case after a crash
-    # mid-batch — exactly when the cleanup matters most.
+    # Regression: teardown was three unguarded statements, so the first
+    # failure skipped the rest. A dead browser is the normal case after a
+    # crash mid-batch — exactly when the cleanup matters most.
     loop = asyncio.new_event_loop()
     session = _BatchSession(nd_browser=_DeadBrowser(), loop=loop)
 
