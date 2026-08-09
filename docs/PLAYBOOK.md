@@ -304,7 +304,39 @@ py -m ruff format --check .   # what CI runs
 ```
 
 Per-file rule exemptions live in `pyproject.toml` with a comment giving the
-reason. Fix the code rather than widening a rule.
+reason, or naming the section here that gives it. Fix the code rather than
+widening a rule.
+
+**Why each exemption stands.** Four files carry one, and no exemption is
+there because the rule was inconvenient.
+
+`network.py` — `BLE001` and `S110`: the escalation ladder catches broad
+exceptions on purpose. Any failure inside a tier — a missing browser
+binary, a CDP disconnect, a driver crash — must fall through to the next
+tier rather than abort the fetch, and the best-effort teardown paths must
+not let a failure while closing a browser mask the result already fetched.
+Narrowing either would couple the fetcher to each engine's exception
+hierarchy, which is the coupling the `PageSource` ABC exists to avoid.
+`PLC0415`: the browser libraries are imported inside the tier methods so
+the package installs and runs with none of them present; hoisting them to
+module scope would make every optional dependency mandatory. `PLR0911`:
+the orchestrator returns from each tier as it succeeds, and collapsing
+that into one exit would thread a result variable through every branch.
+
+`chrome.py` — `S607`: `tasklist` resolves via `PATH` on purpose, because
+hardcoding a System32 path breaks on non-default Windows installs, and the
+call is already best-effort.
+
+`tests/**` — pytest's assert-based style trips `S101`, and comparing
+against literals trips `PLR2004`. The tier-stub helper takes one argument
+per tier, which trips the argument-count rules. `S311` flags `random` as
+non-cryptographic, which is the point: a seeded generator builds a
+deterministic incompressible fixture. `D` is exempt because a docstring on
+a test named after its assertion restates the name.
+
+`examples/**` — `S101`: the `FakeFetcher` example is a consumer's test
+pattern made executable, and the assertions are what it demonstrates.
+Printing PASS/FAIL instead would show a way nobody writes tests.
 
 Docstrings are part of the lint: the `D` rules run with the Google
 convention, so a public symbol without one fails `ruff check`. The suite is
@@ -336,6 +368,19 @@ raise it against the measured figure when the testable surface grows, never
 lower it to make a change pass (ADR-002). Leave a few points of headroom:
 the floor is enforced on every matrix leg, and Linux and Windows cover
 different branches of `chrome.py`, so they do not report the same figure.
+
+**Where the floor came from.** Sized from the measured baseline, never from
+a target picked by feel. It went 45 to 63 when the batch path was brought
+under test, 63 to 70 when the CLI first came under test, and 70 to 76 when
+the remaining argument parsing did, at which point `__main__` reached 99% —
+all but its own guard. The measured figure is around 79%, and the gap to
+the floor stays as headroom rather than being spent: the legs sit within a
+fraction of a point of each other now that `chrome.py` no longer queries
+the host, but the floor tracks the lowest of them.
+
+What is left uncovered is the browser-tier method bodies, which need a
+headed Chrome and are validated by hand (§3.7). The floor is not a quality
+claim about them — it is a ratchet that must not regress.
 
 ### 3.4 Secret scanning (gitleaks)
 

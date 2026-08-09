@@ -81,42 +81,23 @@ select = [
 convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
-# The escalation ladder catches broad exceptions on purpose: any failure
-# inside a tier — a missing browser binary, a CDP disconnect, a driver
-# crash — must fall through to the next tier rather than abort the fetch.
-# Narrowing these would couple the fetcher to each engine's exception
-# hierarchy, which is exactly the coupling the PageSource ABC avoids.
-# S110 (try-except-pass) covers the best-effort browser teardown paths for
-# the same reason: a failure while closing a browser must not mask the
-# result already fetched.
+# Every exemption below is deliberate, and PLAYBOOK 3.1 states why each
+# one stands. None is here because the rule was inconvenient.
 #
-# PLC0415 (import not at top level): the browser libraries are imported
-# inside the tier methods deliberately, so the package installs and runs
-# with none of them present. Hoisting them to module scope would make
-# every optional dependency mandatory.
-#
-# PLR0911 (too many returns): the escalation orchestrator returns from
-# each tier as it succeeds. Collapsing that into one exit point would
-# need a result variable threaded through every branch, which reads worse
-# than the early returns.
+# Broad excepts and best-effort teardown keep the ladder falling through
+# to the next tier; lazy imports keep the optional engines optional.
 "src/pagefetch/network.py" = ["BLE001", "S110", "PLC0415", "PLR0911"]
-# S607 (partial executable path): `tasklist` is resolved via PATH on
-# purpose — hardcoding a System32 path breaks on non-default Windows
-# installs, and the call is already best-effort.
+
+# `tasklist` resolves via PATH, because a hardcoded System32 path breaks
+# on non-default Windows installs.
 "src/pagefetch/chrome.py" = ["BLE001", "S110", "S607"]
-# pytest's assert-based style (S101 flags every assertion) and its habit
-# of comparing against literals (PLR2004). The tier-stub helper takes one
-# argument per tier, which trips the argument-count rules. S311 flags
-# `random` as non-cryptographic, which is the point — a seeded generator
-# builds a deterministic incompressible fixture.
-#
-# D (pydocstyle): a docstring on `test_undecompressable_body_is_not_cached`
-# restates the name. The naming convention already carries a test's intent,
-# so the rule would buy 209 lines of restatement and no information.
+
+# pytest's assert-based style, its literal comparisons, and the one stub
+# helper taking an argument per tier. A test named after its assertion
+# gains nothing from a docstring restating it.
 "tests/**" = ["S101", "PLR2004", "PLR0913", "PLR0917", "S311", "D"]
-# S101 (assert): the FakeFetcher example is a consumer's test pattern made
-# executable, and the assertions are what it demonstrates. Printing
-# PASS/FAIL instead would show a way nobody writes tests.
+
+# The assertions are what the example demonstrates.
 "examples/**" = ["S101"]
 
 [tool.mypy]
@@ -154,16 +135,7 @@ source = ["pagefetch"]
 
 [tool.coverage.report]
 show_missing = true
-# Sized from the measured baseline, not from a target picked by feel.
-# Raised 45 -> 63 when the batch path was brought under test, 63 -> 70 when
-# the CLI first came under test, and 70 -> 76 when the remaining argument
-# parsing did — __main__ reached 99%, all but the
-# __main__ guard. The measured figure is ~79%. The floor has to hold on
-# every matrix leg, so it tracks the lowest; the legs sit within a fraction
-# of a point of each other now that chrome.py no longer queries the host,
-# but the gap stays as headroom rather than being spent. What is left
-# uncovered is the browser-tier method bodies, which need a headed Chrome
-# and are validated by hand. This is a ratchet floor that must not regress,
-# NOT a quality claim — raise it against the measured figure as the
-# testable surface grows, and never lower it to make a change pass.
+# A ratchet sized from the measured baseline, never from a target picked
+# by feel: raise it as the testable surface grows, never lower it to make
+# a change pass. PLAYBOOK 3.3 has the history and what stays uncovered.
 fail_under = 76

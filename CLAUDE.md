@@ -174,7 +174,10 @@ project-specific:
   point at by section
 - Public functions and class members are annotated
 - Fix the code rather than widening a ruff rule; per-file exemptions
-  live in `pyproject.toml` with the reason
+  live in `pyproject.toml` with the reason, or with the PLAYBOOK section
+  that gives it. A comment there states what the setting does and the one
+  clause that makes it non-obvious — anything needing a second sentence
+  belongs in the PLAYBOOK, which the comment names
 
 ### 2.3 Comments
 
