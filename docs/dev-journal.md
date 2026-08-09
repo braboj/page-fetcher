@@ -2100,3 +2100,58 @@ mis-scaled also passes when there are no diagrams left to measure.
 - Five issues still stand open against the chain — `#983`, `#995`, `#999`,
   `#1000`, `#1001` — and none govern here until they land and the pin
   moves.
+
+---
+
+## 2026-08-09 (twenty-fifth session) — Where a check should live
+
+**Tool**: Claude Code (Opus 5)
+
+A short one, and nothing in this repository changed. It exists because the
+previous entry recorded no issues created, and four were.
+
+**Changes**
+
+- None here. The output is entirely upstream.
+
+**Issues created**: `solid-ai-templates#1004` (the citation ban covers
+commented configuration, not just source), `#1005` (pair every
+no-violations assertion with proof the inputs were reached), and `#1006`
+(ship the consumer-side checks the chain already prescribes). A comment on
+`#1002` records the downstream implementation result, including the
+strict-lower-bound argument that measurement disproved.
+
+The question that produced `#1006` was whether this repository's `tools/`
+belong upstream. The answer turned on a distinction that was not obvious
+until the templates repo was actually read: it already ships Python, so
+"can it hold code" was the wrong question. Its three tools are all
+maintainer-side, operating on the templates' own content. Nothing there
+executes inside a consumer's gate. Sending a check up means that repo
+starts owning runtime behaviour in other people's pipelines, which is a
+category change and needs a record there before code.
+
+Two of the four transfer and two do not, and the split is not about
+quality. Journal order and code citations enforce rules the chain already
+mandates — the second is prescribed almost to the line, and the first is
+the open subject of `#999`, which cites this repository as its evidence.
+Comment layout enforces a chain rule too, but its five carve-outs exist
+where the rule collides with `ruff format` and `D202`; another stack
+collides somewhere else, and making them configurable would dissolve the
+property that each carve-out is stated, tested, and needs a reason before a
+sixth. Diagram exports is drawio-specific, and its general form was already
+contributed as a rule rather than as code.
+
+Both stay here until there is a second consumer to generalize against. One
+implementation is not evidence of a shared need — which is the same
+argument the previous entry ran into from the other direction, where a
+limit that had been written down was mistaken for a limit that had been
+justified.
+
+**Not done**
+
+- All three new issues are filed, none landed. Eight now stand open against
+  the chain — `#983`, `#995`, `#999`, `#1000`, `#1001`, `#1004`, `#1005`,
+  `#1006` — and none govern here until they land and the pin moves.
+- `#1006` offers a PR with both checks, their suites, the hooks manifest and
+  the record. Nothing starts until the category change is agreed there.
+- `#9`'s velocity measurement, still unchanged.
