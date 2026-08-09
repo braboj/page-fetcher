@@ -468,13 +468,18 @@ readily as pass a bad one.
 ### 3.10 Code citations
 
 ```bash
-py tools/check_code_citations.py src tests examples tools
+py tools/check_code_citations.py src tests examples tools \
+   .github pyproject.toml .pre-commit-config.yaml
 ```
 
 Same output contract as §3.6, and the same three places: the
 `code-citations` pre-commit hook, a step in `Lint and format`, and
 `test_code_citations.py`. Two codes — `ISSUE` for a `#` followed by
 digits, `RECORD` for an `ADR` followed by digits.
+
+The roots are listed in four places — the hook's `args`, the CI step, the
+command above and `ROOTS` in the test. A root added to some and not the
+others fails the test, which compares the list against what it reaches.
 
 `base/core/quality.md` bans citing an issue, PR or decision record by
 number in a code comment or docstring, and asks for exactly this check.
@@ -486,15 +491,20 @@ name the descriptor, the source or the derivation. A durable source
 Markdown is the opposite and is never scanned. The README, the decision
 records, the journal and this file cite numbers because that is their job.
 
-Comments come from `tokenize` and docstrings from `ast`, so a citation
-inside an ordinary string literal is left alone — test data describing a
-violation is not one. There are no carve-outs; a case needing one should
-be recorded before it is added.
+In Python, comments come from `tokenize` and docstrings from `ast`, so a
+citation inside an ordinary string literal is left alone — test data
+describing a violation is not one. There are no carve-outs; a case needing
+one should be recorded before it is added.
 
-Two limits worth knowing. It scans Python only, so a number in a comment
-in `ci.yml`, `.pre-commit-config.yaml` or `pyproject.toml` is not caught —
-ten of those stand today. And it matches the two shapes above, so a bare
-"issue 151" in prose passes; the rule is wider than what a regex can hold.
+Commented configuration is scanned as code, because a workflow, a hook
+list and the project file all carry reasoning and a number rots there the
+same way. Those are read line by line rather than parsed: a `#` outside a
+quote opens a comment. That is enough for these files and would not
+survive an escaped quote or a block scalar carrying a lone `#`.
+
+One limit remains. It matches the two shapes above, so a bare "issue 151"
+in prose passes — the rule is wider than what a regex can hold, and the
+gate is a floor under review rather than a replacement for it.
 
 ## 4. Maintenance
 

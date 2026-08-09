@@ -40,14 +40,17 @@ jobs:
       - name: Comment layout
         # Standard library only, so it needs nothing installed above. Roots
         # are listed rather than globbed, so a new top-level directory is a
-        # deliberate addition here rather than silently unchecked (ADR-016).
+        # deliberate addition here rather than silently unchecked.
         run: python tools/check_comment_layout.py src tests examples tools
 
       - name: Code citations
         # Standard library only, like the check above. Bans an issue, PR
         # or record number in a comment or docstring: code outlives the
-        # tracker, and markdown is where a number belongs.
-        run: python tools/check_code_citations.py src tests examples tools
+        # tracker, and markdown is where a number belongs. Commented
+        # configuration is code for this purpose, so it is scanned too.
+        run: >
+          python tools/check_code_citations.py src tests examples tools
+          .github pyproject.toml .pre-commit-config.yaml
 
       - name: Journal order
         # Standard library only, like the check above. The path is named
@@ -59,7 +62,7 @@ jobs:
         # Standard library only, like the two above. Reads the committed
         # PNG's header rather than the image, so it needs no draw.io and
         # no display — which is what lets the export scale be gated at
-        # all, since the render does not show it (#151).
+        # all, since the render does not show it.
         run: python tools/check_diagram_exports.py docs/assets
 
   types:

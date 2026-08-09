@@ -126,6 +126,10 @@ py tools/check_journal_order.py docs/dev-journal.md
 
 # diagram export scale and pairing — same output contract
 py tools/check_diagram_exports.py docs/assets
+
+# issue/PR/record numbers in code and commented config — same contract
+py tools/check_code_citations.py src tests examples tools \
+   .github pyproject.toml .pre-commit-config.yaml
 ```
 
 ## 2. Code conventions
@@ -187,8 +191,9 @@ project-specific:
   docstring comes from `base-quality` — do not restate it or its
   reasoning. It binds code only: the README, the decision records and the
   journal cite numbers as their job. `tools/check_code_citations.py` gates
-  it over the Python roots; comments in `ci.yml`, `.pre-commit-config.yaml`
-  and `pyproject.toml` are outside what it scans and are still on review
+  it over the code roots and the commented configuration — `ci.yml`,
+  `.pre-commit-config.yaml` and `pyproject.toml` included, since a number
+  rots in a workflow comment the same way it rots in a module
 - The two structural rules above are gated, not reviewed:
   `tools/check_comment_layout.py` runs in pre-commit, in CI and in the
   suite. Width is left to ruff's `E501`, which already measures comment

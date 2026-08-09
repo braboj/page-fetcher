@@ -5,14 +5,19 @@ One rule, reported under two codes:
     ISSUE   a `#` followed immediately by digits
     RECORD  an `ADR` followed by digits
 
-Run it over the repository's Python roots:
+Run it over the repository's code roots and its commented configuration:
 
-    python tools/check_code_citations.py src tests examples tools
+    python tools/check_code_citations.py src tests examples tools \
+        .github pyproject.toml .pre-commit-config.yaml
 
-Comments come from `tokenize` and docstrings from `ast`, so a citation
-inside an ordinary string literal is left alone — test data describing a
-violation is not one. Markdown is never scanned: cross-referencing by
-number is what the README, the records and the journal are for.
+In Python, comments come from `tokenize` and docstrings from `ast`, so a
+citation inside an ordinary string literal is left alone — test data
+describing a violation is not one. Configuration is line-based instead: a
+`#` outside a quote opens a comment, which handles these files and would
+not survive an escaped quote or a block scalar carrying a lone `#`.
+
+Markdown is never scanned: cross-referencing by number is what the README,
+the records and the journal are for.
 
 There are no carve-outs. The rule allows naming a durable source — an
 author, a year, a method — and neither pattern matches one, so nothing
@@ -37,6 +42,14 @@ PATTERNS = (
 )
 
 DOCSTRING_OWNERS = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
+
+# Commented configuration counts as code: a workflow, a hook list and the
+# project file all carry reasoning, and a number rots there exactly as it
+# does in a module. These are read line by line rather than parsed, which
+# is why the set is listed instead of inferred.
+CONFIG_SUFFIXES = (".yml", ".yaml", ".toml", ".cfg", ".ini")
+
+SCANNED_SUFFIXES = (".py", *CONFIG_SUFFIXES)
 
 
 def _comments(path: Path) -> Iterator[tuple[int, str]]:
@@ -68,27 +81,67 @@ def _docstrings(path: Path, tree: ast.Module) -> Iterator[tuple[int, str]]:
             yield literal.lineno + offset, line
 
 
+def _comment_part(line: str) -> str:
+    """Return the comment on one config line, ignoring a quoted `#`."""
+    quote = ""
+
+    for index, char in enumerate(line):
+        if quote:
+            if char == quote:
+                quote = ""
+        elif char in "\"'":
+            quote = char
+        elif char == "#":
+            return line[index:]
+
+    return ""
+
+
+def _config_comments(path: Path) -> Iterator[tuple[int, str]]:
+    """Yield every comment in a line-based config file with its line."""
+    lines = path.read_text(encoding="utf-8").splitlines()
+
+    for row, line in enumerate(lines, start=1):
+        comment = _comment_part(line)
+        if comment:
+            yield row, comment
+
+
+def _lines(path: Path) -> Iterator[tuple[int, str]]:
+    """Yield every comment or docstring line in one scannable file."""
+    if path.suffix in CONFIG_SUFFIXES:
+        yield from _config_comments(path)
+        return
+
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    yield from _comments(path)
+    yield from _docstrings(path, tree)
+
+
 def check(path: Path) -> list[tuple[int, str, str]]:
     """Return `(line, code, text)` for every citation in one file."""
-    tree = ast.parse(path.read_text(encoding="utf-8"))
     found: list[tuple[int, str, str]] = []
 
-    for row, text in list(_comments(path)) + list(_docstrings(path, tree)):
+    # Every match rather than the first: a line naming two issues in one
+    # parenthesis would otherwise report once, and a count that undersells
+    # the work left is the one thing a gate must not do.
+    for row, text in _lines(path):
         for code, pattern in PATTERNS:
-            match = pattern.search(text)
-            if match is not None:
+            for match in pattern.finditer(text):
                 found.append((row, code, f"{match.group()}  in: {text.strip()}"))
 
     return sorted(found)
 
 
-def _python_files(root: Path) -> Iterator[Path]:
-    """Yield every Python file under one root, in a stable order."""
+def _scannable_files(root: Path) -> Iterator[Path]:
+    """Yield every file under one root this can read, in a stable order."""
     if root.is_file():
         yield root
         return
 
-    yield from sorted(root.rglob("*.py"))
+    yield from sorted(
+        path for suffix in SCANNED_SUFFIXES for path in root.rglob(f"*{suffix}")
+    )
 
 
 def main(argv: list[str]) -> int:
@@ -99,7 +152,7 @@ def main(argv: list[str]) -> int:
 
     found = 0
     for name in argv:
-        for path in _python_files(Path(name)):
+        for path in _scannable_files(Path(name)):
             for row, code, text in check(path):
                 print(f"{path.as_posix()}:{row}: {code}: {text}")
                 found += 1

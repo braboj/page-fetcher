@@ -47,7 +47,7 @@ repos:
   # The project-local hooks, for conventions no linter in the list above
   # expresses. Both were adopted after review had been given the job and
   # had missed it: 26 comment-layout sites accumulated across the package
-  # and the suite (ADR-016), and the journal was newest-first for twenty
+  # and the suite, and the journal was newest-first for twenty
   # sessions against a rule the pinned template already carried.
   #
   # `language: python` rather than `system` for both: the scripts need
@@ -72,12 +72,21 @@ repos:
         name: code citations
         entry: python tools/check_code_citations.py
         language: python
-        types: [python]
-        # Roots are listed rather than passed as changed filenames, for
-        # the same reason as above — and so that a new top-level directory
-        # is a deliberate addition here rather than silently unchecked.
+        # Commented configuration is scanned alongside the code roots, so
+        # the hook cannot be limited to `types: [python]`. Roots are listed
+        # rather than passed as changed filenames, for the same reason as
+        # above — and so that a new one is a deliberate addition here
+        # rather than silently unchecked.
+        files: \.(py|ya?ml|toml|cfg|ini)$
         pass_filenames: false
-        args: [src, tests, examples, tools]
+        args:
+          - src
+          - tests
+          - examples
+          - tools
+          - .github
+          - pyproject.toml
+          - .pre-commit-config.yaml
 
       - id: journal-order
         name: journal order
