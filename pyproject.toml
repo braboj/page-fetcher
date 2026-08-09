@@ -49,7 +49,7 @@ where = ["src"]
 # Tests and examples ship with the repository, not the wheel — the captured
 # HTML fixtures alone are larger than the package, and an example is only
 # useful beside the source it explains. Under the src/ layout both sit
-# outside the package, so neither has to be excluded by hand (ADR-010).
+# outside the package, so neither has to be excluded by hand.
 include = ["pagefetch*"]
 
 [tool.ruff]
@@ -128,7 +128,7 @@ python_version = "3.10"
 # commit in the repository.
 files = ["src", "tests", "examples", "tools"]
 # tools/ is a directory of scripts, not an installed package, so its
-# modules are only importable by the suite through this path (ADR-016).
+# modules are only importable by the suite through this path.
 mypy_path = "tools"
 # The browser tiers are lazily imported and optional, so their stubs are
 # absent in a plain `pip install -e .` checkout and in CI.
@@ -147,23 +147,23 @@ pythonpath = ["tools"]
 
 [tool.coverage.run]
 # Named as an import, so it resolves through the install rather than the
-# working directory — which is the whole point of the src/ layout
-# (ADR-010). The suite sits outside the package now, so no omit pattern is
-# needed to keep it out of the figure.
+# working directory — which is the whole point of the src/ layout. The
+# suite sits outside the package now, so no omit pattern is needed to keep
+# it out of the figure.
 source = ["pagefetch"]
 
 [tool.coverage.report]
 show_missing = true
 # Sized from the measured baseline, not from a target picked by feel.
-# Raised 45 -> 63 when the batch path was brought under test (#4), 63 -> 70
-# when the CLI first came under test (#13, #14), and 70 -> 76 when the
-# remaining argument parsing did (#22, #24) — __main__ reached 99%, all but
-# the __main__ guard. The measured figure is ~79%. The floor has to hold on
+# Raised 45 -> 63 when the batch path was brought under test, 63 -> 70 when
+# the CLI first came under test, and 70 -> 76 when the remaining argument
+# parsing did — __main__ reached 99%, all but the
+# __main__ guard. The measured figure is ~79%. The floor has to hold on
 # every matrix leg, so it tracks the lowest; the legs sit within a fraction
 # of a point of each other now that chrome.py no longer queries the host,
 # but the gap stays as headroom rather than being spent. What is left
 # uncovered is the browser-tier method bodies, which need a headed Chrome
 # and are validated by hand. This is a ratchet floor that must not regress,
-# NOT a quality claim — raise it again as the testable surface grows. See
-# ADR-002.
+# NOT a quality claim — raise it against the measured figure as the
+# testable surface grows, and never lower it to make a change pass.
 fail_under = 76

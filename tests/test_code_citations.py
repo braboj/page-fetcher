@@ -2,11 +2,21 @@ from pathlib import Path
 from textwrap import dedent
 
 import pytest
-from check_code_citations import check
+from check_code_citations import _scannable_files, check
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-ROOTS = ("src", "tests", "examples", "tools")
+# The same roots the hook and the CI step pass. Listed rather than derived
+# so that a root added to one and forgotten in the others fails here.
+ROOTS = (
+    "src",
+    "tests",
+    "examples",
+    "tools",
+    ".github",
+    "pyproject.toml",
+    ".pre-commit-config.yaml",
+)
 
 
 def codes(tmp_path: Path, source: str) -> list[str]:
@@ -103,11 +113,63 @@ def test_both_codes_are_reported_from_one_file(tmp_path):
     assert codes(tmp_path, source) == ["ISSUE", "RECORD"]
 
 
+CONFIG = [
+    pytest.param("ci.yml", "steps:\n  # per ADR-002\n", "RECORD", id="yaml"),
+    pytest.param("p.toml", "# raised when #4 landed\nx = 1\n", "ISSUE", id="toml"),
+    pytest.param("s.cfg", "# see #9\n[x]\n", "ISSUE", id="cfg"),
+]
+
+
+@pytest.mark.parametrize(("name", "source", "expected"), CONFIG)
+def test_a_citation_in_commented_configuration_is_reported(
+    tmp_path, name, source, expected
+):
+    path = tmp_path / name
+    path.write_text(source, encoding="utf-8")
+    assert [code for _, code, _ in check(path)] == [expected]
+
+
+def test_a_hash_inside_a_quoted_config_value_is_not_a_comment(tmp_path):
+    # A `#` inside a quote is data, not a comment opener. Reading the line
+    # naively would report the value and there would be nothing to fix.
+    path = tmp_path / "ci.yml"
+    path.write_text('key: "a literal #42 inside a value"\n', encoding="utf-8")
+    assert check(path) == []
+
+
+def test_a_trailing_config_comment_is_read_past_its_value(tmp_path):
+    path = tmp_path / "ci.yml"
+    path.write_text('key: "value"  # narrowed by #42\n', encoding="utf-8")
+    assert [code for _, code, _ in check(path)] == ["ISSUE"]
+
+
+def test_every_citation_on_a_line_is_reported(tmp_path):
+    # A line naming two issues at once must report twice, or the count
+    # undersells what is left to fix.
+    path = tmp_path / "p.toml"
+    path.write_text("# raised when #4 and #5 landed\n", encoding="utf-8")
+    assert [code for _, code, _ in check(path)] == ["ISSUE", "ISSUE"]
+
+
 def test_the_repository_carries_no_citations():
     found = [
         f"{path.relative_to(REPO_ROOT).as_posix()}:{row}: {code}: {text}"
         for root in ROOTS
-        for path in sorted((REPO_ROOT / root).rglob("*.py"))
+        for path in _scannable_files(REPO_ROOT / root)
         for row, code, text in check(path)
     ]
     assert found == []
+
+
+def test_the_commented_configuration_is_actually_reached():
+    # The assertion above passes whether the config roots are scanned or
+    # silently skipped, so the file list is checked against what the roots
+    # are supposed to cover.
+    scanned = {
+        path.relative_to(REPO_ROOT).as_posix()
+        for root in ROOTS
+        for path in _scannable_files(REPO_ROOT / root)
+    }
+    assert "pyproject.toml" in scanned
+    assert ".pre-commit-config.yaml" in scanned
+    assert ".github/workflows/ci.yml" in scanned
