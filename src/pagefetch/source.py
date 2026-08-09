@@ -29,7 +29,7 @@ class Transport(Enum):
     Named for what each tier requires of the caller rather than for the
     library behind it, so swapping an engine is not a breaking change.
     HEADED and HEADLESS both get past bot protection and differ only in
-    whether a display is available; see ADR-006.
+    whether a display is available.
     """
 
     AUTO = "auto"  # http, escalating through the browser tiers as needed

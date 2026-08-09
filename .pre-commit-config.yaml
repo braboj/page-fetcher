@@ -68,6 +68,17 @@ repos:
         pass_filenames: false
         args: [src, tests, examples, tools]
 
+      - id: code-citations
+        name: code citations
+        entry: python tools/check_code_citations.py
+        language: python
+        types: [python]
+        # Roots are listed rather than passed as changed filenames, for
+        # the same reason as above — and so that a new top-level directory
+        # is a deliberate addition here rather than silently unchecked.
+        pass_filenames: false
+        args: [src, tests, examples, tools]
+
       - id: journal-order
         name: journal order
         entry: python tools/check_journal_order.py

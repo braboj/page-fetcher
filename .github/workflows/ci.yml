@@ -30,15 +30,25 @@ jobs:
           python-version: "3.13"
       - name: Install
         run: python -m pip install --upgrade pip ruff
+
       - name: Lint
         run: ruff check --output-format=github .
+
       - name: Format
         run: ruff format --check .
+
       - name: Comment layout
         # Standard library only, so it needs nothing installed above. Roots
         # are listed rather than globbed, so a new top-level directory is a
         # deliberate addition here rather than silently unchecked (ADR-016).
         run: python tools/check_comment_layout.py src tests examples tools
+
+      - name: Code citations
+        # Standard library only, like the check above. Bans an issue, PR
+        # or record number in a comment or docstring: code outlives the
+        # tracker, and markdown is where a number belongs.
+        run: python tools/check_code_citations.py src tests examples tools
+
       - name: Journal order
         # Standard library only, like the check above. The path is named
         # for the same reason the roots are: a second journal would be a

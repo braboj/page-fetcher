@@ -84,9 +84,9 @@ def test_patterns_list_is_covered_by_parametrization():
     ],
 )
 def test_rate_limit_in_ordinary_prose_is_not_bot_blocked(prose):
-    # #12: "Rate.?limit" matched the bare phrase, so an article about API
-    # rate limiting was unfetchable — every tier applies this same gate, so
-    # there was no escalation path that could return the page.
+    # Regression: "Rate.?limit" matched the bare phrase, so an article
+    # about API rate limiting was unfetchable — every tier applies this
+    # same gate, so no escalation path could return the page.
     article = "<html><title>API design</title><body>" + (prose * 200) + "</body></html>"
     assert is_bot_blocked(article) is False
     assert looks_like_real_content(article) is True
@@ -108,10 +108,9 @@ def test_real_throttle_wording_is_still_detected(snippet):
 
 
 def test_dpreview_real_body_is_not_bot_blocked():
-    # Imbra-Ltd/wuseria#870 regression: a real 137 KB DPReview spec page
-    # embeds the substring "checking your browser extensions and settings"
-    # inside ad-blocker help text. The Cloudflare pattern must not
-    # false-match on that text.
+    # Regression: a real 137 KB DPReview spec page embeds the substring
+    # "checking your browser extensions and settings" inside ad-blocker
+    # help text. The Cloudflare pattern must not false-match on that text.
     html = (FIXTURES / "dpreview_specifications.html").read_text(
         encoding="utf-8", errors="replace"
     )
@@ -237,9 +236,10 @@ def test_error_patterns_list_is_covered_by_parametrization():
     ],
 )
 def test_ambiguous_phrase_in_body_copy_of_a_real_page_is_not_an_error(aside):
-    # #12: these phrases were unanchored, so a real product page mentioning
-    # a dead variant read as a soft-404. That verdict is terminal in AUTO
-    # mode — no escalation, no cache, no content — so the page was lost.
+    # Regression: these phrases were unanchored, so a real product page
+    # mentioning a dead variant read as a soft-404. That verdict is
+    # terminal in AUTO mode — no escalation, no cache, no content — so the
+    # page was lost.
     page = (
         "<html><head><title>Canon RF 50mm f/1.2L USM Lens</title></head><body>"
         + ("<p>Full specifications and sample images. " * 400)

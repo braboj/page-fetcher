@@ -12,8 +12,10 @@ headless. If http fails for another reason (404, timeout), it tries js,
 then headed, then headless.
 
 The tiers are named for what they require of the caller, not for the
-library behind them; ADR-006 records why the two bot-bypass tiers both
-exist and why headless is last despite the name.
+library behind them, so swapping an engine is not a breaking change. Both
+bot-bypass tiers exist because they differ in whether a display is
+available, and headless is last despite the name because it is the one
+most often refused.
 
 Third-party browser libraries are imported lazily inside each tier so the
 package works with only the standard library installed — unavailable tiers
@@ -93,7 +95,9 @@ def require_supported_scheme(url: str) -> None:
     This is a scheme allowlist and nothing more. It does NOT stop a
     request to a loopback or private address over http — a caller passing
     URLs that originate from untrusted input still has to filter those
-    itself. See ADR-003 for why that is deliberately out of scope here.
+    itself. Blocking them here is deliberately out of scope: this is a
+    fetcher for pages a human chose, and a resolver-level guard belongs
+    with whatever decides the URLs are safe to visit.
     """
     scheme = urllib.parse.urlsplit(url).scheme.lower()
     if scheme in ALLOWED_SCHEMES:

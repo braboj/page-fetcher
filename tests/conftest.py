@@ -6,8 +6,8 @@ host's real process table.
 `import pagefetch` resolves through the install, not through sys.path.
 This file used to insert the repository root so the import worked without
 one — which is exactly how the suite came to pass against source that was
-never packaged. ADR-010 moved the package to `src/` to close that off, so
-the manipulation is gone: run the editable install from ONBOARDING §1.
+never packaged. Moving the package under `src/` closed that off, so the
+manipulation is gone: run the editable install from ONBOARDING §1.
 """
 
 from pathlib import Path
