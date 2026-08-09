@@ -11,47 +11,13 @@ Run it over the directory holding the sources and their exports:
 
     python tools/check_diagram_exports.py docs/assets
 
-PLAYBOOK 4.7 exports at `--scale 2 --border 10`. Two of the seven diagrams
-were committed at the default scale instead and neither was caught by
-review: every arrow and every label renders correctly at half the
-resolution, so nothing about the image says it is wrong, and being a
-smaller file it reads in the diffstat as a compression win — #149's PNG
-went from 102 KB to 56 KB and looked like an improvement. ADR-020 already
-requires reading the export before committing, and that rule caught
-neither, because reading a render proves the arrows are there and the
-arrows are there at any scale. The property that was wrong is not one the
-image displays, which is what makes this a gate rather than a review note.
+It reads the PNG's header rather than the image, so it needs neither
+draw.io nor a display. What it does not do is check that an export is
+current for its source: an edit moving nothing structural leaves every
+measurement here unchanged, so a stale export needs a different check.
 
-What the scale rule compares. The export crops to the drawing's content
-box rather than to the page box, so `2 * pageWidth` is not the expected
-width — chapter 3's business context is a 1440x680 page that exports to
-2695x1077. What the file does yield is the box enclosing every vertex and
-every edge waypoint, which comes close to what draw.io renders without
-matching it: labels, shadows and stroke widths push the rendered bounds
-outward, while a shape's painted extent can sit just inside its geometry.
-Measured against `2 * (box + 2 * 10)` the seven committed exports land
-between 0.994 and 1.016 — mostly above it, and the deployment view 0.56%
-below. Closing that gap would mean reimplementing text metrics, so the
-rule is a band rather than an equality.
-
-Where the band's edges come from. Divided by the box alone, the seven land
-between 2.026 and 2.112. The same sources at scale 1 land at half that:
-the two committed that way measured 1.009 and 1.026. So the floor
-separates two populations a factor of two apart and can sit anywhere
-between them. It is at 1.75 rather than at 2.0 because the box is not a
-strict lower bound — the deployment view proves it can exceed what gets
-rendered — and a floor resting on an inequality that does not quite hold
-would fail a legitimate commit to catch nothing a looser one misses. The
-ceiling at 3.0 rejects an export taken at scale 3 or 4. It also assumes a
-content box much larger than the border, which adds `4 * 10 / box` to the
-ratio: 0.03 at the width of these diagrams, and enough to matter only
-below about 100px — smaller than any single shape in any of them.
-
-One thing this deliberately does not do: it does not check that a PNG was
-exported from the current source. An edit that moves nothing structural
-leaves the ratio in band, so a stale export is a different defect needing
-a different check. This gates the scale, which is the one a reader cannot
-see.
+PLAYBOOK 3.9 covers why the scale rule is a band rather than an equality,
+and carries the measurements behind its edges.
 """
 
 import struct
@@ -59,9 +25,15 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-# The export scale PLAYBOOK 4.7 specifies, and the band around it that the
-# docstring derives. All three sit together so that changing the export
-# command has one place to look.
+# The documented export scale, and the band the recovered ratio must land
+# in. The export crops to the content box rather than the page, so the
+# scale is recovered by dividing the PNG by the box around the source's
+# vertices and waypoints — close to what draw.io renders, not equal to it.
+# The band is wide because it only has to separate two populations a factor
+# of two apart, and the floor sits under 2.0 because that box is not a
+# strict lower bound: one diagram renders 0.56% narrower than its geometry,
+# and a floor resting on an inequality that does not quite hold would fail
+# a good export to catch nothing a looser one misses.
 SCALE = 2
 FLOOR = 1.75
 CEILING = 3.0

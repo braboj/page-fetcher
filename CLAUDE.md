@@ -165,6 +165,11 @@ project-specific:
 
 - Line length 88, enforced on code and on Python inside the README
 - Every public symbol has a docstring
+- A docstring states the contract and stays short. It never carries an
+  issue number or an ADR reference — those date the code and answer a
+  question the caller is not asking. Reasoning goes in a comment beside
+  the rule it explains; history and measurements go in the PLAYBOOK, and
+  a docstring may point at the section holding them
 - Public functions and class members are annotated
 - Fix the code rather than widening a ruff rule; per-file exemptions
   live in `pyproject.toml` with the reason

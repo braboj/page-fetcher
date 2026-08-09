@@ -431,15 +431,39 @@ source or an export missing its counterpart, and `UNREADABLE` for a source
 whose geometry cannot be recovered.
 
 It reads the PNG's IHDR header rather than the image, so it needs neither
-draw.io nor a display and runs anywhere the other two do. The scale is
-recovered by dividing the PNG by the box enclosing the source's vertices
-and waypoints; §4.7 covers why that is a band rather than an equality, and
-the checker's docstring carries the measurements.
+draw.io nor a display and runs anywhere the other two do.
 
 The scale rule exists because reading the render cannot catch what it
 gates. Two of seven diagrams shipped at the default scale, both found by
 accident during unrelated work — the failure is invisible in the image and
-reads in the diffstat as a compression win (#151).
+reads in the diffstat as a compression win (#151). ADR-020 already required
+reading the export before committing and caught neither, because reading a
+render proves the arrows are there and the arrows are there at any scale.
+
+**Why the rule is a band.** The export crops to the drawing's content box
+rather than the page box, so `2 * pageWidth` is not the expected width —
+chapter 3's business context is a 1440x680 page exporting to 2695x1077.
+What the source does yield is the box enclosing every vertex and edge
+waypoint, which is close to what draw.io renders without matching it:
+labels and shadows push the rendered bounds outward, while a shape's
+painted extent can sit just inside its geometry. Closing that gap would
+mean reimplementing text metrics.
+
+**Where its edges come from.** Divided by that box, the seven committed
+exports run 2.026 to 2.112. The same sources at scale 1 land at half that
+— the two committed that way measured 1.009 and 1.026 — so the floor
+separates two populations a factor of two apart and can sit anywhere
+between them. It is at 1.75 rather than 2.0 because the box is not a
+strict lower bound: measured against `2 * (box + 20)` the seven run 0.994
+to 1.016, the deployment view coming in 0.56% under. A floor resting on an
+inequality that does not quite hold would fail a good export to catch
+nothing a looser one misses. The ceiling at 3.0 rejects scale 3 and 4; it
+assumes a content box much larger than the border, which adds `40 / box`
+to the ratio and matters only below about 100px.
+
+A vertex nested in a group is reported rather than measured. Its geometry
+is relative to the group, and a wrong box would fail a good export as
+readily as pass a bad one.
 
 ## 4. Maintenance
 
@@ -693,12 +717,9 @@ py tools/check_diagram_exports.py docs/assets
 ```
 
 It recovers the scale by dividing the PNG by the box enclosing the
-source's vertices and edge waypoints. That box is close to what draw.io
-renders rather than equal to it — labels and shadows push the rendered
-bounds outward, while a shape's painted extent can sit just inside its
-geometry — so the rule accepts a band around the nominal scale rather than
-one figure. The checker's docstring carries the measurements behind both
-of its edges; a scale-1 export misses the floor by a factor of two, so the
+source's vertices and edge waypoints, and accepts a band around the
+nominal scale rather than one figure. §3.9 has the reasoning and the
+measurements; a scale-1 export misses the floor by a factor of two, so the
 tolerance costs nothing against the defect it exists for.
 
 A diagram whose layout is arithmetic rather than judgement — the quality
