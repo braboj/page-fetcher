@@ -2013,3 +2013,90 @@ is exactly how this one read.
 - Five issues still stand open against the chain — `#983`, `#995`, `#999`,
   `#1000`, `#1001` — and none govern here until they land and the pin
   moves.
+
+---
+
+## 2026-08-08 to 2026-08-09 (twenty-fourth session) — Nothing found reads the same as nothing looked at
+
+**Tool**: Claude Code (Opus 5)
+
+Two gates, and each one shipped with a hole the gate itself could not
+report. The theme is the same in both: an assertion that nothing is wrong
+passes just as well when nothing was examined.
+
+**Changes**
+
+- `tools/check_diagram_exports.py`, four codes — `SCALE` for an export not
+  taken at `--scale 2`, `EDGE` for the missing `<mxGeometry>` that drops an
+  arrow silently, `UNPAIRED`, and `UNREADABLE`. Wired into pre-commit, the
+  `Lint and format` job and the suite (#153).
+- The scale is recovered by dividing the PNG by the box around the source's
+  vertices and waypoints, and accepted as a band rather than one figure.
+- The diagram-export docstring cut from 54 lines to 20; its derivation moved
+  to PLAYBOOK 3.9, which had been pointing back at the docstring (#154).
+- `tools/check_code_citations.py`, two codes — `ISSUE` and `RECORD`. Eighteen
+  citations cleared from the package, the suite and `tools/` (#155).
+- Extended to commented configuration, clearing twelve more from `ci.yml`,
+  `.pre-commit-config.yaml` and `pyproject.toml` (#156).
+- CLAUDE.md 2.3 points at the inherited rule instead of restating it.
+
+**PRs merged**: #153, #154, #155, #156. **Issues closed**: #151.
+
+The scale band's floor is the first thing that went differently than
+reasoned. The argument for putting it at exactly 2.0 was that the geometry
+box is a strict lower bound on what draw.io renders — labels and shadows
+push the bounds outward and nothing pulls them in — so a true scale-2
+export can never come in under twice the box. Measuring all seven against
+`2 * (box + 20)` disproved it: they run 0.994 to 1.016, and the deployment
+view renders 0.56% narrower than its own geometry. The floor sits at 1.75
+because of that measurement, not despite it. A tolerance justified by an
+anomaly is defensible; the same number picked by feel would not have been,
+and the inequality that looked like a proof would have failed a good export
+to catch nothing a looser bound misses.
+
+The citation rule was already in the chain. It was proposed here as a new
+convention, and `base/core/quality.md` has carried it at the pinned
+revision all along — inherited by thirteen files, `python-lib` among them.
+It was also wider than the reading it was given: it binds code comments as
+well as docstrings, and it prescribes the very check that was then written
+as though from scratch. The second half of that is the useful part. The
+gap was never the rule; it was that nothing enforced it, and eighteen
+sites had accumulated the same way the comment-layout sites did before that
+rule was gated.
+
+Then the same shape twice more. The citation gate landed scanning Python
+only, and the config gap was recorded as a stated limit — with an argument
+that the coverage ratchet's numbers were a deliberate audit trail worth
+keeping. Told to remove all of them, they turned out to cost nothing: the
+comment already said what each rise paid for, and the numbers beside those
+phrases named threads no reader could still reach. A limit that has been
+written down is not thereby a limit that was justified.
+
+And the count was wrong while it was being reported. Ten citations, said
+twice, because the checker returned the first match per line and one line
+named two issues in a single parenthesis. Twelve. The fix — report every
+match — is what a gate owes: undercounting the work left is the one number
+it must not get wrong. Extending it also caught the checker itself, because
+the comment written to explain that fix instantiated a citation to
+illustrate it, and `tools/` is one of its own roots.
+
+The test that ties them together is `test_the_repository_carries_no_citations`.
+It passed throughout — while the configuration was unscanned, and it would
+pass again if a root were dropped from the list. An emptiness assertion
+cannot distinguish a clean repository from an unread one. It is now paired
+with a test that the roots reach the files they claim to, and the diagram
+suite carries the same pairing, because the check that no diagram is
+mis-scaled also passes when there are no diagrams left to measure.
+
+**Not done**
+
+- `#9`'s velocity measurement, unchanged. Ninth session.
+- The citation gate matches two shapes, so a bare "issue 151" written out
+  in prose passes. The rule is wider than a regex holds, and the gate is a
+  floor under review rather than a replacement for it.
+- Configuration is scanned line by line rather than parsed: a `#` outside a
+  quote opens a comment. Enough for these files, and it would not survive
+  an escaped quote or a block scalar carrying a lone `#`.
+- Five issues still stand open against the chain — `#983`, `#995`, `#999`,
+  `#1000`, `#1001` — and none govern here until they land and the pin
+  moves.
