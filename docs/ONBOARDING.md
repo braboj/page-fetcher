@@ -73,9 +73,10 @@ py tools/check_comment_layout.py src tests examples tools   # -> no output
 py tools/check_journal_order.py docs/dev-journal.md         # -> no output
 py tools/check_diagram_exports.py docs/assets               # -> no output
 
-# no output; the roots are in PLAYBOOK 3.10 and repeated by the hook
+# also no output; PLAYBOOK 3.10 explains the roots
 py tools/check_code_citations.py src tests examples tools \
    .github pyproject.toml .pre-commit-config.yaml
+
 py -m pytest --cov=pagefetch
 ```
 
