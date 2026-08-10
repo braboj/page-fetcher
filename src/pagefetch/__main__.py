@@ -39,6 +39,7 @@ from pathlib import Path
 
 from .cache import FileCache
 from .detection import is_bot_blocked, is_error_page
+from .errors import CommandLineError
 from .network import NetworkFetcher
 from .source import DEFAULT_WAIT_MS, ContentMode, FetchOptions, Transport
 
@@ -103,11 +104,11 @@ def _parse_wait_ms(argv: list[str]) -> int:
     try:
         wait_ms = int(raw)
     except ValueError:
-        raise ValueError(
+        raise CommandLineError(
             f"--wait expects a whole number of milliseconds, got {raw!r}"
         ) from None
     if wait_ms < 0:
-        raise ValueError(f"--wait cannot be negative, got {wait_ms}")
+        raise CommandLineError(f"--wait cannot be negative, got {wait_ms}")
     return wait_ms
 
 
@@ -125,7 +126,9 @@ def _parse_mode(argv: list[str]) -> ContentMode:
     try:
         return _FORMATS[raw]
     except KeyError:
-        raise ValueError(f"--format expects one of: {accepted}, got {raw!r}") from None
+        raise CommandLineError(
+            f"--format expects one of: {accepted}, got {raw!r}"
+        ) from None
 
 
 def _flag_value(argv: list[str], flag: str, expects: str = "a value") -> str | None:
@@ -149,7 +152,7 @@ def _flag_value(argv: list[str], flag: str, expects: str = "a value") -> str | N
         return None
     idx = argv.index(flag)
     if idx + 1 >= len(argv):
-        raise ValueError(f"{flag} expects {expects}")
+        raise CommandLineError(f"{flag} expects {expects}")
     value = argv[idx + 1]
 
     # An explicitly empty value is the same mistake arriving by the other
@@ -157,7 +160,7 @@ def _flag_value(argv: list[str], flag: str, expects: str = "a value") -> str | N
     # and every call site below truth-tested it back into the None an
     # absent flag produces. No flag here accepts an empty value.
     if value == "":
-        raise ValueError(f"{flag} expects {expects}, got an empty value")
+        raise CommandLineError(f"{flag} expects {expects}, got an empty value")
     return value
 
 

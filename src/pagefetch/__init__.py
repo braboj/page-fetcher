@@ -29,6 +29,13 @@ from .detection import (
     is_error_page,
     looks_like_real_content,
 )
+from .errors import (
+    CacheDirError,
+    CommandLineError,
+    InvalidURL,
+    PagefetchError,
+    UnsupportedEncoding,
+)
 from .fake import FakeFetcher
 from .network import (
     ALLOWED_SCHEMES,
@@ -51,15 +58,20 @@ __all__ = [
     "DEFAULT_USER_AGENT",
     "ERROR_PAGE_PATTERNS",
     "MIN_REAL_CONTENT_BYTES",
+    "CacheDirError",
     "CleanReport",
+    "CommandLineError",
     "ContentMode",
     "FakeFetcher",
     "FetchOptions",
     "FetchResult",
     "FileCache",
+    "InvalidURL",
     "NetworkFetcher",
     "PageSource",
+    "PagefetchError",
     "Transport",
+    "UnsupportedEncoding",
     "html_to_text",
     "is_bot_blocked",
     "is_cacheable_junk",

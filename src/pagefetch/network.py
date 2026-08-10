@@ -41,6 +41,7 @@ from .detection import (
     is_error_page,
     looks_like_real_content,
 )
+from .errors import InvalidURL, UnsupportedEncoding
 from .source import (
     DEFAULT_WAIT_MS,
     ContentMode,
@@ -106,11 +107,11 @@ def require_supported_scheme(url: str) -> None:
     if not scheme:
         # Plain ASCII on purpose: this reaches a terminal, and a Windows
         # console in a legacy code page renders anything else as garbage.
-        raise ValueError(
+        raise InvalidURL(
             f"{url!r} has no scheme; pagefetch needs an absolute URL "
             f"({allowed}). Did you mean https://{url}?"
         )
-    raise ValueError(
+    raise InvalidURL(
         f"{url!r} uses the {scheme!r} scheme; pagefetch only fetches {allowed}"
     )
 
@@ -136,7 +137,7 @@ def _decompress(raw: bytes, content_encoding: str) -> bytes:
     tokens = [t.strip() for t in content_encoding.lower().split(",")]
     tokens = [t for t in tokens if t and t != "identity"]
     if len(tokens) > 1:
-        raise ValueError(f"chained Content-Encoding {content_encoding!r}")
+        raise UnsupportedEncoding(f"chained Content-Encoding {content_encoding!r}")
     encoding = tokens[0] if tokens else ""
 
     if encoding == "gzip" or raw[:2] == _GZIP_MAGIC:
@@ -148,7 +149,7 @@ def _decompress(raw: bytes, content_encoding: str) -> bytes:
             # Some servers send a raw deflate stream with no zlib header.
             return zlib.decompress(raw, -zlib.MAX_WBITS)
     if encoding and encoding not in DECODABLE_ENCODINGS:
-        raise ValueError(f"unsupported Content-Encoding {encoding!r}")
+        raise UnsupportedEncoding(f"unsupported Content-Encoding {encoding!r}")
     return raw
 
 
