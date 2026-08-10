@@ -84,7 +84,7 @@ class ChromeReaper:
         rows: list[tuple[int, int, str]] = []
         try:
             result = subprocess.run(
-                [
+                [  # noqa: S607
                     "powershell",
                     "-NoProfile",
                     "-NonInteractive",
@@ -103,7 +103,7 @@ class ChromeReaper:
                     continue
                 with contextlib.suppress(ValueError):
                     rows.append((int(parts[0]), int(parts[1]), parts[2].lower()))
-        except Exception:
+        except Exception:  # noqa: BLE001, S110
             pass
         return rows
 
@@ -119,7 +119,14 @@ class ChromeReaper:
         pids: set[int] = set()
         try:
             result = subprocess.run(
-                ["tasklist", "/FI", "IMAGENAME eq chrome.exe", "/FO", "CSV", "/NH"],
+                [  # noqa: S607
+                    "tasklist",
+                    "/FI",
+                    "IMAGENAME eq chrome.exe",
+                    "/FO",
+                    "CSV",
+                    "/NH",
+                ],
                 capture_output=True,
                 text=True,
                 timeout=5,
@@ -130,7 +137,7 @@ class ChromeReaper:
                 if len(parts) >= _MIN_CSV_COLUMNS:
                     with contextlib.suppress(ValueError):
                         pids.add(int(parts[_PID_COLUMN]))
-        except Exception:
+        except Exception:  # noqa: BLE001, S110
             pass
         return pids
 

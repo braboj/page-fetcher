@@ -16,7 +16,9 @@ def fetcher(cache):
     return NetworkFetcher(cache=cache)
 
 
-def _stub_tiers(fetcher, monkeypatch, urllib_result, pw=None, nd=None, uc=None):
+def _stub_tiers(  # noqa: PLR0913, PLR0917
+    fetcher, monkeypatch, urllib_result, pw=None, nd=None, uc=None
+):
     """Replace the four tier methods with recording stubs.
 
     urllib_result: what _fetch_urllib returns (content / _BOT_BLOCKED / None).
