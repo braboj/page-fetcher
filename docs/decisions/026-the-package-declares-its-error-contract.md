@@ -117,7 +117,7 @@ effort removing elsewhere.
 rooted in one base, each type also deriving from the built-in it replaces
 so the change is not breaking, with a test asserting the hierarchy is
 closed — is reusable and belongs near `base/core/quality.md`'s existing
-material on error handling. Not yet filed.
+material on error handling. Filed upstream.
 
 ## Related
 
