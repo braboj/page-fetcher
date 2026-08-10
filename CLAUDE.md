@@ -173,9 +173,13 @@ project-specific:
   history or measurements go in the PLAYBOOK, which the docstring may
   point at by section
 - Public functions and class members are annotated
-- Fix the code rather than widening a ruff rule; per-file exemptions
-  live in `pyproject.toml` with the reason, or with the PLAYBOOK section
-  that gives it. A comment there states what the setting does and the one
+- Fix the code rather than widening a ruff rule. Where the code is right,
+  exempt at the narrowest scope that covers it: a `# noqa` at the site for
+  a few known cases, a per-file entry in `pyproject.toml` only for a rule
+  firing across the file for one structural reason. `RUF100` audits the
+  first and cannot see the second, so a per-file entry outlives its cause
+  silently
+- A comment in `pyproject.toml` states what the setting does and the one
   clause that makes it non-obvious — anything needing a second sentence
   belongs in the PLAYBOOK, which the comment names
 

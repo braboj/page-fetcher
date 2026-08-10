@@ -27,7 +27,9 @@ from pagefetch.network import ACCEPT_ENCODING, _decompress
 # roughly a third, well above the floor, so the undecoded body reads as
 # real content and is cached. The assertion below keeps the fixture
 # honest if the floor ever moves.
-_FILLER = "".join(random.Random(0).choices(string.ascii_letters + "   ", k=60_000))
+_FILLER = "".join(
+    random.Random(0).choices(string.ascii_letters + "   ", k=60_000)  # noqa: S311
+)
 PAGE_HTML = "<html><body>" + _FILLER + "</body></html>"
 
 assert len(gzip.compress(PAGE_HTML.encode())) > MIN_REAL_CONTENT_BYTES

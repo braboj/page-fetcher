@@ -126,7 +126,7 @@ select = [
     "S",    # flake8-bandit
     "BLE",  # flake8-blind-except
     "PL",   # pylint
-    "RUF",  # ruff-specific
+    "RUF",  # ruff-specific, incl. RUF100 unused-noqa
     "D",    # pydocstyle
 ]
 
@@ -144,29 +144,20 @@ convention = "google"
 # =============================================================================
 # PER-FILE IGNORES
 # =============================================================================
-# The files below carry an exemption because the rule and the code disagree
-# for a stated reason, never because the rule was inconvenient. Each entry
-# names the rule as ruff names it, and PLAYBOOK 3.1 gives each in full. Fix
-# the code rather than widening a rule.
+# A rule is exempted per file only where it fires across the file for one
+# structural reason. Anything narrower is a `# noqa` at the site, so the
+# exemption cannot outlive the code that earned it. PLAYBOOK 3.1 gives each
+# in full. Fix the code rather than widening a rule.
 # =============================================================================
 [tool.ruff.lint.per-file-ignores]
 "src/pagefetch/network.py" = [
     "BLE001",   # blind-except: a tier failure must fall through
     "S110",     # try-except-pass: best-effort browser teardown
     "PLC0415",  # import-outside-top-level: engines stay optional
-    "PLR0911",  # too-many-return-statements: one exit per tier
-]
-"src/pagefetch/chrome.py" = [
-    "BLE001",   # blind-except: a host probe must not abort the fetch
-    "S110",     # try-except-pass: best-effort teardown
-    "S607",     # start-process-with-partial-path: tasklist via PATH
 ]
 "tests/**" = [
     "S101",     # assert: pytest's assertion style
-    "PLR2004",  # magic-value-comparison: literals in assertions
-    "PLR0913",  # too-many-arguments: the tier-stub helper
-    "PLR0917",  # too-many-positional-arguments: the same helper
-    "S311",     # non-cryptographic-random: a seeded fixture is the point
+    "PLR2004",  # magic-value-comparison: naming it would be tautological
     "D",        # pydocstyle: a test name already carries its intent
 ]
 "examples/**" = [
@@ -216,8 +207,7 @@ source = ["pagefetch"]
 #=============================================================================
 # The floor is a ratchet sized from the measured baseline, never from a
 # target picked by feel: raise it as the testable surface grows, never lower
-# it to make a change pass. PLAYBOOK 3.3 has the history and what stays
-# uncovered.
+# it to make a change pass.
 #=============================================================================
 [tool.coverage.report]
 show_missing = true

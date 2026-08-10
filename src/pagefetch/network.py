@@ -316,7 +316,7 @@ class NetworkFetcher(PageSource):
 
     # --- tier 1: urllib ----------------------------------------------
 
-    def _fetch_urllib(self, url: str, mode: ContentMode) -> str | None:
+    def _fetch_urllib(self, url: str, mode: ContentMode) -> str | None:  # noqa: PLR0911
         """Fetch via plain urllib.
 
         Returns content, the _BOT_BLOCKED / _ERROR_PAGE sentinel, or None.
@@ -685,7 +685,9 @@ class NetworkFetcher(PageSource):
         self._write_cache(url, opts, content)
         return content, tier
 
-    def _escalate(self, url: str, opts: FetchOptions, sb_session) -> tuple[str, str]:
+    def _escalate(  # noqa: PLR0911
+        self, url: str, opts: FetchOptions, sb_session
+    ) -> tuple[str, str]:
         """Run the tier strategy for opts.transport. Returns (content, tier)."""
         mode, wait_ms = opts.mode, opts.wait_ms
 

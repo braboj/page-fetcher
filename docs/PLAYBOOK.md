@@ -303,40 +303,52 @@ py -m ruff format .           # format, including Python inside the README
 py -m ruff format --check .   # what CI runs
 ```
 
-Per-file rule exemptions live in `pyproject.toml` with a comment giving the
-reason, or naming the section here that gives it. Fix the code rather than
-widening a rule.
+Fix the code rather than widening a rule. Where the code is right and the
+rule is still wrong about it, the exemption goes at the **narrowest scope
+that covers it**:
 
-**Why each exemption stands.** Four files carry one, and no exemption is
-there because the rule was inconvenient.
+- a `# noqa: <code>` on the line, when a rule fires at a few known sites
+- a per-file entry in `pyproject.toml`, only when a rule fires across the
+  file for one structural reason
 
-`network.py` — `BLE001` and `S110`: the escalation ladder catches broad
-exceptions on purpose. Any failure inside a tier — a missing browser
-binary, a CDP disconnect, a driver crash — must fall through to the next
-tier rather than abort the fetch, and the best-effort teardown paths must
-not let a failure while closing a browser mask the result already fetched.
-Narrowing either would couple the fetcher to each engine's exception
-hierarchy, which is the coupling the `PageSource` ABC exists to avoid.
-`PLC0415`: the browser libraries are imported inside the tier methods so
-the package installs and runs with none of them present; hoisting them to
-module scope would make every optional dependency mandatory. `PLR0911`:
-the orchestrator returns from each tier as it succeeds, and collapsing
-that into one exit would thread a result variable through every branch.
+The distinction is not tidiness. A per-file entry keeps suppressing a rule
+after the code that earned it is gone, and nothing reports that it has
+become dead — `RUF100` catches a stale `# noqa`, and has nothing to say
+about a stale per-file ignore. Prefer the form the linter can audit.
 
-`chrome.py` — `S607`: `tasklist` resolves via `PATH` on purpose, because
-hardcoding a System32 path breaks on non-default Windows installs, and the
-call is already best-effort.
+**The per-file entries.** Three files carry one.
 
-`tests/**` — pytest's assert-based style trips `S101`, and comparing
-against literals trips `PLR2004`. The tier-stub helper takes one argument
-per tier, which trips the argument-count rules. `S311` flags `random` as
-non-cryptographic, which is the point: a seeded generator builds a
-deterministic incompressible fixture. `D` is exempt because a docstring on
-a test named after its assertion restates the name.
+`network.py` — `BLE001` and `S110` fire across the ladder, which catches
+broad exceptions on purpose: any failure inside a tier, a missing browser
+binary, a CDP disconnect, a driver crash, must fall through to the next
+tier rather than abort the fetch, and a failure while closing a browser
+must not mask the result already fetched. Narrowing either would couple
+the fetcher to each engine's exception hierarchy, which is the coupling
+the `PageSource` ABC exists to avoid. `PLC0415`: the browser libraries are
+imported inside the tier methods so the package installs and runs with
+none of them present.
+
+`tests/**` — pytest's assert-based style trips `S101` at every assertion,
+and `D` would buy a docstring on every test named after its own assertion.
+`PLR2004` stays for a subtler reason: a test that imports the constant it
+compares against asserts that a value equals itself, so the literal in the
+assertion is the test.
 
 `examples/**` — `S101`: the `FakeFetcher` example is a consumer's test
 pattern made executable, and the assertions are what it demonstrates.
 Printing PASS/FAIL instead would show a way nobody writes tests.
+
+**The inline ones.** `PLR0911` on `_fetch_urllib` and `_escalate`, which
+return from each tier as it succeeds; collapsing that into one exit would
+thread a result variable through every branch. `S607` on the two
+`subprocess.run` calls in `chrome.py`, where `powershell` and `tasklist`
+resolve through `PATH` because a hardcoded System32 path breaks on
+non-default Windows installs, and both calls are already best-effort —
+as are the two `except Exception: pass` blocks around them, carrying
+`BLE001` and `S110`. In the suite, `PLR0913` and `PLR0917` on the tier-stub
+helper, which takes one argument per tier by design, and `S311` on the
+seeded generator that builds a deterministic incompressible fixture — the
+non-cryptographic randomness being exactly the point.
 
 Docstrings are part of the lint: the `D` rules run with the Google
 convention, so a public symbol without one fails `ruff check`. The suite is
