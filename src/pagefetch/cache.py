@@ -18,7 +18,11 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .errors import CacheDirError
+from .errors import (
+    CacheDirNotADirectory,
+    CacheDirNotSet,
+    CacheDirNotWritable,
+)
 from .source import ContentMode
 
 # A consuming project can point every entry point (CLI included) at one
@@ -93,7 +97,7 @@ class FileCache:
         the damage in that case.
         """
         if isinstance(value, str) and value == "":
-            raise CacheDirError(
+            raise CacheDirNotSet(
                 f"pagefetch cache dir (from {source}) is empty — expected a "
                 f"directory path; {to_default} to use the default"
             )
@@ -108,7 +112,7 @@ class FileCache:
         """
         path = self.cache_dir
         if path.exists() and not path.is_dir():
-            raise CacheDirError(
+            raise CacheDirNotADirectory(
                 f"pagefetch cache dir (from {source}) is not a directory: {path}"
             )
 
@@ -124,12 +128,12 @@ class FileCache:
 
             ancestor = parent
         if not ancestor.is_dir():
-            raise CacheDirError(
+            raise CacheDirNotADirectory(
                 f"pagefetch cache dir (from {source}) has a non-directory "
                 f"ancestor: {ancestor} (for {path})"
             )
         if not os.access(ancestor, os.W_OK):
-            raise CacheDirError(
+            raise CacheDirNotWritable(
                 f"pagefetch cache dir (from {source}) is not writable: "
                 f"{path} (nearest existing ancestor {ancestor} is read-only)"
             )

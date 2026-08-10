@@ -31,10 +31,15 @@ from .detection import (
 )
 from .errors import (
     CacheDirError,
+    CacheDirNotADirectory,
+    CacheDirNotSet,
+    CacheDirNotWritable,
     CommandLineError,
     InvalidURL,
+    MissingScheme,
     PagefetchError,
     UnsupportedEncoding,
+    UnsupportedScheme,
 )
 from .fake import FakeFetcher
 from .network import (
@@ -59,6 +64,9 @@ __all__ = [
     "ERROR_PAGE_PATTERNS",
     "MIN_REAL_CONTENT_BYTES",
     "CacheDirError",
+    "CacheDirNotADirectory",
+    "CacheDirNotSet",
+    "CacheDirNotWritable",
     "CleanReport",
     "CommandLineError",
     "ContentMode",
@@ -67,11 +75,13 @@ __all__ = [
     "FetchResult",
     "FileCache",
     "InvalidURL",
+    "MissingScheme",
     "NetworkFetcher",
     "PageSource",
     "PagefetchError",
     "Transport",
     "UnsupportedEncoding",
+    "UnsupportedScheme",
     "html_to_text",
     "is_bot_blocked",
     "is_cacheable_junk",

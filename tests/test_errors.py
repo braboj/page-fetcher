@@ -12,12 +12,12 @@ PACKAGE = Path(__file__).resolve().parent.parent / "src" / "pagefetch"
 RAISED = [
     pytest.param(
         lambda: require_supported_scheme("file:///etc/passwd"),
-        errors.InvalidURL,
+        errors.UnsupportedScheme,
         id="a-scheme-the-package-will-not-fetch",
     ),
     pytest.param(
         lambda: require_supported_scheme("example.com/page"),
-        errors.InvalidURL,
+        errors.MissingScheme,
         id="a-url-with-no-scheme",
     ),
     pytest.param(
@@ -77,6 +77,22 @@ def test_two_failures_that_were_indistinguishable_now_are(tmp_path):
 
     assert not issubclass(errors.CacheDirError, errors.InvalidURL)
     assert not issubclass(errors.InvalidURL, errors.CacheDirError)
+
+
+def test_a_caller_can_catch_the_family_or_the_case(tmp_path):
+    # The depth exists so a caller chooses. Catching the base handles every
+    # bad cache directory; catching the leaf handles the one it can repair.
+    target = tmp_path / "not-a-dir"
+    target.write_text("", encoding="utf-8")
+
+    with pytest.raises(errors.CacheDirError):
+        FileCache(cache_dir=target).ensure_dir()
+    with pytest.raises(errors.CacheDirNotADirectory):
+        FileCache(cache_dir=target).ensure_dir()
+
+    # And the leaves stay mutually exclusive, or the choice is not real.
+    assert not issubclass(errors.CacheDirNotSet, errors.CacheDirNotADirectory)
+    assert not issubclass(errors.MissingScheme, errors.UnsupportedScheme)
 
 
 def test_the_type_survives_a_reworded_message():

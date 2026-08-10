@@ -41,7 +41,7 @@ from .detection import (
     is_error_page,
     looks_like_real_content,
 )
-from .errors import InvalidURL, UnsupportedEncoding
+from .errors import MissingScheme, UnsupportedEncoding, UnsupportedScheme
 from .source import (
     DEFAULT_WAIT_MS,
     ContentMode,
@@ -107,11 +107,11 @@ def require_supported_scheme(url: str) -> None:
     if not scheme:
         # Plain ASCII on purpose: this reaches a terminal, and a Windows
         # console in a legacy code page renders anything else as garbage.
-        raise InvalidURL(
+        raise MissingScheme(
             f"{url!r} has no scheme; pagefetch needs an absolute URL "
             f"({allowed}). Did you mean https://{url}?"
         )
-    raise InvalidURL(
+    raise UnsupportedScheme(
         f"{url!r} uses the {scheme!r} scheme; pagefetch only fetches {allowed}"
     )
 
