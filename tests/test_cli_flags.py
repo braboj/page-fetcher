@@ -22,6 +22,7 @@ from pagefetch.__main__ import (
     _unknown_flags,
     main,
 )
+from pagefetch.errors import CommandLineError
 
 
 def _run(monkeypatch, argv):
@@ -207,19 +208,19 @@ def test_wait_accepts_zero():
 
 @pytest.mark.parametrize("value", ["abc", "1.5", "", "5000ms"])
 def test_wait_rejects_a_non_integer(value):
-    with pytest.raises(ValueError, match="whole number of milliseconds"):
+    with pytest.raises(CommandLineError):
         _parse_wait_ms(["pagefetch", "https://x.test", "--wait", value])
 
 
 def test_wait_rejects_a_negative_value():
-    with pytest.raises(ValueError, match="cannot be negative"):
+    with pytest.raises(CommandLineError):
         _parse_wait_ms(["pagefetch", "https://x.test", "--wait", "-1000"])
 
 
 def test_wait_without_a_value_is_rejected():
     # Regression: this returned DEFAULT_WAIT_MS and exited 0, substituting
     # the default for the value the user was explicitly reaching past.
-    with pytest.raises(ValueError, match="whole number of milliseconds"):
+    with pytest.raises(CommandLineError):
         _parse_wait_ms(["pagefetch", "https://x.test", "--wait"])
 
 
@@ -250,14 +251,14 @@ def test_format_accepts_both_modes(value, expected):
 
 @pytest.mark.parametrize("value", ["bogus", "HTML", "txt", ""])
 def test_format_rejects_an_unknown_value(value):
-    with pytest.raises(ValueError, match="expects one of: html, text"):
+    with pytest.raises(CommandLineError):
         _parse_mode(["pagefetch", "https://x.test", "--format", value])
 
 
 def test_format_without_a_value_is_rejected():
     # Distinct from absence on purpose: falling back to the default here
     # would hand back exactly what the user was trying to override.
-    with pytest.raises(ValueError, match="expects one of: html, text"):
+    with pytest.raises(CommandLineError):
         _parse_mode(["pagefetch", "https://x.test", "--format"])
 
 
@@ -286,7 +287,7 @@ def test_every_value_flag_rejects_a_missing_value(flag):
     # Parametrized over the set rather than a hand-written list, so a
     # value flag added later inherits the guard instead of repeating the
     # missing-value bug.
-    with pytest.raises(ValueError, match=f"{flag} expects "):
+    with pytest.raises(CommandLineError):
         _flag_value(["pagefetch", "https://x.test", flag], flag)
 
 

@@ -153,7 +153,6 @@ convention = "google"
 "src/pagefetch/network.py" = [
     "BLE001",   # blind-except: a tier failure must fall through
     "S110",     # try-except-pass: best-effort browser teardown
-    "PLC0415",  # import-outside-top-level: engines stay optional
 ]
 "tests/**" = [
     "S101",     # assert: pytest's assertion style

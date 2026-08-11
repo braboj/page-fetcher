@@ -181,6 +181,7 @@ fetcher = NetworkFetcher(cache=FileCache(cache_dir=Path("/my/cache")))
 | ---------------------------- | -------------------------------------------------- |
 | `src/pagefetch/`             | The package — import this                          |
 | `src/pagefetch/source.py`    | `PageSource` ABC and the option / result types     |
+| `src/pagefetch/errors.py`    | The error contract — what the package raises       |
 | `src/pagefetch/network.py`   | `NetworkFetcher` — the four-tier escalation ladder |
 | `src/pagefetch/detection.py` | Bot-wall, error-page, and real-content predicates  |
 | `src/pagefetch/cache.py`     | `FileCache` — on-disk cache and junk sweep         |
