@@ -303,8 +303,59 @@ py -m ruff format .           # format, including Python inside the README
 py -m ruff format --check .   # what CI runs
 ```
 
-Per-file rule exemptions live in `pyproject.toml` with a comment giving the
-reason. Fix the code rather than widening a rule.
+Fix the code rather than widening a rule. Where the code is right and the
+rule is still wrong about it, the exemption goes at the **narrowest scope
+that covers it**:
+
+- a `# noqa: <code>` on the line, when a rule fires at a few known sites
+- a per-file entry in `pyproject.toml`, only when a rule fires across the
+  file for one structural reason
+
+The distinction is not tidiness. A per-file entry keeps suppressing a rule
+after the code that earned it is gone, and nothing reports that it has
+become dead — `RUF100` catches a stale `# noqa`, and has nothing to say
+about a stale per-file ignore. Prefer the form the linter can audit.
+
+**The per-file entries.** Three files carry one.
+
+`network.py` — `BLE001` and `S110` fire across the ladder, which catches
+broad exceptions on purpose: any failure inside a tier, a missing browser
+binary, a CDP disconnect, a driver crash, must fall through to the next
+tier rather than abort the fetch, and a failure while closing a browser
+must not mask the result already fetched. Narrowing either would couple
+the fetcher to each engine's exception hierarchy, which is the coupling
+the `PageSource` ABC exists to avoid.
+
+`tests/**` — pytest's assert-based style trips `S101` at every assertion,
+and `D` would buy a docstring on every test named after its own assertion.
+`PLR2004` stays for a subtler reason: a test that imports the constant it
+compares against asserts that a value equals itself, so the literal in the
+assertion is the test.
+
+`examples/**` — `S101`: the `FakeFetcher` example is a consumer's test
+pattern made executable, and the assertions are what it demonstrates.
+Printing PASS/FAIL instead would show a way nobody writes tests.
+
+**The inline ones.** `PLC0415` on the six browser imports — `playwright`,
+`nodriver` and `seleniumbase`, twice each — which stay inside the tier
+methods so the package installs and runs with none of them present. This
+was a per-file entry until it was read: of the thirteen sites it covered,
+four re-imported a module the file already imports at the top and three
+were `urllib` submodules that belonged there too. The rule's stated reason
+covered six of them, which is the failure mode a per-file entry cannot
+report about itself.
+
+`PLR0911` on `_fetch_urllib` and `_escalate`, which
+return from each tier as it succeeds; collapsing that into one exit would
+thread a result variable through every branch. `S607` on the two
+`subprocess.run` calls in `chrome.py`, where `powershell` and `tasklist`
+resolve through `PATH` because a hardcoded System32 path breaks on
+non-default Windows installs, and both calls are already best-effort —
+as are the two `except Exception: pass` blocks around them, carrying
+`BLE001` and `S110`. In the suite, `PLR0913` and `PLR0917` on the tier-stub
+helper, which takes one argument per tier by design, and `S311` on the
+seeded generator that builds a deterministic incompressible fixture — the
+non-cryptographic randomness being exactly the point.
 
 Docstrings are part of the lint: the `D` rules run with the Google
 convention, so a public symbol without one fails `ruff check`. The suite is
@@ -336,6 +387,19 @@ raise it against the measured figure when the testable surface grows, never
 lower it to make a change pass (ADR-002). Leave a few points of headroom:
 the floor is enforced on every matrix leg, and Linux and Windows cover
 different branches of `chrome.py`, so they do not report the same figure.
+
+**Where the floor came from.** Sized from the measured baseline, never from
+a target picked by feel. It went 45 to 63 when the batch path was brought
+under test, 63 to 70 when the CLI first came under test, and 70 to 76 when
+the remaining argument parsing did, at which point `__main__` reached 99% —
+all but its own guard. The measured figure is around 79%, and the gap to
+the floor stays as headroom rather than being spent: the legs sit within a
+fraction of a point of each other now that `chrome.py` no longer queries
+the host, but the floor tracks the lowest of them.
+
+What is left uncovered is the browser-tier method bodies, which need a
+headed Chrome and are validated by hand (§3.7). The floor is not a quality
+claim about them — it is a ratchet that must not regress.
 
 ### 3.4 Secret scanning (gitleaks)
 

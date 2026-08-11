@@ -181,6 +181,7 @@ fetcher = NetworkFetcher(cache=FileCache(cache_dir=Path("/my/cache")))
 | ---------------------------- | -------------------------------------------------- |
 | `src/pagefetch/`             | The package — import this                          |
 | `src/pagefetch/source.py`    | `PageSource` ABC and the option / result types     |
+| `src/pagefetch/errors.py`    | The error contract — what the package raises       |
 | `src/pagefetch/network.py`   | `NetworkFetcher` — the four-tier escalation ladder |
 | `src/pagefetch/detection.py` | Bot-wall, error-page, and real-content predicates  |
 | `src/pagefetch/cache.py`     | `FileCache` — on-disk cache and junk sweep         |
@@ -222,7 +223,7 @@ py -m pip install -e ".[browsers]"
 playwright install chromium
 ```
 
-The gate is four checks, each runnable on its own:
+The gate runs from the toolchain, each check runnable on its own:
 
 ```bash
 py -m ruff check .          # lint
@@ -231,9 +232,14 @@ py -m mypy                  # type check
 py -m pytest --cov=pagefetch
 ```
 
-`pre-commit install` runs the first three on every commit, plus a secret
-scan. CI runs all four on every pull request, because a hook can be skipped
-with `--no-verify`.
+Beside those are the repository checks in `tools/`, for conventions no
+linter expresses — comment layout, code citations, journal order and
+diagram exports. Each is silent on success.
+[docs/ONBOARDING.md](docs/ONBOARDING.md) lists them with their arguments.
+
+`pre-commit install` wires all of it to run on every commit, plus a secret
+scan. CI repeats every one of them on each pull request, because a hook can
+be skipped with `--no-verify`.
 
 ## Configuration reference
 

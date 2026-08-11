@@ -1,11 +1,39 @@
+# =============================================================================
+# PYPROJECT.TOML
+# =============================================================================
+# This file is the configuration for the Python project. It specifies the
+# build system, project metadata, dependencies, optional dependencies, URLs,
+# scripts, and various tool configurations for linting, type checking,
+# testing, and code coverage.
+# =============================================================================
+
+
+# =============================================================================
+# BUILD SYSTEM CONFIGURATION
+# =============================================================================
+# The build system configuration specifies the requirements for building the
+# project and the backend to use for building.
+# =============================================================================
 [build-system]
 requires = ["setuptools>=83.0.0"]
 build-backend = "setuptools.build_meta"
 
+
+# =============================================================================
+# PROJECT METADATA
+# =============================================================================
+# The project metadata section contains information about the project, such
+# as its name, version, description, license, authors, keywords, and
+# classifiers. It also specifies the dependencies required for the project
+# and any optional dependencies.
+# =============================================================================
 [project]
 name = "pagefetch"
 version = "0.1.0"
-description = "Auto-escalating web page fetcher: plain HTTP first, browsers only when the response is a bot wall, an error, or implausibly short."
+description = """\
+Auto-escalating web page fetcher: plain HTTP first, browsers only when the \
+response is a bot wall, an error, or implausibly short.\
+"""
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -18,16 +46,19 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Internet :: WWW/HTTP",
 ]
-
-# Tier 1 (urllib) is standard library only, so the package installs with no
-# dependencies at all. The browser tiers are lazily imported and skipped
-# when absent — see the extras below.
 dependencies = []
 
+# =============================================================================
+# OPTIONAL DEPENDENCIES
+# =============================================================================
+# The optional dependencies section specifies additional packages that can be
+# installed to enable specific features of the project. In this case, there
+# are optional dependencies for browser automation and development tools. The
+# "browsers" optional dependency includes packages for browser automation,
+# while the "dev" optional dependency includes packages for development tasks
+# such as linting, type checking, testing, and pre-commit hooks.
+# =============================================================================
 [project.optional-dependencies]
-# Tier 2 needs `playwright install chromium` after pip install.
-# Tier 3 (nodriver) is AGPL-3.0 — see the README's Dependencies section
-# before shipping a network service built on it.
 browsers = ["playwright>=1.61.0", "nodriver>=0.50.3", "seleniumbase>=4.51.8"]
 dev = [
     "ruff>=0.16",
@@ -37,30 +68,52 @@ dev = [
     "pre-commit>=4.6.1",
 ]
 
+#=============================================================================
+# PROJECT URLS
+#=============================================================================
+# The project URLs section specifies the homepage and issue tracker URLs for
+# the project.
+#=============================================================================
 [project.urls]
 Homepage = "https://github.com/braboj/page-fetcher"
 Issues = "https://github.com/braboj/page-fetcher/issues"
 
+#=============================================================================
+# PROJECT SCRIPTS
+#=============================================================================
+# The project scripts section specifies the command-line scripts that can be
+# run from the terminal. In this case, the "pagefetch" script is defined,
+# which points to the main function in the "pagefetch.__main__" module.
+#=============================================================================
 [project.scripts]
 pagefetch = "pagefetch.__main__:main"
 
+#=============================================================================
+# SETUPTOOLS CONFIGURATION
+#=============================================================================
+# The setuptools configuration section specifies the package discovery
+# settings for the project. It indicates that the source code is located in
+# the "src" directory and includes packages that match the "pagefetch*"
+# pattern.
+#=============================================================================
 [tool.setuptools.packages.find]
 where = ["src"]
-# Tests and examples ship with the repository, not the wheel — the captured
-# HTML fixtures alone are larger than the package, and an example is only
-# useful beside the source it explains. Under the src/ layout both sit
-# outside the package, so neither has to be excluded by hand.
 include = ["pagefetch*"]
 
+#=============================================================================
+# RUFF CONFIGURATION
+#=============================================================================
+# Ruff is a fast Python linter and code formatter. The following
+# configuration specifies the line length, target Python version, excluded
+# files, and linting rules to apply. It also includes per-file ignores for
+# specific files that may have different coding standards or are not part of
+# the main package. The configuration also specifies the pydocstyle
+# convention to use for docstring validation.
+#=============================================================================
 [tool.ruff]
 line-length = 88
 target-version = "py310"
-# The vendored template system is a submodule with its own toolchain and
-# its own CI. Linting it here reports 85 errors that no commit in this
-# repository can fix, and breaks the `ruff check .` the README tells
-# contributors to run.
 extend-exclude = ["docs/solid-ai-templates"]
-
 [tool.ruff.lint]
 select = [
     "E",    # pycodestyle errors
@@ -73,97 +126,88 @@ select = [
     "S",    # flake8-bandit
     "BLE",  # flake8-blind-except
     "PL",   # pylint
-    "RUF",  # ruff-specific
+    "RUF",  # ruff-specific, incl. RUF100 unused-noqa
     "D",    # pydocstyle
 ]
 
+#=============================================================================
+# Pydocstyle Configuration
+#=============================================================================
+# Pydocstyle is a tool for checking compliance with Python docstring
+# conventions. The following configuration specifies the docstring convention
+# to use. In this case, it uses the "google" convention, which enforces the
+# Google style for docstrings.
+#=============================================================================
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
+# =============================================================================
+# PER-FILE IGNORES
+# =============================================================================
+# A rule is exempted per file only where it fires across the file for one
+# structural reason. Anything narrower is a `# noqa` at the site, so the
+# exemption cannot outlive the code that earned it. PLAYBOOK 3.1 gives each
+# in full. Fix the code rather than widening a rule.
+# =============================================================================
 [tool.ruff.lint.per-file-ignores]
-# The escalation ladder catches broad exceptions on purpose: any failure
-# inside a tier — a missing browser binary, a CDP disconnect, a driver
-# crash — must fall through to the next tier rather than abort the fetch.
-# Narrowing these would couple the fetcher to each engine's exception
-# hierarchy, which is exactly the coupling the PageSource ABC avoids.
-# S110 (try-except-pass) covers the best-effort browser teardown paths for
-# the same reason: a failure while closing a browser must not mask the
-# result already fetched.
-#
-# PLC0415 (import not at top level): the browser libraries are imported
-# inside the tier methods deliberately, so the package installs and runs
-# with none of them present. Hoisting them to module scope would make
-# every optional dependency mandatory.
-#
-# PLR0911 (too many returns): the escalation orchestrator returns from
-# each tier as it succeeds. Collapsing that into one exit point would
-# need a result variable threaded through every branch, which reads worse
-# than the early returns.
-"src/pagefetch/network.py" = ["BLE001", "S110", "PLC0415", "PLR0911"]
-# S607 (partial executable path): `tasklist` is resolved via PATH on
-# purpose — hardcoding a System32 path breaks on non-default Windows
-# installs, and the call is already best-effort.
-"src/pagefetch/chrome.py" = ["BLE001", "S110", "S607"]
-# pytest's assert-based style (S101 flags every assertion) and its habit
-# of comparing against literals (PLR2004). The tier-stub helper takes one
-# argument per tier, which trips the argument-count rules. S311 flags
-# `random` as non-cryptographic, which is the point — a seeded generator
-# builds a deterministic incompressible fixture.
-#
-# D (pydocstyle): a docstring on `test_undecompressable_body_is_not_cached`
-# restates the name. The naming convention already carries a test's intent,
-# so the rule would buy 209 lines of restatement and no information.
-"tests/**" = ["S101", "PLR2004", "PLR0913", "PLR0917", "S311", "D"]
-# S101 (assert): the FakeFetcher example is a consumer's test pattern made
-# executable, and the assertions are what it demonstrates. Printing
-# PASS/FAIL instead would show a way nobody writes tests.
-"examples/**" = ["S101"]
+"src/pagefetch/network.py" = [
+    "BLE001",   # blind-except: a tier failure must fall through
+    "S110",     # try-except-pass: best-effort browser teardown
+]
+"tests/**" = [
+    "S101",     # assert: pytest's assertion style
+    "PLR2004",  # magic-value-comparison: naming it would be tautological
+    "D",        # pydocstyle: a test name already carries its intent
+]
+"examples/**" = [
+    "S101",     # assert: the assertions are what the example demonstrates
+]
 
+# =============================================================================
+# MYPY CONFIGURATION
+# =============================================================================
+# Mypy is a static type checker for Python. The following configuration
+# specifies the Python version, the files to check, and various options for
+# handling imports and warnings.
+# =============================================================================
 [tool.mypy]
 python_version = "3.10"
-# The package, its suite, the examples and the dev tools are four roots
-# under the src/ layout. Listing only "src" would silently stop
-# type-checking the rest — and an example that no longer type-checks is a
-# published mistake, while a tool that no longer type-checks gates every
-# commit in the repository.
 files = ["src", "tests", "examples", "tools"]
-# tools/ is a directory of scripts, not an installed package, so its
-# modules are only importable by the suite through this path.
 mypy_path = "tools"
-# The browser tiers are lazily imported and optional, so their stubs are
-# absent in a plain `pip install -e .` checkout and in CI.
 ignore_missing_imports = true
 warn_unused_configs = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 
+# =============================================================================
+# PYTEST CONFIGURATION
+# =============================================================================
+# Pytest is a testing framework for Python. The following configuration
+# specifies the test paths, additional options, and the Python path for the
+# tests.
+# =============================================================================
 [tool.pytest.ini_options]
-testpaths = ["tests"]
-addopts = "-q"
-# tools/ ships with the repository but is not part of the wheel, so the
-# suite cannot reach its modules through the install the way it reaches
-# pagefetch. This puts them on the path for test_comment_layout.py.
-pythonpath = ["tools"]
+testpaths = ["tests"]   # The directory where the test files are located
+pythonpath = ["tools"]  # Directories added to the Python path for the tests
+addopts = "-q"          # Additional command-line options (quiet mode)
 
+#=============================================================================
+# COVERAGE CONFIGURATION
+#=============================================================================
+# Coverage.py is a tool for measuring code coverage of Python programs. The
+# following configuration specifies the source files to measure, reporting
+# options, and the minimum coverage threshold for the tests.
+#=============================================================================
 [tool.coverage.run]
-# Named as an import, so it resolves through the install rather than the
-# working directory — which is the whole point of the src/ layout. The
-# suite sits outside the package now, so no omit pattern is needed to keep
-# it out of the figure.
 source = ["pagefetch"]
 
+#=============================================================================
+# COVERAGE REPORT CONFIGURATION
+#=============================================================================
+# The floor is a ratchet sized from the measured baseline, never from a
+# target picked by feel: raise it as the testable surface grows, never lower
+# it to make a change pass.
+#=============================================================================
 [tool.coverage.report]
 show_missing = true
-# Sized from the measured baseline, not from a target picked by feel.
-# Raised 45 -> 63 when the batch path was brought under test, 63 -> 70 when
-# the CLI first came under test, and 70 -> 76 when the remaining argument
-# parsing did — __main__ reached 99%, all but the
-# __main__ guard. The measured figure is ~79%. The floor has to hold on
-# every matrix leg, so it tracks the lowest; the legs sit within a fraction
-# of a point of each other now that chrome.py no longer queries the host,
-# but the gap stays as headroom rather than being spent. What is left
-# uncovered is the browser-tier method bodies, which need a headed Chrome
-# and are validated by hand. This is a ratchet floor that must not regress,
-# NOT a quality claim — raise it against the measured figure as the
-# testable surface grows, and never lower it to make a change pass.
 fail_under = 76

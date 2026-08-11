@@ -2013,3 +2013,230 @@ is exactly how this one read.
 - Five issues still stand open against the chain — `#983`, `#995`, `#999`,
   `#1000`, `#1001` — and none govern here until they land and the pin
   moves.
+
+---
+
+## 2026-08-08 to 2026-08-09 (twenty-fourth session) — Nothing found reads the same as nothing looked at
+
+**Tool**: Claude Code (Opus 5)
+
+Two gates, and each one shipped with a hole the gate itself could not
+report. The theme is the same in both: an assertion that nothing is wrong
+passes just as well when nothing was examined.
+
+**Changes**
+
+- `tools/check_diagram_exports.py`, four codes — `SCALE` for an export not
+  taken at `--scale 2`, `EDGE` for the missing `<mxGeometry>` that drops an
+  arrow silently, `UNPAIRED`, and `UNREADABLE`. Wired into pre-commit, the
+  `Lint and format` job and the suite (#153).
+- The scale is recovered by dividing the PNG by the box around the source's
+  vertices and waypoints, and accepted as a band rather than one figure.
+- The diagram-export docstring cut from 54 lines to 20; its derivation moved
+  to PLAYBOOK 3.9, which had been pointing back at the docstring (#154).
+- `tools/check_code_citations.py`, two codes — `ISSUE` and `RECORD`. Eighteen
+  citations cleared from the package, the suite and `tools/` (#155).
+- Extended to commented configuration, clearing twelve more from `ci.yml`,
+  `.pre-commit-config.yaml` and `pyproject.toml` (#156).
+- CLAUDE.md 2.3 points at the inherited rule instead of restating it.
+
+**PRs merged**: #153, #154, #155, #156. **Issues closed**: #151.
+
+The scale band's floor is the first thing that went differently than
+reasoned. The argument for putting it at exactly 2.0 was that the geometry
+box is a strict lower bound on what draw.io renders — labels and shadows
+push the bounds outward and nothing pulls them in — so a true scale-2
+export can never come in under twice the box. Measuring all seven against
+`2 * (box + 20)` disproved it: they run 0.994 to 1.016, and the deployment
+view renders 0.56% narrower than its own geometry. The floor sits at 1.75
+because of that measurement, not despite it. A tolerance justified by an
+anomaly is defensible; the same number picked by feel would not have been,
+and the inequality that looked like a proof would have failed a good export
+to catch nothing a looser bound misses.
+
+The citation rule was already in the chain. It was proposed here as a new
+convention, and `base/core/quality.md` has carried it at the pinned
+revision all along — inherited by thirteen files, `python-lib` among them.
+It was also wider than the reading it was given: it binds code comments as
+well as docstrings, and it prescribes the very check that was then written
+as though from scratch. The second half of that is the useful part. The
+gap was never the rule; it was that nothing enforced it, and eighteen
+sites had accumulated the same way the comment-layout sites did before that
+rule was gated.
+
+Then the same shape twice more. The citation gate landed scanning Python
+only, and the config gap was recorded as a stated limit — with an argument
+that the coverage ratchet's numbers were a deliberate audit trail worth
+keeping. Told to remove all of them, they turned out to cost nothing: the
+comment already said what each rise paid for, and the numbers beside those
+phrases named threads no reader could still reach. A limit that has been
+written down is not thereby a limit that was justified.
+
+And the count was wrong while it was being reported. Ten citations, said
+twice, because the checker returned the first match per line and one line
+named two issues in a single parenthesis. Twelve. The fix — report every
+match — is what a gate owes: undercounting the work left is the one number
+it must not get wrong. Extending it also caught the checker itself, because
+the comment written to explain that fix instantiated a citation to
+illustrate it, and `tools/` is one of its own roots.
+
+The test that ties them together is `test_the_repository_carries_no_citations`.
+It passed throughout — while the configuration was unscanned, and it would
+pass again if a root were dropped from the list. An emptiness assertion
+cannot distinguish a clean repository from an unread one. It is now paired
+with a test that the roots reach the files they claim to, and the diagram
+suite carries the same pairing, because the check that no diagram is
+mis-scaled also passes when there are no diagrams left to measure.
+
+**Not done**
+
+- `#9`'s velocity measurement, unchanged. Ninth session.
+- The citation gate matches two shapes, so a bare "issue 151" written out
+  in prose passes. The rule is wider than a regex holds, and the gate is a
+  floor under review rather than a replacement for it.
+- Configuration is scanned line by line rather than parsed: a `#` outside a
+  quote opens a comment. Enough for these files, and it would not survive
+  an escaped quote or a block scalar carrying a lone `#`.
+- Five issues still stand open against the chain — `#983`, `#995`, `#999`,
+  `#1000`, `#1001` — and none govern here until they land and the pin
+  moves.
+
+---
+
+## 2026-08-09 (twenty-fifth session) — Where a check should live
+
+**Tool**: Claude Code (Opus 5)
+
+A short one, and nothing in this repository changed. It exists because the
+previous entry recorded no issues created, and four were.
+
+**Changes**
+
+- None here. The output is entirely upstream.
+
+**Issues created**: `solid-ai-templates#1004` (the citation ban covers
+commented configuration, not just source), `#1005` (pair every
+no-violations assertion with proof the inputs were reached), and `#1006`
+(ship the consumer-side checks the chain already prescribes). A comment on
+`#1002` records the downstream implementation result, including the
+strict-lower-bound argument that measurement disproved.
+
+The question that produced `#1006` was whether this repository's `tools/`
+belong upstream. The answer turned on a distinction that was not obvious
+until the templates repo was actually read: it already ships Python, so
+"can it hold code" was the wrong question. Its three tools are all
+maintainer-side, operating on the templates' own content. Nothing there
+executes inside a consumer's gate. Sending a check up means that repo
+starts owning runtime behaviour in other people's pipelines, which is a
+category change and needs a record there before code.
+
+Two of the four transfer and two do not, and the split is not about
+quality. Journal order and code citations enforce rules the chain already
+mandates — the second is prescribed almost to the line, and the first is
+the open subject of `#999`, which cites this repository as its evidence.
+Comment layout enforces a chain rule too, but its five carve-outs exist
+where the rule collides with `ruff format` and `D202`; another stack
+collides somewhere else, and making them configurable would dissolve the
+property that each carve-out is stated, tested, and needs a reason before a
+sixth. Diagram exports is drawio-specific, and its general form was already
+contributed as a rule rather than as code.
+
+Both stay here until there is a second consumer to generalize against. One
+implementation is not evidence of a shared need — which is the same
+argument the previous entry ran into from the other direction, where a
+limit that had been written down was mistaken for a limit that had been
+justified.
+
+**Not done**
+
+- All three new issues are filed, none landed. Eight now stand open against
+  the chain — `#983`, `#995`, `#999`, `#1000`, `#1001`, `#1004`, `#1005`,
+  `#1006` — and none govern here until they land and the pin moves.
+- `#1006` offers a PR with both checks, their suites, the hooks manifest and
+  the record. Nothing starts until the category change is agreed there.
+- `#9`'s velocity measurement, still unchanged.
+
+---
+
+## 2026-08-09 to 2026-08-10 (twenty-sixth session) — The exemption that covered more than it said
+
+**Tool**: Claude Code (Opus 5)
+
+Configuration, then the exemptions inside it, then the errors the code
+raises. Each step was prompted by being asked why the previous one was the
+way it was, and each answer was worse than expected.
+
+**Changes**
+
+- `pyproject.toml` restructured with a banner per section and wrapped at 80
+  columns; `description` becomes a multi-line string so the value survives
+  the wrap intact (#160).
+- Seven of eleven per-file ignore descriptions named the wrong rule. Each
+  now carries the name `ruff rule` reports.
+- Long-form reasoning moved to PLAYBOOK 3.1 and 3.3, which already held a
+  near-verbatim copy of the coverage paragraph.
+- Per-file ignores narrowed from fourteen codes across four files to seven
+  across three; seven became a `# noqa` at the site (#161).
+- `PLC0415` dropped from `network.py` entirely (#162, open).
+- `errors.py`: ten error types over thirteen raise sites, and the suite's
+  twenty-two message assertions become four (#163, open).
+- ADR-026 records the error contract.
+
+**PRs merged**: #160, #161. **Open**: #162, #163.
+
+The rule written in one change was broken by the change that wrote it. #161
+put it into PLAYBOOK 3.1: a per-file ignore keeps suppressing a rule after
+the code that earned it is gone, and nothing reports that it has gone dead,
+where `RUF100` fails a stale `# noqa`. Prefer the form the linter can
+audit. Three entries were kept anyway on the argument that they fire across
+a file for one structural reason.
+
+Asked why `PLC0415` was among them, the answer was that it was not. Of the
+thirteen sites the entry covered, six were the browser imports its
+rationale described. Four re-imported `asyncio` or `time` inside a function
+though the module already imports both at the top — statements that did
+nothing at all. Three were `urllib` submodules that belonged beside the
+`urllib.parse` already there. The exemption was covering seven sites its
+stated reason never mentioned, which is precisely the defect the previous
+change had described in the abstract while leaving an instance of it in
+place.
+
+The lazy-import guarantee is a runtime property no lint rule checks, so it
+was checked directly rather than inferred: with all three engines
+installed, importing the package leaves all three absent from
+`sys.modules`.
+
+The errors question started from the same place and ended somewhere else.
+The proposal was to define an error module so the blind `except Exception`
+in the tiers could be narrowed. It cannot: those catch failures raised by
+playwright, nodriver, seleniumbase and urllib, and a type declared here
+does not change what a driver raises. Checking whether a blind catch could
+swallow the package's own `ValueError` and report a bug as a tier failure
+found that it could not — the one site that raises inside a try is caught
+by a deliberately narrow handler.
+
+What the question did surface was the suite. Twenty-two assertions matched
+on message text, because with every site raising a bare `ValueError` there
+was nothing else to match on. Rewording one cache message broke two tests,
+neither about wording. After the migration the same reword breaks none.
+
+The hierarchy's depth was set by the tests rather than by taste. Four cache
+tests distinguished faults that all collapsed to one type, which is the
+type being too coarse. The bound that settled it is whether a caller could
+act differently — an unset directory is a different repair from an
+unwritable one, while a chained encoding and an unknown one both mean
+escalate. Ten types for thirteen sites. A type per site would re-encode the
+messages as class names.
+
+**Not done**
+
+- `#162` and `#163` are open and green, not merged.
+- `pyproject.toml` is 80-column clean and nothing enforces it. `ruff`'s
+  `line-length` does not scan TOML, so it drifts on the next edit.
+- The upstream candidate on `ADR-026` is recorded and not filed: a library
+  declaring one error base, each type also deriving from the built-in it
+  replaces, with a test asserting the hierarchy is closed.
+- Eight issues stand open against the chain — `#983`, `#995`, `#999`,
+  `#1000`, `#1001`, `#1004`, `#1005`, `#1006` — and none govern here until
+  they land and the pin moves.
+- `#9`'s velocity measurement, still unchanged.

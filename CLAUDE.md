@@ -61,6 +61,10 @@ of truth. Agent-specific placement rules:
   must kill nothing when ownership cannot be established
 - `source.py` MUST NOT import from any other package module — it is the
   contract every other module depends on
+- Every error raised on purpose is a type in `errors.py`, deriving from
+  `PagefetchError` and from the built-in its site would otherwise raise.
+  A new raise site uses one or adds one; a test asserts the type, and the
+  message only where the message is its subject (ADR-026)
 - New tests go in `tests/`, one file per concern, named
   `test_<concern>.py`
 - New examples go in `examples/`. What an example and its index MUST
@@ -173,8 +177,15 @@ project-specific:
   history or measurements go in the PLAYBOOK, which the docstring may
   point at by section
 - Public functions and class members are annotated
-- Fix the code rather than widening a ruff rule; per-file exemptions
-  live in `pyproject.toml` with the reason
+- Fix the code rather than widening a ruff rule. Where the code is right,
+  exempt at the narrowest scope that covers it: a `# noqa` at the site for
+  a few known cases, a per-file entry in `pyproject.toml` only for a rule
+  firing across the file for one structural reason. `RUF100` audits the
+  first and cannot see the second, so a per-file entry outlives its cause
+  silently
+- A comment in `pyproject.toml` states what the setting does and the one
+  clause that makes it non-obvious — anything needing a second sentence
+  belongs in the PLAYBOOK, which the comment names
 
 ### 2.3 Comments
 

@@ -102,4 +102,10 @@ def test_invalid_cache_dir_flag_exits_with_error(tmp_path, monkeypatch, capsys):
     with pytest.raises(SystemExit) as exc:
         main()
     assert exc.value.code == 1
-    assert "not a directory" in capsys.readouterr().err
+
+    # main() converts the error to output, so there is no type left to
+    # assert. What the CLI owes the user is the prefix every other failure
+    # uses and the path that caused it — both stable under a reword.
+    err = capsys.readouterr().err
+    assert err.startswith("Error:")
+    assert str(a_file) in err

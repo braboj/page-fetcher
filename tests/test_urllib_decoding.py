@@ -18,6 +18,7 @@ import pytest
 
 from pagefetch import ContentMode, FetchOptions, NetworkFetcher
 from pagefetch.detection import MIN_REAL_CONTENT_BYTES
+from pagefetch.errors import UnsupportedEncoding
 from pagefetch.network import ACCEPT_ENCODING, _decompress
 
 # Deliberately near-incompressible, seeded for determinism. A repetitive
@@ -27,7 +28,9 @@ from pagefetch.network import ACCEPT_ENCODING, _decompress
 # roughly a third, well above the floor, so the undecoded body reads as
 # real content and is cached. The assertion below keeps the fixture
 # honest if the floor ever moves.
-_FILLER = "".join(random.Random(0).choices(string.ascii_letters + "   ", k=60_000))
+_FILLER = "".join(
+    random.Random(0).choices(string.ascii_letters + "   ", k=60_000)  # noqa: S311
+)
 PAGE_HTML = "<html><body>" + _FILLER + "</body></html>"
 
 assert len(gzip.compress(PAGE_HTML.encode())) > MIN_REAL_CONTENT_BYTES
@@ -164,7 +167,7 @@ def test_decompress_rejects_an_encoding_it_cannot_undo(header):
     # Regression: these used to fall through and be returned unchanged, so
     # the compressed bytes became mojibake that cleared the size floor and
     # was cached as if it were a page.
-    with pytest.raises(ValueError, match="unsupported Content-Encoding"):
+    with pytest.raises(UnsupportedEncoding):
         _decompress(b"\x1b\x2a\x00\x84not-html-at-all", header)
 
 
@@ -173,7 +176,7 @@ def test_decompress_rejects_a_chained_encoding(header):
     # A chain has to be undone in reverse, and any link this tier cannot
     # undo makes the whole body unreadable. Rejected even when one link is
     # gzip and the body still carries the gzip magic bytes.
-    with pytest.raises(ValueError, match="chained Content-Encoding"):
+    with pytest.raises(UnsupportedEncoding):
         _decompress(gzip.compress(b"<html>hi</html>"), header)
 
 
