@@ -85,6 +85,12 @@ Budget for it when planning a session's end. They serialize, because a PR
 cannot be brought up to date with a merge that has not happened yet, so
 three PRs reported as ready to merge cost three CI cycles here.
 
+The cycle is not only bookkeeping. Where two PRs in the batch touch the
+same module, each was measured against a base the other had not landed on,
+and the re-run is the first and only test of the combination — `git` still
+reports MERGEABLE, which claims the texts combine, not that the result
+passes. Read a green tick as naming the base it ran against.
+
 If the base branch gets deleted while a stacked PR points at it:
 
 ```bash

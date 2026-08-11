@@ -2240,3 +2240,75 @@ messages as class names.
   `#1000`, `#1001`, `#1004`, `#1005`, `#1006` — and none govern here until
   they land and the pin moves.
 - `#9`'s velocity measurement, still unchanged.
+
+## 2026-08-11 (twenty-seventh session) — Green names the base it ran against
+
+**Tool**: Claude Code (Opus 5)
+
+No code was written. Four pull requests stood open and green, and the work
+was deciding what order they could safely merge in and what their green
+checks were actually claiming.
+
+**Changes**
+
+- No source change originated here. `main` moves `35a07e8` to `3e53a2a`
+  across four squash merges.
+- `#162` drops the `PLC0415` exemption from `network.py`, keeping six lazy
+  imports behind a `# noqa` each.
+- `#163` adds `errors.py` — ten types over thirteen raise sites — and
+  ADR-026.
+- `#164` is the twenty-sixth session's journal entry.
+- `#157` moves the CodeQL `init` and `analyze` pins forward one SHA.
+- ADR-026's `Upstream:` line now names the issue it was filed as, `#1007`.
+  Format only; no decision prose changes.
+- PLAYBOOK 1.3 gains what the update cycle buys, beside what it costs.
+- `#1008` filed upstream: `git.md` prices the forced re-run as cost and
+  does not say it is the only test of the combination.
+
+**PRs merged**: #162, #163, #164, #157. **Issues closed**: none — none of
+the four carried a closing reference, and `#9` is untouched.
+
+Both `#162` and `#163` changed `network.py`, and both changed its import
+block: one lifted `urllib.request` and `urllib.error` to the top and
+annotated the six lazy imports, the other added `from .errors import ...`
+and retyped four raises. Neither had been tested against the other. Each
+carried eleven green checks measured against `35a07e8` — a base that
+stopped existing the moment the first of them merged.
+
+GitHub called the second one MERGEABLE after that merge, which is a claim
+about text: the two edits touch different lines and combine without
+conflict. It is not a claim that the combination passes. Nothing in the
+pull request view separates those two, and the green ticks sit beside the
+mergeable badge as though they were one fact.
+
+Branch protection is what closed the gap. `required_status_checks.strict`
+is true, so a branch behind `main` is BLOCKED until it is brought up to
+date, and the checks then run on the merged result rather than on the base
+they were written against. `#163` re-ran its eleven against `#162`'s
+`network.py` and passed.
+
+The test that would have caught a real conflict is in `#163` itself. Its
+closure test walks every raise statement in the package and fails on
+anything outside the hierarchy, which makes it exactly the test a change
+landing in another module after its last green run would break. It can
+only report that if it runs again after that change, which is what strict
+mode forced.
+
+The cost is three branch updates and three full CI cycles for four merges,
+because each merge puts every remaining branch behind. Ordering `#162`
+before `#163` was chosen for the shared file, but under strict mode the
+order buys nothing: whichever goes second is retested either way.
+
+**Not done**
+
+- The coverage floor is `76` against `80.37` measured on Windows. The
+  ratchet says raise it against the measured figure; this session's scope
+  was the merge, so it was left alone.
+- `pyproject.toml` is 80-column clean and nothing enforces it, unchanged
+  from the last session.
+- Ten issues stand open against the chain — `#983`, `#995`, `#999`,
+  `#1000`, `#1001`, `#1004`, `#1005`, `#1006`, `#1007` (the error hierarchy
+  filed from ADR-026) and `#1008` — and none govern here until they land
+  and the pin moves. The submodule is pinned at `v2.44.0-3-g00fd16b`, which
+  is upstream `main`.
+- `#9`'s velocity measurement, still unchanged.
