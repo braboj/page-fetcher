@@ -324,9 +324,7 @@ binary, a CDP disconnect, a driver crash, must fall through to the next
 tier rather than abort the fetch, and a failure while closing a browser
 must not mask the result already fetched. Narrowing either would couple
 the fetcher to each engine's exception hierarchy, which is the coupling
-the `PageSource` ABC exists to avoid. `PLC0415`: the browser libraries are
-imported inside the tier methods so the package installs and runs with
-none of them present.
+the `PageSource` ABC exists to avoid.
 
 `tests/**` — pytest's assert-based style trips `S101` at every assertion,
 and `D` would buy a docstring on every test named after its own assertion.
@@ -338,7 +336,16 @@ assertion is the test.
 pattern made executable, and the assertions are what it demonstrates.
 Printing PASS/FAIL instead would show a way nobody writes tests.
 
-**The inline ones.** `PLR0911` on `_fetch_urllib` and `_escalate`, which
+**The inline ones.** `PLC0415` on the six browser imports — `playwright`,
+`nodriver` and `seleniumbase`, twice each — which stay inside the tier
+methods so the package installs and runs with none of them present. This
+was a per-file entry until it was read: of the thirteen sites it covered,
+four re-imported a module the file already imports at the top and three
+were `urllib` submodules that belonged there too. The rule's stated reason
+covered six of them, which is the failure mode a per-file entry cannot
+report about itself.
+
+`PLR0911` on `_fetch_urllib` and `_escalate`, which
 return from each tier as it succeeds; collapsing that into one exit would
 thread a result variable through every branch. `S607` on the two
 `subprocess.run` calls in `chrome.py`, where `powershell` and `tasklist`

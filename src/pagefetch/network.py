@@ -26,7 +26,9 @@ import asyncio
 import gzip
 import sys
 import time
+import urllib.error
 import urllib.parse
+import urllib.request
 import zlib
 from dataclasses import dataclass
 from pathlib import Path
@@ -271,8 +273,6 @@ class NetworkFetcher(PageSource):
 
     def download_bytes(self, url: str, min_size: int = 0) -> bytes | None:
         """Download raw bytes over HTTP. No escalation — tier 1 only."""
-        import urllib.request
-
         require_supported_scheme(url)
         try:
             # S310 wants proof the scheme is safe; require_supported_scheme
@@ -296,7 +296,7 @@ class NetworkFetcher(PageSource):
         require_supported_scheme(url)
         opts = options or FetchOptions()
         try:
-            from playwright.sync_api import sync_playwright
+            from playwright.sync_api import sync_playwright  # noqa: PLC0415
         except ImportError:
             print("[js] Not installed", file=sys.stderr)
             return False
@@ -322,9 +322,6 @@ class NetworkFetcher(PageSource):
 
         Returns content, the _BOT_BLOCKED / _ERROR_PAGE sentinel, or None.
         """
-        import urllib.error
-        import urllib.request
-
         try:
             # S310 wants proof the scheme is safe. Every public entry point
             # calls require_supported_scheme before reaching this tier, but
@@ -399,7 +396,7 @@ class NetworkFetcher(PageSource):
         Uses domcontentloaded (not networkidle) — faster on ad-heavy pages.
         """
         try:
-            from playwright.sync_api import sync_playwright
+            from playwright.sync_api import sync_playwright  # noqa: PLC0415
         except ImportError:
             print("[js] Not installed", file=sys.stderr)
             return None
@@ -440,12 +437,10 @@ class NetworkFetcher(PageSource):
     def _fetch_nodriver(self, url: str, mode: ContentMode, wait_ms: int) -> str | None:
         """Fetch via Nodriver (headed Chrome via CDP, no driver binary)."""
         try:
-            import nodriver as uc_nd
+            import nodriver as uc_nd  # noqa: PLC0415
         except ImportError:
             print("[headed] Not installed", file=sys.stderr)
             return None
-
-        import asyncio
 
         async def _fetch() -> str | None:
             browser = None
@@ -475,10 +470,8 @@ class NetworkFetcher(PageSource):
 
         Shared by single-fetch and batch (persistent browser) paths.
         """
-        import time as _time
-
-        deadline = _time.monotonic() + 15
-        while _time.monotonic() < deadline:
+        deadline = time.monotonic() + 15
+        while time.monotonic() < deadline:
             try:
                 if await page.evaluate("document.readyState") == "complete":
                     break
@@ -487,7 +480,7 @@ class NetworkFetcher(PageSource):
             await page.sleep(0.3)
 
         interval = 0.5
-        while _time.monotonic() < deadline:
+        while time.monotonic() < deadline:
             html = await page.get_content()
             if not is_bot_blocked(html):
                 break
@@ -536,7 +529,7 @@ class NetworkFetcher(PageSource):
         _fetch_uc_with_session.
         """
         try:
-            from seleniumbase import SB
+            from seleniumbase import SB  # noqa: PLC0415
         except ImportError:
             print("[headless] SeleniumBase not installed", file=sys.stderr)
             return None
@@ -584,8 +577,6 @@ class NetworkFetcher(PageSource):
         First for readyState, then poll the page source for bot detection
         with backoff.
         """
-        import time
-
         deadline = time.monotonic() + timeout_s
         while time.monotonic() < deadline:
             try:
@@ -609,8 +600,6 @@ class NetworkFetcher(PageSource):
     @staticmethod
     def _uc_wait_for_scroll(sb, timeout_s: int = 3) -> None:
         """Scroll to bottom and wait for DOM height to stabilize."""
-        import time
-
         try:
             prev_height = sb.execute_script(
                 "return document.body ? document.body.scrollHeight : 0"
@@ -788,7 +777,7 @@ class NetworkFetcher(PageSource):
         """Launch a persistent Nodriver browser, or None if it cannot be."""
         loop = None
         try:
-            import nodriver as uc_nd
+            import nodriver as uc_nd  # noqa: PLC0415
 
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
@@ -817,7 +806,7 @@ class NetworkFetcher(PageSource):
     def _start_uc_session(self, url_count: int) -> _BatchSession | None:
         """Open a persistent SeleniumBase UC session, or None if absent."""
         try:
-            from seleniumbase import SB
+            from seleniumbase import SB  # noqa: PLC0415
 
             pids_before = self._reaper.running_chrome_pids()
             context = SB(uc=True, headless=True)
