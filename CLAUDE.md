@@ -61,6 +61,10 @@ of truth. Agent-specific placement rules:
   must kill nothing when ownership cannot be established
 - `source.py` MUST NOT import from any other package module — it is the
   contract every other module depends on
+- Every error raised on purpose is a type in `errors.py`, deriving from
+  `PagefetchError` and from the built-in its site would otherwise raise.
+  A new raise site uses one or adds one; a test asserts the type, and the
+  message only where the message is its subject (ADR-026)
 - New tests go in `tests/`, one file per concern, named
   `test_<concern>.py`
 - New examples go in `examples/`. What an example and its index MUST

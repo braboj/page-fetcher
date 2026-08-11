@@ -10,6 +10,7 @@ import pytest
 
 from pagefetch import ContentMode, FileCache
 from pagefetch.cache import CACHE_DIR_ENV
+from pagefetch.errors import CacheDirNotADirectory, CacheDirNotSet
 
 
 def test_url_hash_is_sha256_first_16_hex():
@@ -77,13 +78,13 @@ def test_empty_env_var_is_rejected(monkeypatch):
     # lose silently to the lowest — the shape a wrapper script produces
     # when the variable it forwards is unset.
     monkeypatch.setenv(CACHE_DIR_ENV, "")
-    with pytest.raises(ValueError, match="is empty"):
+    with pytest.raises(CacheDirNotSet):
         FileCache()
 
 
 def test_empty_env_var_error_names_the_source_and_the_way_out(monkeypatch):
     monkeypatch.setenv(CACHE_DIR_ENV, "")
-    with pytest.raises(ValueError) as exc:
+    with pytest.raises(CacheDirNotSet) as exc:
         FileCache()
     message = str(exc.value)
     assert CACHE_DIR_ENV in message
@@ -93,7 +94,7 @@ def test_empty_env_var_error_names_the_source_and_the_way_out(monkeypatch):
 
 def test_empty_cache_dir_argument_is_rejected(monkeypatch):
     monkeypatch.delenv(CACHE_DIR_ENV, raising=False)
-    with pytest.raises(ValueError, match="is empty"):
+    with pytest.raises(CacheDirNotSet):
         FileCache(cache_dir="")
 
 
@@ -123,14 +124,14 @@ def test_valid_nonexistent_dir_under_writable_parent_is_accepted(tmp_path):
 def test_cache_dir_pointing_at_a_file_is_rejected(tmp_path):
     a_file = tmp_path / "not-a-dir.txt"
     a_file.write_text("x", encoding="utf-8")
-    with pytest.raises(ValueError, match="not a directory"):
+    with pytest.raises(CacheDirNotADirectory):
         FileCache(cache_dir=a_file)
 
 
 def test_cache_dir_with_file_ancestor_is_rejected(tmp_path):
     a_file = tmp_path / "file.txt"
     a_file.write_text("x", encoding="utf-8")
-    with pytest.raises(ValueError, match="non-directory ancestor"):
+    with pytest.raises(CacheDirNotADirectory):
         FileCache(cache_dir=a_file / "sub" / "cache")
 
 
@@ -138,8 +139,12 @@ def test_validation_error_names_the_source(tmp_path, monkeypatch):
     a_file = tmp_path / "f.txt"
     a_file.write_text("x", encoding="utf-8")
     monkeypatch.setenv(CACHE_DIR_ENV, str(a_file))
-    with pytest.raises(ValueError, match=CACHE_DIR_ENV):
+    with pytest.raises(CacheDirNotADirectory) as exc:
         FileCache()
+
+    # The type says what went wrong; this test is about the message saying
+    # which setting supplied the path, which the type cannot carry.
+    assert CACHE_DIR_ENV in str(exc.value)
 
 
 def test_validation_does_not_create_the_dir(tmp_path):

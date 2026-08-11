@@ -18,6 +18,7 @@ from pagefetch import (
     NetworkFetcher,
     require_supported_scheme,
 )
+from pagefetch.errors import InvalidURL
 
 REJECTED = [
     "file:///etc/passwd",
@@ -71,12 +72,12 @@ def test_supported_schemes_pass(url):
 
 @pytest.mark.parametrize("url", REJECTED)
 def test_unsupported_schemes_raise(url):
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidURL):
         require_supported_scheme(url)
 
 
 def test_error_names_the_scheme_and_what_is_allowed():
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(InvalidURL) as excinfo:
         require_supported_scheme("ftp://example.com/x")
     message = str(excinfo.value)
     assert "ftp" in message
@@ -86,7 +87,7 @@ def test_error_names_the_scheme_and_what_is_allowed():
 def test_scheme_relative_url_gets_a_usable_hint():
     # "example.com/page" parses to an empty scheme. Naming the scheme in
     # the error would be useless, so this case says what to do instead.
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(InvalidURL) as excinfo:
         require_supported_scheme("example.com/page")
     message = str(excinfo.value)
     assert "no scheme" in message
@@ -102,20 +103,20 @@ def test_allowed_schemes_is_exactly_http_and_https():
 
 @pytest.mark.parametrize("url", REJECTED)
 def test_fetch_rejects_before_touching_any_tier(fetcher, url, no_tiers):
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidURL):
         fetcher.fetch(url)
     assert no_tiers == []
 
 
 @pytest.mark.parametrize("url", REJECTED)
 def test_download_bytes_rejects(fetcher, url):
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidURL):
         fetcher.download_bytes(url)
 
 
 @pytest.mark.parametrize("url", REJECTED)
 def test_screenshot_rejects(fetcher, url, tmp_path):
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidURL):
         fetcher.screenshot(url, tmp_path / "shot.png")
 
 
@@ -124,7 +125,7 @@ def test_batch_rejects_before_fetching_anything(fetcher, no_tiers):
     # minutes, so the whole list is checked up front rather than failing
     # part-way through with work already done.
     urls = ["https://a.test", "https://b.test", "file:///etc/passwd"]
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(InvalidURL) as excinfo:
         fetcher.fetch_batch(urls)
     assert "file" in str(excinfo.value)
     assert no_tiers == []
@@ -150,6 +151,6 @@ def test_supported_url_reaches_the_tiers(fetcher, monkeypatch):
 
 def test_rejection_happens_before_the_cache_is_consulted(fetcher, tmp_path: Path):
     # Nothing should be written or read for a URL that never runs.
-    with pytest.raises(ValueError):
+    with pytest.raises(InvalidURL):
         fetcher.fetch("file:///etc/passwd")
     assert fetcher._cache.read("file:///etc/passwd", ContentMode.TEXT) is None
