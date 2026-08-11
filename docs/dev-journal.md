@@ -2155,3 +2155,88 @@ justified.
 - `#1006` offers a PR with both checks, their suites, the hooks manifest and
   the record. Nothing starts until the category change is agreed there.
 - `#9`'s velocity measurement, still unchanged.
+
+---
+
+## 2026-08-09 to 2026-08-10 (twenty-sixth session) — The exemption that covered more than it said
+
+**Tool**: Claude Code (Opus 5)
+
+Configuration, then the exemptions inside it, then the errors the code
+raises. Each step was prompted by being asked why the previous one was the
+way it was, and each answer was worse than expected.
+
+**Changes**
+
+- `pyproject.toml` restructured with a banner per section and wrapped at 80
+  columns; `description` becomes a multi-line string so the value survives
+  the wrap intact (#160).
+- Seven of eleven per-file ignore descriptions named the wrong rule. Each
+  now carries the name `ruff rule` reports.
+- Long-form reasoning moved to PLAYBOOK 3.1 and 3.3, which already held a
+  near-verbatim copy of the coverage paragraph.
+- Per-file ignores narrowed from fourteen codes across four files to seven
+  across three; seven became a `# noqa` at the site (#161).
+- `PLC0415` dropped from `network.py` entirely (#162, open).
+- `errors.py`: ten error types over thirteen raise sites, and the suite's
+  twenty-two message assertions become four (#163, open).
+- ADR-026 records the error contract.
+
+**PRs merged**: #160, #161. **Open**: #162, #163.
+
+The rule written in one change was broken by the change that wrote it. #161
+put it into PLAYBOOK 3.1: a per-file ignore keeps suppressing a rule after
+the code that earned it is gone, and nothing reports that it has gone dead,
+where `RUF100` fails a stale `# noqa`. Prefer the form the linter can
+audit. Three entries were kept anyway on the argument that they fire across
+a file for one structural reason.
+
+Asked why `PLC0415` was among them, the answer was that it was not. Of the
+thirteen sites the entry covered, six were the browser imports its
+rationale described. Four re-imported `asyncio` or `time` inside a function
+though the module already imports both at the top — statements that did
+nothing at all. Three were `urllib` submodules that belonged beside the
+`urllib.parse` already there. The exemption was covering seven sites its
+stated reason never mentioned, which is precisely the defect the previous
+change had described in the abstract while leaving an instance of it in
+place.
+
+The lazy-import guarantee is a runtime property no lint rule checks, so it
+was checked directly rather than inferred: with all three engines
+installed, importing the package leaves all three absent from
+`sys.modules`.
+
+The errors question started from the same place and ended somewhere else.
+The proposal was to define an error module so the blind `except Exception`
+in the tiers could be narrowed. It cannot: those catch failures raised by
+playwright, nodriver, seleniumbase and urllib, and a type declared here
+does not change what a driver raises. Checking whether a blind catch could
+swallow the package's own `ValueError` and report a bug as a tier failure
+found that it could not — the one site that raises inside a try is caught
+by a deliberately narrow handler.
+
+What the question did surface was the suite. Twenty-two assertions matched
+on message text, because with every site raising a bare `ValueError` there
+was nothing else to match on. Rewording one cache message broke two tests,
+neither about wording. After the migration the same reword breaks none.
+
+The hierarchy's depth was set by the tests rather than by taste. Four cache
+tests distinguished faults that all collapsed to one type, which is the
+type being too coarse. The bound that settled it is whether a caller could
+act differently — an unset directory is a different repair from an
+unwritable one, while a chained encoding and an unknown one both mean
+escalate. Ten types for thirteen sites. A type per site would re-encode the
+messages as class names.
+
+**Not done**
+
+- `#162` and `#163` are open and green, not merged.
+- `pyproject.toml` is 80-column clean and nothing enforces it. `ruff`'s
+  `line-length` does not scan TOML, so it drifts on the next edit.
+- The upstream candidate on `ADR-026` is recorded and not filed: a library
+  declaring one error base, each type also deriving from the built-in it
+  replaces, with a test asserting the hierarchy is closed.
+- Eight issues stand open against the chain — `#983`, `#995`, `#999`,
+  `#1000`, `#1001`, `#1004`, `#1005`, `#1006` — and none govern here until
+  they land and the pin moves.
+- `#9`'s velocity measurement, still unchanged.
